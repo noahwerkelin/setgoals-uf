@@ -1,6 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type Units = "metric" | "imperial";
+export type Role = "individual" | "parent" | "child";
+
+export type ChildProfile = {
+  id: string;
+  name: string;
+  birthday: string; // YYYY-MM-DD
+  avatar: string; // emoji or initials
+  dailyGoal: number; // steps
+  code: string; // 6-char login code
+};
 
 export type SettingsState = {
   stepsPer30: number;
@@ -14,6 +24,10 @@ export type SettingsState = {
   isPro: boolean;
   // Pro: minutes saved from yesterday usable today (cap at 60)
   bonusMinFromYesterday: number;
+  // Profile / role
+  role: Role;
+  displayName: string;
+  children: ChildProfile[];
 };
 
 const DEFAULTS: SettingsState = {
@@ -27,6 +41,9 @@ const DEFAULTS: SettingsState = {
   units: "metric",
   isPro: false,
   bonusMinFromYesterday: 45,
+  role: "individual",
+  displayName: "Lukas",
+  children: [],
 };
 
 type Ctx = {
@@ -65,6 +82,10 @@ export function useSettings() {
   return ctx;
 }
 
+export function useIsChild() {
+  return useSettings().settings.role === "child";
+}
+
 // Unit helpers
 export function kmToDisplay(km: number, units: Units): { value: number; unit: "km" | "mi" } {
   if (units === "imperial") return { value: km * 0.621371, unit: "mi" };
@@ -74,4 +95,11 @@ export function kmToDisplay(km: number, units: Units): { value: number; unit: "k
 export function formatDistance(km: number, units: Units, digits = 1): string {
   const { value, unit } = kmToDisplay(km, units);
   return `${value.toFixed(digits)} ${unit}`;
+}
+
+export function genChildCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = "";
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
 }
