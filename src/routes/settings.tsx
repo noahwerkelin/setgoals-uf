@@ -1,6 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Check, Smartphone, Activity } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { useT, type Lang } from "@/lib/i18n";
+import { useSettings, type SettingsState } from "@/lib/settings";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -12,61 +34,286 @@ export const Route = createFileRoute("/settings")({
   component: Page,
 });
 
-const GROUPS: { title: string; rows: { label: string; meta?: string }[] }[] = [
-  {
-    title: "Earning rules",
-    rows: [
-      { label: "Steps per 30 min", meta: "1,000" },
-      { label: "Daily screen-time cap", meta: "3h" },
-      { label: "Carry over unused time", meta: "Off" },
-    ],
-  },
-  {
-    title: "Integrations",
-    rows: [
-      { label: "Apple HealthKit", meta: "Connected" },
-      { label: "Google Fit / Health Connect", meta: "Connect" },
-      { label: "Push notifications", meta: "On" },
-    ],
-  },
-  {
-    title: "Privacy",
-    rows: [
-      { label: "Anonymous on leaderboards", meta: "Off" },
-      { label: "Share location for routes", meta: "While using" },
-    ],
-  },
-  {
-    title: "Account",
-    rows: [{ label: "Email" }, { label: "Sign out" }],
-  },
-];
-
 function Page() {
+  const { t, lang, setLang } = useT();
+  const { settings, update } = useSettings();
+  const [stepsOpen, setStepsOpen] = useState(false);
+  const [capOpen, setCapOpen] = useState(false);
+  const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
+
   return (
     <AppShell>
-      <PageHeader title="Settings" />
+      <PageHeader title={t("settings.title")} />
       <div className="px-6 space-y-6">
-        {GROUPS.map((g) => (
-          <section key={g.title} className="space-y-2">
-            <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{g.title}</h2>
-            <div className="rounded-3xl bg-card ring-1 ring-black/5">
-              {g.rows.map((r, i) => (
-                <button
-                  key={r.label}
-                  className={`flex w-full items-center justify-between p-4 text-left ${i > 0 ? "border-t border-sage-100" : ""}`}
-                >
-                  <span className="text-sm font-medium">{r.label}</span>
-                  <span className="flex items-center gap-1 text-xs font-medium text-sage-600">
-                    {r.meta} <ChevronRight className="size-4" />
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-        ))}
+        {/* Earning rules */}
+        <Group title={t("settings.earning")}>
+          <Row
+            label={t("settings.steps_per_30")}
+            meta={settings.stepsPer30.toLocaleString()}
+            onClick={() => setStepsOpen(true)}
+          />
+          <Row
+            label={t("settings.daily_cap")}
+            meta={`${settings.dailyCapHours}${t("settings.hours")}`}
+            onClick={() => setCapOpen(true)}
+          />
+        </Group>
+
+        {/* Integrations */}
+        <Group title={t("settings.integrations")}>
+          <IntegrationRow
+            icon={<Smartphone className="size-4" />}
+            label={t("settings.healthkit")}
+            connected={settings.healthkitConnected}
+            onAction={() =>
+              settings.healthkitConnected
+                ? (update("healthkitConnected", false), toast(t("settings.disconnect") + " ✓"))
+                : setConnectKind("hk")
+            }
+            t={t}
+          />
+          <IntegrationRow
+            icon={<Activity className="size-4" />}
+            label={t("settings.googlefit")}
+            connected={settings.googlefitConnected}
+            onAction={() =>
+              settings.googlefitConnected
+                ? (update("googlefitConnected", false), toast(t("settings.disconnect") + " ✓"))
+                : setConnectKind("gf")
+            }
+            t={t}
+          />
+          <ToggleRow
+            label={t("settings.push")}
+            checked={settings.pushOn}
+            onChange={(v) => update("pushOn", v)}
+          />
+        </Group>
+
+        {/* Privacy */}
+        <Group title={t("settings.privacy")}>
+          <ToggleRow
+            label={t("settings.anon_lb")}
+            checked={settings.anonymousLeaderboard}
+            onChange={(v) => update("anonymousLeaderboard", v)}
+          />
+          <SelectRow
+            label={t("settings.share_loc")}
+            value={settings.shareLocation}
+            onChange={(v) => update("shareLocation", v as SettingsState["shareLocation"])}
+            options={[
+              { value: "off", label: t("settings.off") },
+              { value: "while_using", label: t("settings.while_using") },
+              { value: "always", label: t("settings.on") },
+            ]}
+          />
+        </Group>
+
+        {/* Account & language */}
+        <Group title={t("settings.account")}>
+          <SelectRow
+            label={t("settings.language")}
+            value={lang}
+            onChange={(v) => setLang(v as Lang)}
+            options={[
+              { value: "en", label: "English" },
+              { value: "sv", label: "Svenska" },
+            ]}
+          />
+          <Row label={t("settings.email")} meta="lukas@example.com" onClick={() => toast("lukas@example.com")} />
+          <Row label={t("settings.signout")} onClick={() => toast.success(t("settings.signout"))} />
+        </Group>
+
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
       </div>
+
+      {/* Steps per 30 dialog */}
+      <SliderDialog
+        open={stepsOpen}
+        onOpenChange={setStepsOpen}
+        title={t("settings.steps_per_30")}
+        value={settings.stepsPer30}
+        min={200}
+        max={3000}
+        step={100}
+        unit=""
+        onSave={(v) => {
+          update("stepsPer30", v);
+          toast.success(`${t("settings.steps_per_30")}: ${v.toLocaleString()}`);
+        }}
+        t={t}
+      />
+
+      {/* Daily cap dialog */}
+      <SliderDialog
+        open={capOpen}
+        onOpenChange={setCapOpen}
+        title={t("settings.daily_cap")}
+        value={settings.dailyCapHours}
+        min={1}
+        max={8}
+        step={1}
+        unit={t("settings.hours")}
+        onSave={(v) => {
+          update("dailyCapHours", v);
+          toast.success(`${t("settings.daily_cap")}: ${v}${t("settings.hours")}`);
+        }}
+        t={t}
+      />
+
+      {/* Connect dialog */}
+      <Dialog open={connectKind !== null} onOpenChange={(o) => !o && setConnectKind(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{connectKind === "hk" ? t("hk.title") : t("gf.title")}</DialogTitle>
+            <DialogDescription>
+              {connectKind === "hk" ? t("hk.desc") : t("gf.desc")}
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-2 text-sm text-sage-700">
+            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> Steps</li>
+            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> Distance</li>
+            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> Active energy</li>
+          </ul>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConnectKind(null)}>{t("settings.cancel")}</Button>
+            <Button
+              onClick={() => {
+                if (connectKind === "hk") update("healthkitConnected", true);
+                if (connectKind === "gf") update("googlefitConnected", true);
+                toast.success(t("settings.connected"));
+                setConnectKind(null);
+              }}
+            >
+              {t("hk.allow")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
+  );
+}
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{title}</h2>
+      <div className="rounded-3xl bg-card ring-1 ring-black/5 divide-y divide-sage-100">{children}</div>
+    </section>
+  );
+}
+
+function Row({ label, meta, onClick }: { label: string; meta?: string; onClick?: () => void }) {
+  return (
+    <button onClick={onClick} className="flex w-full items-center justify-between p-4 text-left hover:bg-sage-50/60 transition-colors">
+      <span className="text-sm font-medium">{label}</span>
+      <span className="flex items-center gap-1 text-xs font-medium text-sage-600">
+        {meta} <ChevronRight className="size-4" />
+      </span>
+    </button>
+  );
+}
+
+function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex w-full items-center justify-between p-4">
+      <span className="text-sm font-medium">{label}</span>
+      <Switch checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+function SelectRow({
+  label, value, onChange, options,
+}: { label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <div className="flex w-full items-center justify-between gap-3 p-4">
+      <span className="text-sm font-medium">{label}</span>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="h-8 w-auto min-w-[120px] rounded-xl border-0 bg-sage-100 text-xs font-medium text-sage-700">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function IntegrationRow({
+  icon, label, connected, onAction, t,
+}: { icon: ReactNode; label: string; connected: boolean; onAction: () => void; t: (k: string) => string }) {
+  return (
+    <div className="flex w-full items-center justify-between p-4">
+      <div className="flex items-center gap-3">
+        <span className="grid size-8 place-items-center rounded-lg bg-sage-100 text-sage-700">{icon}</span>
+        <span className="text-sm font-medium">{label}</span>
+      </div>
+      <button
+        onClick={onAction}
+        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+          connected ? "bg-sage-100 text-sage-700 hover:bg-sage-200" : "bg-sage-600 text-primary-foreground hover:bg-sage-700"
+        }`}
+      >
+        {connected ? t("settings.connected") : t("settings.connect")}
+      </button>
+    </div>
+  );
+}
+
+function SliderDialog({
+  open, onOpenChange, title, value, min, max, step, unit, onSave, t,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  title: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+  onSave: (v: number) => void;
+  t: (k: string) => string;
+}) {
+  const [local, setLocal] = useState(value);
+  // sync when opened
+  useState(() => setLocal(value));
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (o) setLocal(value);
+        onOpenChange(o);
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="py-4 space-y-6">
+          <p className="text-center text-4xl font-semibold tabular-nums text-sage-700">
+            {local.toLocaleString()}<span className="text-base font-medium text-sage-600 ml-1">{unit}</span>
+          </p>
+          <Slider
+            value={[local]}
+            min={min}
+            max={max}
+            step={step}
+            onValueChange={(v) => setLocal(v[0])}
+          />
+          <div className="flex justify-between text-[11px] text-sage-600 tabular-nums">
+            <span>{min.toLocaleString()}{unit}</span>
+            <span>{max.toLocaleString()}{unit}</span>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
+          <Button onClick={() => { onSave(local); onOpenChange(false); }}>{t("settings.save")}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
