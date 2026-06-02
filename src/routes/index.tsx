@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Flame, Footprints, MapPin, Trophy, Zap } from "lucide-react";
+import { ChevronRight, Flame, Footprints, MapPin, Sparkles, Trophy, Zap } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
+import { formatDistance, useSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/")({
   head: () => ({
