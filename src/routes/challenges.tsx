@@ -30,6 +30,8 @@ const WEEKLY = [
 
 function Page() {
   const { t } = useT();
+  const { settings } = useSettings();
+  const [proOpen, setProOpen] = useState(false);
   return (
     <AppShell>
       <PageHeader eyebrow={t("challenges.eyebrow")} title={t("challenges.title")} />
@@ -57,16 +59,32 @@ function Page() {
         </section>
 
         <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
-          <h3 className="text-sm font-semibold">{t("challenges.custom")}</h3>
-          <p className="mt-1 text-xs text-sage-600">{t("challenges.custom_desc")}</p>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">{t("challenges.custom")}</h3>
+            {!settings.isPro && (
+              <span className="rounded-full bg-sage-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-sage-700">
+                {t("pro.badge")}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-sage-600">
+            {settings.isPro ? t("challenges.custom_desc") : t("challenges.pro_lock")}
+          </p>
           <button
-            onClick={() => toast(t("challenges.edit_rules"))}
-            className="mt-3 rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
+            onClick={() => {
+              if (!settings.isPro) setProOpen(true);
+              else toast(t("challenges.edit_rules"));
+            }}
+            className={`mt-3 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold ${
+              settings.isPro ? "bg-sage-100 text-sage-700" : "bg-sage-600 text-primary-foreground"
+            }`}
           >
-            {t("challenges.edit_rules")}
+            {!settings.isPro && <Lock className="size-3.5" />}
+            {settings.isPro ? t("challenges.edit_rules") : t("pro.unlock")}
           </button>
         </section>
       </div>
+      <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
     </AppShell>
   );
 }
