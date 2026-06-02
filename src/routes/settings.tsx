@@ -144,12 +144,24 @@ function Page() {
               { value: "sv", label: "Svenska" },
             ]}
           />
+          <SelectRow
+            label={t("units.label")}
+            value={settings.units}
+            onChange={(v) => update("units", v as SettingsState["units"])}
+            options={[
+              { value: "metric", label: t("units.metric") },
+              { value: "imperial", label: t("units.imperial") },
+            ]}
+          />
           <Row label={t("settings.email")} meta="lukas@example.com" onClick={() => toast("lukas@example.com")} />
           <Row label={t("settings.signout")} onClick={() => toast.success(t("settings.signout"))} />
         </Group>
 
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
       </div>
+
+      <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
+
 
       {/* Steps per 30 dialog */}
       <SliderDialog
