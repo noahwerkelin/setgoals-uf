@@ -20,6 +20,8 @@ const ICON_PATHS: Record<string, string> = {
     '<path d="M2 18c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M2 13c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="6" r="2" fill="white"/>',
   Family:
     '<path d="M12 2 4 8v12h6v-6h4v6h6V8z" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/>',
+  Gym:
+    '<path d="M6 6v12M3 9v6M18 6v12M21 9v6M6 12h12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>',
   You:
     '<circle cx="12" cy="12" r="3" fill="white"/>',
 };
@@ -30,6 +32,8 @@ const KIND_TO_ICON: Record<string, string> = {
   Cycling: "Cycling",
   Swim: "Swim",
   Family: "Family",
+  Gym: "Gym",
+  Nature: "Mountain",
 };
 
 function makeSageIcon(kind: string, opts?: { you?: boolean }) {
