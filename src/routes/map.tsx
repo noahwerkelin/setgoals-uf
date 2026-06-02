@@ -23,11 +23,11 @@ export const Route = createFileRoute("/map")({
 const ICONS = { Hiking: Mountain, Running: Navigation, Cycling: Bike, Swim: Waves, Family: Trees };
 
 const BASE_ROUTES = [
-  { id: "1", dist: "2.4 km", diffKey: "Moderate", kind: "Hiking", offset: [0.012, -0.018] },
-  { id: "2", dist: "5.1 km", diffKey: "Easy", kind: "Running", offset: [-0.008, 0.022] },
-  { id: "3", dist: "12.8 km", diffKey: "Hard", kind: "Cycling", offset: [0.025, 0.03] },
-  { id: "4", dist: "0.9 km", diffKey: "Easy", kind: "Swim", offset: [-0.018, -0.012] },
-  { id: "5", dist: "3.2 km", diffKey: "Easy", kind: "Family", offset: [0.018, 0.008] },
+  { id: "1", km: 2.4, diffKey: "Moderate", kind: "Hiking", offset: [0.012, -0.018] },
+  { id: "2", km: 5.1, diffKey: "Easy", kind: "Running", offset: [-0.008, 0.022] },
+  { id: "3", km: 12.8, diffKey: "Hard", kind: "Cycling", offset: [0.025, 0.03] },
+  { id: "4", km: 0.9, diffKey: "Easy", kind: "Swim", offset: [-0.018, -0.012] },
+  { id: "5", km: 3.2, diffKey: "Easy", kind: "Family", offset: [0.018, 0.008] },
 ];
 
 const DEFAULT_CENTER: [number, number] = [57.7089, 11.9746]; // Gothenburg
