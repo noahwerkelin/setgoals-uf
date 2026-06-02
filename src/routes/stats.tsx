@@ -1,0 +1,84 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { AppShell, PageHeader } from "@/components/AppShell";
+
+export const Route = createFileRoute("/stats")({
+  head: () => ({
+    meta: [
+      { title: "Statistics — SetGoals UF" },
+      { name: "description", content: "Daily, weekly, and monthly trends for steps and screen time." },
+    ],
+  }),
+  component: Page,
+});
+
+const WEEK = [5200, 8100, 6400, 9200, 7240, 11200, 4300];
+const MAX = Math.max(...WEEK);
+const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
+
+function Page() {
+  const avg = Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length);
+  return (
+    <AppShell>
+      <PageHeader eyebrow="Last 7 days" title="Statistics" />
+      <div className="px-6 space-y-5">
+        <section className="rounded-3xl bg-card p-6 ring-1 ring-black/5 animate-rise">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-widest text-sage-600">Daily average</p>
+              <p className="text-3xl font-semibold tabular-nums">{avg.toLocaleString()}</p>
+            </div>
+            <span className="rounded-full bg-sage-100 px-3 py-1 text-xs font-medium text-sage-700">+12% vs last week</span>
+          </div>
+          <div className="mt-6 grid grid-cols-7 items-end gap-2 h-40">
+            {WEEK.map((v, i) => (
+              <div key={i} className="flex h-full flex-col items-center gap-2">
+                <div className="flex h-full w-full items-end">
+                  <div
+                    className="w-full rounded-t-lg bg-sage-600"
+                    style={{ height: `${(v / MAX) * 100}%`, opacity: i === 4 ? 1 : 0.55 }}
+                  />
+                </div>
+                <span className="text-[10px] font-medium text-sage-600">{DAYS[i]}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid grid-cols-2 gap-4">
+          <Card label="Screen time earned" value="14h 30m" sub="this week" />
+          <Card label="Goal completion" value="86%" sub="last 30 days" />
+          <Card label="Active days" value="6 / 7" sub="this week" />
+          <Card label="Best day" value="11,200" sub="Saturday" />
+        </section>
+
+        <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
+          <h3 className="text-sm font-semibold">Monthly trend</h3>
+          <svg viewBox="0 0 300 100" className="mt-3 w-full">
+            <path
+              d="M0,80 C40,60 70,70 100,55 S180,30 220,40 S290,20 300,25"
+              fill="none"
+              stroke="oklch(0.58 0.038 142)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M0,80 C40,60 70,70 100,55 S180,30 220,40 S290,20 300,25 L300,100 L0,100 Z"
+              fill="oklch(0.58 0.038 142 / 0.12)"
+            />
+          </svg>
+          <p className="mt-2 text-xs text-sage-600">Steady improvement across the last 4 weeks.</p>
+        </section>
+      </div>
+    </AppShell>
+  );
+}
+
+function Card({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div className="rounded-2xl bg-card p-4 ring-1 ring-black/5">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{label}</p>
+      <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
+      <p className="text-xs text-sage-600">{sub}</p>
+    </div>
+  );
+}
