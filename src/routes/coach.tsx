@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Sparkles, Send } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
+import { ProLockCard, ProUpgradeDialog } from "@/components/Pro";
 
 export const Route = createFileRoute("/coach")({
   head: () => ({
@@ -18,8 +20,10 @@ type Msg = { from: "ai" | "me"; text: string };
 
 function Page() {
   const { t } = useT();
+  const { settings } = useSettings();
   const [msgs, setMsgs] = useState<Msg[]>([{ from: "ai", text: t("coach.seed") }]);
   const [text, setText] = useState("");
+  const [proOpen, setProOpen] = useState(false);
 
   function send(v: string) {
     const value = v.trim();
@@ -33,6 +37,26 @@ function Page() {
   }
 
   const suggestions = [t("coach.s1"), t("coach.s2"), t("coach.s3")];
+
+  if (!settings.isPro) {
+    return (
+      <AppShell>
+        <PageHeader
+          eyebrow={t("coach.eyebrow")}
+          title={t("coach.title")}
+          trailing={
+            <span className="grid size-10 place-items-center rounded-full bg-sage-600 text-primary-foreground">
+              <Sparkles className="size-5" />
+            </span>
+          }
+        />
+        <div className="px-6">
+          <ProLockCard titleKey="coach.locked_title" descKey="coach.locked_desc" onUpgrade={() => setProOpen(true)} />
+        </div>
+        <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
