@@ -312,10 +312,9 @@ function ChildEditDialog({
   const { t } = useT();
   const [draft, setDraft] = useState<ChildProfile | null>(initial);
 
-  // sync when opening with a new initial
-  if (open && initial && (!draft || draft.id !== initial.id)) {
-    setDraft(initial);
-  }
+  useEffect(() => {
+    if (open && initial) setDraft(initial);
+  }, [open, initial]);
 
   if (!draft) return null;
 
