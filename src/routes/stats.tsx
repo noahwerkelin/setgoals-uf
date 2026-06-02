@@ -22,6 +22,8 @@ const DAY_KEYS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 function Page() {
   const { t } = useT();
+  const { settings } = useSettings();
+  const [proOpen, setProOpen] = useState(false);
   const avg = Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length);
   return (
     <AppShell>
