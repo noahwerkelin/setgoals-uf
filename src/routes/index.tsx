@@ -177,7 +177,7 @@ function FamilyCard() {
     <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise" style={{ animationDelay: "270ms" }}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold">{t("home.family")}</h2>
-        <span className="text-[10px] font-medium uppercase tracking-widest text-sage-600">{t("home.this_week")}</span>
+        <span className="text-[10px] font-medium uppercase tracking-widest text-sage-600">{t("home.today")}</span>
       </div>
       <div className="space-y-4">
         {rows.map((r) => (
