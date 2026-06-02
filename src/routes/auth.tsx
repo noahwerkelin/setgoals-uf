@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, Check, Copy, User, Users, Shield, Baby } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
