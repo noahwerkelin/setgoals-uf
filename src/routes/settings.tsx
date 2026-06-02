@@ -38,6 +38,7 @@ export const Route = createFileRoute("/settings")({
 function Page() {
   const { t, lang, setLang } = useT();
   const { settings, update } = useSettings();
+  const navigate = useNavigate();
   const [stepsOpen, setStepsOpen] = useState(false);
   const [capOpen, setCapOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
