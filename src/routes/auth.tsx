@@ -405,7 +405,7 @@ function ProfileForm({ t, onDone }: { t: (k: string) => string; onDone: (name: s
   );
 }
 
-function ChildCodeForm({ t, onDone }: { t: (k: string) => string; onDone: (name?: string) => void }) {
+function ChildCodeForm({ t, onDone }: { t: (k: string, vars?: Record<string, string | number>) => string; onDone: (name?: string) => void }) {
   const { settings } = useSettings();
   const [code, setCode] = useState("");
   const submit = (e: React.FormEvent) => {
