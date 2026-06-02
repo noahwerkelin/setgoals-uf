@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ProUpgradeDialog } from "@/components/Pro";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
