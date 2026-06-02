@@ -156,7 +156,7 @@ function Page() {
             ]}
           />
           <Row label={t("settings.email")} meta="lukas@example.com" onClick={() => toast("lukas@example.com")} />
-          <Row label={t("settings.signout")} onClick={() => toast.success(t("settings.signout"))} />
+          <Row label={t("settings.signout")} onClick={() => { toast.success(t("settings.signout")); navigate({ to: "/auth" }); }} />
         </Group>
 
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
