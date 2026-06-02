@@ -159,7 +159,7 @@ function Quote() {
     >
       <p className="text-[10px] font-medium uppercase tracking-widest text-white/70">{t("home.quote_eyebrow")}</p>
       <p className="mt-2 text-pretty text-[17px] font-medium leading-snug text-white">
-        "Take care of your body. It's the only place you have to live."
+        "{t("home.quote.text")}"
       </p>
       <p className="mt-2 text-xs text-white/80">— Jim Rohn</p>
     </section>
