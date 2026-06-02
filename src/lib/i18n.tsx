@@ -482,6 +482,54 @@ const DICTS: Record<Lang, Dict> = {
     "hk.allow": "Tillåt åtkomst",
 
     "common.back": "Tillbaka",
+
+    "units.label": "Enheter",
+    "units.metric": "Metriskt (km)",
+    "units.imperial": "Imperial (mi)",
+
+    "home.bonus_eyebrow": "Pro-bonus",
+    "home.bonus_text": "+{n}m överförda från igår",
+
+    "lb.today_label": "Idag · {date}",
+    "lb.refresh": "Uppdateras dagligen kl. 00:00",
+
+    "pro.badge": "PRO",
+    "pro.title": "SetGoals PRO",
+    "pro.subtitle": "Lås upp hela upplevelsen",
+    "pro.price": "49 kr / månad",
+    "pro.upgrade": "Uppgradera till PRO",
+    "pro.active": "PRO aktivt",
+    "pro.manage": "Hantera prenumeration",
+    "pro.cancel": "Avsluta PRO",
+    "pro.feature.bonus": "Spara gårdagens oanvända skärmtid som bonus",
+    "pro.feature.avatars": "Exklusiva avatarer och kosmetika",
+    "pro.feature.parental": "Avancerade föräldrakontroller",
+    "pro.feature.challenges": "Anpassningsbara utmaningar",
+    "pro.feature.stats": "Djupare statistik och insikter",
+    "pro.feature.coach": "Personlig AI-coach",
+    "pro.locked": "PRO-funktion",
+    "pro.unlock": "Lås upp med PRO",
+    "pro.welcome": "Välkommen till PRO ✦",
+    "pro.cancelled": "PRO avslutat",
+
+    "coach.locked_title": "AI-coachen är en PRO-funktion",
+    "coach.locked_desc": "Få en personlig coach som anpassar mål och rutter efter dig.",
+
+    "parent.adv_title": "Avancerade kontroller",
+    "parent.adv_sub": "Finjustera gränser, scheman och intjäningsmultiplikatorer.",
+    "parent.adv1": "Dagstak per app",
+    "parent.adv2": "Schema för skoltid",
+    "parent.adv3": "Helgmultiplikator",
+
+    "challenges.pro_lock": "Anpassade utmaningar ingår i PRO.",
+
+    "stats.pro_title": "Djupare insikter",
+    "stats.pro_sub": "Sömn, pulszoner och intensitetstrender.",
+    "stats.pro1": "Aktiva pulszoner",
+    "stats.pro2": "Sömn & återhämtning",
+    "stats.pro3": "Veckans intensitet",
+
+    "rewards.locked_pro": "PRO-avatar",
   },
 };
 
