@@ -1,17 +1,18 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Map, Trophy, Sparkles, User } from "lucide-react";
-
-const items = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/map", label: "Map", icon: Map },
-  { to: "/challenges", label: "Goals", icon: Trophy },
-  { to: "/coach", label: "Coach", icon: Sparkles },
-  { to: "/profile", label: "Profile", icon: User },
-] as const;
+import { useT } from "@/lib/i18n";
 
 export function BottomNav() {
   const { location } = useRouterState();
+  const { t } = useT();
   const path = location.pathname;
+  const items = [
+    { to: "/", label: t("nav.home"), icon: Home },
+    { to: "/map", label: t("nav.map"), icon: Map },
+    { to: "/challenges", label: t("nav.goals"), icon: Trophy },
+    { to: "/coach", label: t("nav.coach"), icon: Sparkles },
+    { to: "/profile", label: t("nav.profile"), icon: User },
+  ] as const;
   return (
     <nav
       className="fixed bottom-5 left-1/2 z-50 flex w-[calc(100%-32px)] max-w-[360px] -translate-x-1/2 items-center justify-around rounded-3xl bg-card/85 p-1.5 ring-1 ring-black/5 backdrop-blur-xl"
