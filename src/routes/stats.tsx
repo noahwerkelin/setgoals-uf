@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Lock, Sparkles } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
+import { ProUpgradeDialog } from "@/components/Pro";
 
 export const Route = createFileRoute("/stats")({
   head: () => ({
