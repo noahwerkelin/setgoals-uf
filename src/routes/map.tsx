@@ -23,11 +23,11 @@ export const Route = createFileRoute("/map")({
 const ICONS = { Hiking: Mountain, Running: Navigation, Cycling: Bike, Swim: Waves, Family: Trees };
 
 const BASE_ROUTES = [
-  { id: "1", name: "Änggårdsbergen Loop", dist: "2.4 km", diff: "Moderate", kind: "Hiking", offset: [0.012, -0.018] },
-  { id: "2", name: "Riverside Run", dist: "5.1 km", diff: "Easy", kind: "Running", offset: [-0.008, 0.022] },
-  { id: "3", name: "Forest Cycle", dist: "12.8 km", diff: "Hard", kind: "Cycling", offset: [0.025, 0.03] },
-  { id: "4", name: "Lake Swim Spot", dist: "0.9 km", diff: "Easy", kind: "Swim", offset: [-0.018, -0.012] },
-  { id: "5", name: "Nature Reserve", dist: "3.2 km", diff: "Easy", kind: "Family", offset: [0.018, 0.008] },
+  { id: "1", dist: "2.4 km", diffKey: "Moderate", kind: "Hiking", offset: [0.012, -0.018] },
+  { id: "2", dist: "5.1 km", diffKey: "Easy", kind: "Running", offset: [-0.008, 0.022] },
+  { id: "3", dist: "12.8 km", diffKey: "Hard", kind: "Cycling", offset: [0.025, 0.03] },
+  { id: "4", dist: "0.9 km", diffKey: "Easy", kind: "Swim", offset: [-0.018, -0.012] },
+  { id: "5", dist: "3.2 km", diffKey: "Easy", kind: "Family", offset: [0.018, 0.008] },
 ];
 
 const DEFAULT_CENTER: [number, number] = [57.7089, 11.9746]; // Gothenburg
@@ -67,14 +67,14 @@ function MapPage() {
     () =>
       BASE_ROUTES.filter((r) => filter === "All" || r.kind === filter).map((r) => ({
         id: r.id,
-        name: r.name,
+        name: t(`map.route.${r.id}`),
         kind: r.kind,
         dist: r.dist,
-        diff: r.diff,
+        diff: t(`map.diff.${r.diffKey}`),
         lat: center[0] + r.offset[0],
         lng: center[1] + r.offset[1],
       })),
-    [center, filter],
+    [center, filter, t],
   );
 
   const filters = ["All", "Hiking", "Running", "Cycling", "Swim", "Family"];
@@ -100,7 +100,8 @@ function MapPage() {
             <ActivityMap
               center={center}
               points={points}
-              onSelect={(p) => toast(p.name, { description: `${p.kind} · ${p.dist} · ${p.diff}` })}
+              youHereLabel={t("map.you_here")}
+              onSelect={(p) => toast(p.name, { description: `${t(`map.kind.${p.kind}`)} · ${p.dist} · ${p.diff}` })}
             />
           </Suspense>
           <div className="pointer-events-none absolute bottom-4 left-4 rounded-2xl bg-card/90 px-3 py-2 ring-1 ring-black/5 backdrop-blur">
@@ -119,7 +120,7 @@ function MapPage() {
                 filter === c ? "bg-sage-600 text-primary-foreground" : "bg-card text-sage-700"
               }`}
             >
-              {c}
+              {t(`map.kind.${c}`)}
             </button>
           ))}
         </div>
@@ -139,7 +140,7 @@ function MapPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{r.name}</p>
                   <p className="text-xs text-sage-600">
-                    {r.kind} · {r.dist} · {r.diff}
+                    {t(`map.kind.${r.kind}`)} · {r.dist} · {r.diff}
                   </p>
                 </div>
                 <button
