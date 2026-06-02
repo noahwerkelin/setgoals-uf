@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, Check, Smartphone, Activity, Sparkles } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
@@ -38,6 +38,7 @@ export const Route = createFileRoute("/settings")({
 function Page() {
   const { t, lang, setLang } = useT();
   const { settings, update } = useSettings();
+  const navigate = useNavigate();
   const [stepsOpen, setStepsOpen] = useState(false);
   const [capOpen, setCapOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
@@ -155,7 +156,7 @@ function Page() {
             ]}
           />
           <Row label={t("settings.email")} meta="lukas@example.com" onClick={() => toast("lukas@example.com")} />
-          <Row label={t("settings.signout")} onClick={() => toast.success(t("settings.signout"))} />
+          <Row label={t("settings.signout")} onClick={() => { toast.success(t("settings.signout")); navigate({ to: "/auth" }); }} />
         </Group>
 
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
