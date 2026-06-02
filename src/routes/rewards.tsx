@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Gift, Sparkles, Ticket } from "lucide-react";
+import { useState } from "react";
+import { Gift, Lock, Sparkles, Ticket } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
+import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rewards")({
