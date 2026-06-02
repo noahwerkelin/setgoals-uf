@@ -315,6 +315,20 @@ const DICTS: Record<Lang, Dict> = {
     "stats.pro3": "Weekly intensity trend",
 
     "rewards.locked_pro": "PRO avatar",
+
+    "parent.child.code": "Login code",
+    "parent.child.edit": "Edit profile",
+    "parent.child.delete": "Remove child",
+    "parent.child.new": "New child profile",
+    "parent.child.daily_goal": "Daily step goal",
+    "parent.child.avatar": "Profile picture",
+    "parent.child.save": "Save profile",
+    "parent.child.created": "Child profile created",
+    "parent.child.updated": "Profile updated",
+    "parent.child.removed": "Child removed",
+    "parent.child.copy_code": "Copy code",
+    "parent.child.empty": "No children yet. Add one to get started.",
+    "parent.child.code_help": "Your child uses this code to sign in.",
   },
   sv: {
     "nav.home": "Hem",
