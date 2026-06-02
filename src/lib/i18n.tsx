@@ -640,6 +640,20 @@ const DICTS: Record<Lang, Dict> = {
     "stats.pro3": "Veckans intensitet",
 
     "rewards.locked_pro": "PRO-avatar",
+
+    "parent.child.code": "Inloggningskod",
+    "parent.child.edit": "Redigera profil",
+    "parent.child.delete": "Ta bort barn",
+    "parent.child.new": "Ny barnprofil",
+    "parent.child.daily_goal": "Dagligt stegmål",
+    "parent.child.avatar": "Profilbild",
+    "parent.child.save": "Spara profil",
+    "parent.child.created": "Barnprofil skapad",
+    "parent.child.updated": "Profil uppdaterad",
+    "parent.child.removed": "Barn borttaget",
+    "parent.child.copy_code": "Kopiera kod",
+    "parent.child.empty": "Inga barn ännu. Lägg till ett för att börja.",
+    "parent.child.code_help": "Ditt barn loggar in med denna kod.",
   },
 };
 
