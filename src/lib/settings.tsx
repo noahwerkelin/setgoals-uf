@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+export type Units = "metric" | "imperial";
+
 export type SettingsState = {
   stepsPer30: number;
   dailyCapHours: number;
@@ -8,6 +10,10 @@ export type SettingsState = {
   pushOn: boolean;
   anonymousLeaderboard: boolean;
   shareLocation: "off" | "while_using" | "always";
+  units: Units;
+  isPro: boolean;
+  // Pro: minutes saved from yesterday usable today (cap at 60)
+  bonusMinFromYesterday: number;
 };
 
 const DEFAULTS: SettingsState = {
@@ -18,6 +24,9 @@ const DEFAULTS: SettingsState = {
   pushOn: true,
   anonymousLeaderboard: false,
   shareLocation: "while_using",
+  units: "metric",
+  isPro: false,
+  bonusMinFromYesterday: 45,
 };
 
 type Ctx = {
@@ -54,4 +63,15 @@ export function useSettings() {
   const ctx = useContext(SettingsCtx);
   if (!ctx) throw new Error("useSettings must be used inside SettingsProvider");
   return ctx;
+}
+
+// Unit helpers
+export function kmToDisplay(km: number, units: Units): { value: number; unit: "km" | "mi" } {
+  if (units === "imperial") return { value: km * 0.621371, unit: "mi" };
+  return { value: km, unit: "km" };
+}
+
+export function formatDistance(km: number, units: Units, digits = 1): string {
+  const { value, unit } = kmToDisplay(km, units);
+  return `${value.toFixed(digits)} ${unit}`;
 }
