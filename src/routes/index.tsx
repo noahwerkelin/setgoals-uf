@@ -28,12 +28,15 @@ function formatMin(min: number) {
 
 function Home() {
   const { t, lang } = useT();
+  const { settings } = useSettings();
   const ringProgress = Math.min(1, STEPS / GOAL);
   const date = new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     weekday: "long",
     month: "short",
     day: "numeric",
   });
+  const distance = formatDistance(5.2, settings.units);
+  const [distValue, distUnit] = distance.split(" ");
 
   return (
     <AppShell>
