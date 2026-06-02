@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Circle, Flame } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { useT } from "@/lib/i18n";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/challenges")({
   head: () => ({
@@ -13,50 +15,52 @@ export const Route = createFileRoute("/challenges")({
 });
 
 const TODAY = [
-  { title: "Walk 5,000 steps", progress: 0.88, done: false },
-  { title: "Visit a new trail", progress: 0, done: false },
-  { title: "Complete a family walk", progress: 1, done: true },
+  { key: "t1", progress: 0.88, done: false },
+  { key: "t2", progress: 0, done: false },
+  { key: "t3", progress: 1, done: true },
 ];
 
 const WEEKLY = [
-  { title: "Reach 40,000 steps this week", progress: 0.6 },
-  { title: "3 outdoor sessions", progress: 0.66 },
+  { key: "w1", progress: 0.6 },
+  { key: "w2", progress: 0.66 },
 ];
 
 function Page() {
+  const { t } = useT();
   return (
     <AppShell>
-      <PageHeader eyebrow="Today's missions" title="Challenges" />
+      <PageHeader eyebrow={t("challenges.eyebrow")} title={t("challenges.title")} />
       <div className="px-6 space-y-6">
         <section className="rounded-3xl bg-sage-600 p-6 text-primary-foreground ring-1 ring-sage-700/40 animate-rise">
           <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-widest text-sage-100/80">
-            <Flame className="size-3.5" /> Streak
+            <Flame className="size-3.5" /> {t("challenges.streak")}
           </div>
-          <p className="mt-1 text-3xl font-semibold tabular-nums">7 days</p>
-          <p className="text-sm text-sage-100/80">Keep going to unlock the Weekend Explorer badge.</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums">{t("challenges.streak_days", { n: 7 })}</p>
+          <p className="text-sm text-sage-100/80">{t("challenges.streak_sub")}</p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">Today</h2>
+          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("challenges.today")}</h2>
           {TODAY.map((c, i) => (
-            <ChallengeRow key={c.title} {...c} delay={i * 50} />
+            <ChallengeRow key={c.key} title={t(`challenges.${c.key}`)} progress={c.progress} done={c.done} delay={i * 50} />
           ))}
         </section>
 
         <section className="space-y-3">
-          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">This week</h2>
+          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("challenges.week")}</h2>
           {WEEKLY.map((c, i) => (
-            <ChallengeRow key={c.title} {...c} done={false} delay={150 + i * 50} />
+            <ChallengeRow key={c.key} title={t(`challenges.${c.key}`)} progress={c.progress} done={false} delay={150 + i * 50} />
           ))}
         </section>
 
         <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
-          <h3 className="text-sm font-semibold">Customize your earning</h3>
-          <p className="mt-1 text-xs text-sage-600">
-            Default: 1,000 steps = 30 min of screen time. Tap to adjust steps required, minutes earned, and daily caps.
-          </p>
-          <button className="mt-3 rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700">
-            Edit earning rules
+          <h3 className="text-sm font-semibold">{t("challenges.custom")}</h3>
+          <p className="mt-1 text-xs text-sage-600">{t("challenges.custom_desc")}</p>
+          <button
+            onClick={() => toast(t("challenges.edit_rules"))}
+            className="mt-3 rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
+          >
+            {t("challenges.edit_rules")}
           </button>
         </section>
       </div>
@@ -65,16 +69,8 @@ function Page() {
 }
 
 function ChallengeRow({
-  title,
-  progress,
-  done,
-  delay = 0,
-}: {
-  title: string;
-  progress: number;
-  done?: boolean;
-  delay?: number;
-}) {
+  title, progress, done, delay = 0,
+}: { title: string; progress: number; done?: boolean; delay?: number }) {
   return (
     <article
       className="flex items-center gap-4 rounded-3xl bg-card p-4 ring-1 ring-black/5 animate-rise"

@@ -84,9 +84,9 @@ function Home() {
         <section className="space-y-3 animate-rise" style={{ animationDelay: "240ms" }}>
           <SectionTitle>{t("home.achievements")}</SectionTitle>
           <div className="grid grid-cols-3 gap-3">
-            <Badge icon={<Trophy className="size-5" />} label="7-day streak" />
-            <Badge icon={<Footprints className="size-5" />} label="First 5K" />
-            <Badge icon={<MapPin className="size-5" />} label="Explorer" />
+            <Badge icon={<Trophy className="size-5" />} label={t("home.badge.streak")} />
+            <Badge icon={<Footprints className="size-5" />} label={t("home.badge.first5k")} />
+            <Badge icon={<MapPin className="size-5" />} label={t("home.badge.explorer")} />
           </div>
         </section>
 
@@ -159,7 +159,7 @@ function Quote() {
     >
       <p className="text-[10px] font-medium uppercase tracking-widest text-white/70">{t("home.quote_eyebrow")}</p>
       <p className="mt-2 text-pretty text-[17px] font-medium leading-snug text-white">
-        "Take care of your body. It's the only place you have to live."
+        "{t("home.quote.text")}"
       </p>
       <p className="mt-2 text-xs text-white/80">— Jim Rohn</p>
     </section>
@@ -177,7 +177,7 @@ function FamilyCard() {
     <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise" style={{ animationDelay: "270ms" }}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold">{t("home.family")}</h2>
-        <span className="text-[10px] font-medium uppercase tracking-widest text-sage-600">{t("home.this_week")}</span>
+        <span className="text-[10px] font-medium uppercase tracking-widest text-sage-600">{t("home.today")}</span>
       </div>
       <div className="space-y-4">
         {rows.map((r) => (

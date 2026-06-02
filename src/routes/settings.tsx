@@ -171,9 +171,9 @@ function Page() {
             </DialogDescription>
           </DialogHeader>
           <ul className="space-y-2 text-sm text-sage-700">
-            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> Steps</li>
-            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> Distance</li>
-            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> Active energy</li>
+            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> {t("settings.scope.steps")}</li>
+            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> {t("settings.scope.distance")}</li>
+            <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> {t("settings.scope.energy")}</li>
           </ul>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setConnectKind(null)}>{t("settings.cancel")}</Button>

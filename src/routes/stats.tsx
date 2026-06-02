@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/stats")({
   head: () => ({
@@ -13,21 +14,22 @@ export const Route = createFileRoute("/stats")({
 
 const WEEK = [5200, 8100, 6400, 9200, 7240, 11200, 4300];
 const MAX = Math.max(...WEEK);
-const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
+const DAY_KEYS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 function Page() {
+  const { t } = useT();
   const avg = Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length);
   return (
     <AppShell>
-      <PageHeader eyebrow="Last 7 days" title="Statistics" />
+      <PageHeader eyebrow={t("stats.eyebrow")} title={t("stats.title")} />
       <div className="px-6 space-y-5">
         <section className="rounded-3xl bg-card p-6 ring-1 ring-black/5 animate-rise">
           <div className="flex items-baseline justify-between">
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-widest text-sage-600">Daily average</p>
+              <p className="text-[10px] font-medium uppercase tracking-widest text-sage-600">{t("stats.avg")}</p>
               <p className="text-3xl font-semibold tabular-nums">{avg.toLocaleString()}</p>
             </div>
-            <span className="rounded-full bg-sage-100 px-3 py-1 text-xs font-medium text-sage-700">+12% vs last week</span>
+            <span className="rounded-full bg-sage-100 px-3 py-1 text-xs font-medium text-sage-700">{t("stats.vs_last")}</span>
           </div>
           <div className="mt-6 grid grid-cols-7 items-end gap-2 h-40">
             {WEEK.map((v, i) => (
@@ -38,21 +40,21 @@ function Page() {
                     style={{ height: `${(v / MAX) * 100}%`, opacity: i === 4 ? 1 : 0.55 }}
                   />
                 </div>
-                <span className="text-[10px] font-medium text-sage-600">{DAYS[i]}</span>
+                <span className="text-[10px] font-medium text-sage-600">{t(`stats.day.${DAY_KEYS[i]}`)}</span>
               </div>
             ))}
           </div>
         </section>
 
         <section className="grid grid-cols-2 gap-4">
-          <Card label="Screen time earned" value="14h 30m" sub="this week" />
-          <Card label="Goal completion" value="86%" sub="last 30 days" />
-          <Card label="Active days" value="6 / 7" sub="this week" />
-          <Card label="Best day" value="11,200" sub="Saturday" />
+          <Card label={t("stats.screen")} value="14h 30m" sub={t("stats.screen_sub")} />
+          <Card label={t("stats.goal")} value="86%" sub={t("stats.goal_sub")} />
+          <Card label={t("stats.active")} value="6 / 7" sub={t("stats.active_sub")} />
+          <Card label={t("stats.best")} value="11,200" sub={t("stats.best_sub")} />
         </section>
 
         <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
-          <h3 className="text-sm font-semibold">Monthly trend</h3>
+          <h3 className="text-sm font-semibold">{t("stats.trend")}</h3>
           <svg viewBox="0 0 300 100" className="mt-3 w-full">
             <path
               d="M0,80 C40,60 70,70 100,55 S180,30 220,40 S290,20 300,25"
@@ -66,7 +68,7 @@ function Page() {
               fill="oklch(0.58 0.038 142 / 0.12)"
             />
           </svg>
-          <p className="mt-2 text-xs text-sage-600">Steady improvement across the last 4 weeks.</p>
+          <p className="mt-2 text-xs text-sage-600">{t("stats.trend_sub")}</p>
         </section>
       </div>
     </AppShell>
