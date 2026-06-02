@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronRight, Check, Smartphone, Activity } from "lucide-react";
+import { ChevronRight, Check, Smartphone, Activity, Sparkles } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT, type Lang } from "@/lib/i18n";
@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ProUpgradeDialog } from "@/components/Pro";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -40,11 +41,35 @@ function Page() {
   const [stepsOpen, setStepsOpen] = useState(false);
   const [capOpen, setCapOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
+  const [proOpen, setProOpen] = useState(false);
 
   return (
     <AppShell>
       <PageHeader title={t("settings.title")} />
       <div className="px-6 space-y-6">
+        {/* PRO */}
+        <button
+          onClick={() => setProOpen(true)}
+          className={`w-full text-left rounded-3xl p-5 ring-1 transition-colors ${
+            settings.isPro
+              ? "bg-sage-600 text-primary-foreground ring-sage-700/40"
+              : "bg-card ring-black/5 hover:bg-sage-50/60"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span className={`grid size-10 place-items-center rounded-2xl ${settings.isPro ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
+              <Sparkles className="size-5" />
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold">{t("pro.title")}</p>
+              <p className={`text-xs ${settings.isPro ? "text-white/80" : "text-sage-600"}`}>
+                {settings.isPro ? t("pro.active") : t("pro.subtitle")}
+              </p>
+            </div>
+            <ChevronRight className="size-4" />
+          </div>
+        </button>
+
         {/* Earning rules */}
         <Group title={t("settings.earning")}>
           <Row
@@ -120,12 +145,24 @@ function Page() {
               { value: "sv", label: "Svenska" },
             ]}
           />
+          <SelectRow
+            label={t("units.label")}
+            value={settings.units}
+            onChange={(v) => update("units", v as SettingsState["units"])}
+            options={[
+              { value: "metric", label: t("units.metric") },
+              { value: "imperial", label: t("units.imperial") },
+            ]}
+          />
           <Row label={t("settings.email")} meta="lukas@example.com" onClick={() => toast("lukas@example.com")} />
           <Row label={t("settings.signout")} onClick={() => toast.success(t("settings.signout"))} />
         </Group>
 
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
       </div>
+
+      <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
+
 
       {/* Steps per 30 dialog */}
       <SliderDialog

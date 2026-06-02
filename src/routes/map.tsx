@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Navigation, MapPin, Mountain, Bike, Waves, Trees, LocateFixed } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings } from "@/lib/settings";
+import { useSettings, kmToDisplay } from "@/lib/settings";
 import { toast } from "sonner";
 
 const ActivityMap = lazy(() =>
@@ -23,11 +23,11 @@ export const Route = createFileRoute("/map")({
 const ICONS = { Hiking: Mountain, Running: Navigation, Cycling: Bike, Swim: Waves, Family: Trees };
 
 const BASE_ROUTES = [
-  { id: "1", dist: "2.4 km", diffKey: "Moderate", kind: "Hiking", offset: [0.012, -0.018] },
-  { id: "2", dist: "5.1 km", diffKey: "Easy", kind: "Running", offset: [-0.008, 0.022] },
-  { id: "3", dist: "12.8 km", diffKey: "Hard", kind: "Cycling", offset: [0.025, 0.03] },
-  { id: "4", dist: "0.9 km", diffKey: "Easy", kind: "Swim", offset: [-0.018, -0.012] },
-  { id: "5", dist: "3.2 km", diffKey: "Easy", kind: "Family", offset: [0.018, 0.008] },
+  { id: "1", km: 2.4, diffKey: "Moderate", kind: "Hiking", offset: [0.012, -0.018] },
+  { id: "2", km: 5.1, diffKey: "Easy", kind: "Running", offset: [-0.008, 0.022] },
+  { id: "3", km: 12.8, diffKey: "Hard", kind: "Cycling", offset: [0.025, 0.03] },
+  { id: "4", km: 0.9, diffKey: "Easy", kind: "Swim", offset: [-0.018, -0.012] },
+  { id: "5", km: 3.2, diffKey: "Easy", kind: "Family", offset: [0.018, 0.008] },
 ];
 
 const DEFAULT_CENTER: [number, number] = [57.7089, 11.9746]; // Gothenburg
@@ -65,16 +65,19 @@ function MapPage() {
 
   const points = useMemo(
     () =>
-      BASE_ROUTES.filter((r) => filter === "All" || r.kind === filter).map((r) => ({
-        id: r.id,
-        name: t(`map.route.${r.id}`),
-        kind: r.kind,
-        dist: r.dist,
-        diff: t(`map.diff.${r.diffKey}`),
-        lat: center[0] + r.offset[0],
-        lng: center[1] + r.offset[1],
-      })),
-    [center, filter, t],
+      BASE_ROUTES.filter((r) => filter === "All" || r.kind === filter).map((r) => {
+        const d = kmToDisplay(r.km, settings.units);
+        return {
+          id: r.id,
+          name: t(`map.route.${r.id}`),
+          kind: r.kind,
+          dist: `${d.value.toFixed(1)} ${d.unit}`,
+          diff: t(`map.diff.${r.diffKey}`),
+          lat: center[0] + r.offset[0],
+          lng: center[1] + r.offset[1],
+        };
+      }),
+    [center, filter, t, settings.units],
   );
 
   const filters = ["All", "Hiking", "Running", "Cycling", "Swim", "Family"];

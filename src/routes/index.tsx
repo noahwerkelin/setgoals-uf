@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Flame, Footprints, MapPin, Trophy, Zap } from "lucide-react";
+import { ChevronRight, Flame, Footprints, MapPin, Sparkles, Trophy, Zap } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
+import { formatDistance, useSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,12 +28,15 @@ function formatMin(min: number) {
 
 function Home() {
   const { t, lang } = useT();
+  const { settings } = useSettings();
   const ringProgress = Math.min(1, STEPS / GOAL);
   const date = new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     weekday: "long",
     month: "short",
     day: "numeric",
   });
+  const distance = formatDistance(5.2, settings.units);
+  const [distValue, distUnit] = distance.split(" ");
 
   return (
     <AppShell>
@@ -76,10 +80,27 @@ function Home() {
 
         <section className="grid grid-cols-2 gap-4 animate-rise" style={{ animationDelay: "120ms" }}>
           <StatTile icon={<Flame className="size-4" />} label={t("home.energy")} value="342" unit="kcal" />
-          <StatTile icon={<Footprints className="size-4" />} label={t("home.distance")} value="5.2" unit="km" />
+          <StatTile icon={<Footprints className="size-4" />} label={t("home.distance")} value={distValue} unit={distUnit} />
         </section>
 
+        {settings.isPro && settings.bonusMinFromYesterday > 0 && (
+          <Link
+            to="/settings"
+            className="flex items-center gap-3 rounded-3xl bg-sage-100 p-4 ring-1 ring-sage-200 animate-rise"
+            style={{ animationDelay: "180ms" }}
+          >
+            <span className="grid size-10 place-items-center rounded-2xl bg-sage-600 text-primary-foreground">
+              <Sparkles className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-700">{t("home.bonus_eyebrow")}</p>
+              <p className="text-sm font-medium text-sage-900">{t("home.bonus_text", { n: settings.bonusMinFromYesterday })}</p>
+            </div>
+          </Link>
+        )}
+
         <Quote />
+
 
         <section className="space-y-3 animate-rise" style={{ animationDelay: "240ms" }}>
           <SectionTitle>{t("home.achievements")}</SectionTitle>
