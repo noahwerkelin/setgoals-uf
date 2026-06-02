@@ -30,6 +30,8 @@ const KIND_TO_ICON: Record<string, string> = {
   Cycling: "Cycling",
   Swim: "Swim",
   Family: "Family",
+  Gym: "Gym",
+  Nature: "Mountain",
 };
 
 function makeSageIcon(kind: string, opts?: { you?: boolean }) {
