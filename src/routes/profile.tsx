@@ -16,6 +16,10 @@ export const Route = createFileRoute("/profile")({
 
 function Page() {
   const { t } = useT();
+  const { settings } = useSettings();
+  const isChild = settings.role === "child";
+  const displayName = settings.displayName || "Lukas Andersson";
+  const initials = displayName.split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
   return (
     <AppShell>
       <PageHeader title={t("profile.title")} />
