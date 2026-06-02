@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Navigation, MapPin, Mountain, Bike, Waves, Trees, LocateFixed } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings } from "@/lib/settings";
+import { useSettings, kmToDisplay } from "@/lib/settings";
 import { toast } from "sonner";
 
 const ActivityMap = lazy(() =>
