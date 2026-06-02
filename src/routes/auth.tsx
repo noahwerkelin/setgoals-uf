@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy, User, Users, Shield, Baby } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/auth")({
 type Step =
   | "start"
   | "signin"
+  | "forgot"
+  | "reset"
   | "type"
   | "role"
   | "form-individual"
@@ -49,6 +52,7 @@ function genCode() {
 
 function Page() {
   const { t } = useT();
+  const { settings, update } = useSettings();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("start");
   const [history, setHistory] = useState<Step[]>([]);
@@ -99,7 +103,26 @@ function Page() {
               onGuest={enterApp}
             />
           )}
-          {step === "signin" && <SigninForm onDone={enterApp} t={t} />}
+          {step === "signin" && (
+            <SigninForm
+              onDone={() => { update("role", "individual"); enterApp(); }}
+              onForgot={() => goto("forgot")}
+              t={t}
+            />
+          )}
+          {step === "forgot" && (
+            <ForgotForm t={t} onDone={() => goto("reset")} />
+          )}
+          {step === "reset" && (
+            <ResetForm
+              t={t}
+              onDone={() => {
+                toast.success(t("auth.password_updated"));
+                setHistory([]);
+                setStep("signin");
+              }}
+            />
+          )}
           {step === "type" && (
             <ChoiceList
               items={[
@@ -139,13 +162,19 @@ function Page() {
           {step === "form-individual" && (
             <ProfileForm
               t={t}
-              onDone={() => enterApp()}
+              onDone={(name) => {
+                update("role", "individual");
+                update("displayName", name);
+                enterApp();
+              }}
             />
           )}
           {step === "form-parent" && (
             <ProfileForm
               t={t}
-              onDone={() => {
+              onDone={(name) => {
+                update("role", "parent");
+                update("displayName", name);
                 const code = genCode();
                 saveCode(code);
                 setFamilyCode(code);
@@ -156,7 +185,13 @@ function Page() {
           {step === "child-code" && (
             <ChildCodeForm
               t={t}
-              onDone={enterApp}
+              onDone={(name) => {
+                update("role", "child");
+                if (name) update("displayName", name);
+                // children can't have Pro
+                if (settings.isPro) update("isPro", false);
+                enterApp();
+              }}
             />
           )}
           {step === "family-code" && (
@@ -172,6 +207,8 @@ function titleFor(step: Step, t: (k: string) => string) {
   switch (step) {
     case "start": return t("auth.start_title");
     case "signin": return t("auth.welcome");
+    case "forgot": return t("auth.forgot_title");
+    case "reset": return t("auth.reset_title");
     case "type": return t("auth.choose_type");
     case "role": return t("auth.who_you");
     case "form-individual": return t("auth.individual");
@@ -184,6 +221,8 @@ function subFor(step: Step, t: (k: string) => string) {
   switch (step) {
     case "start": return t("auth.start_sub");
     case "signin": return t("auth.sub_signin");
+    case "forgot": return t("auth.forgot_sub");
+    case "reset": return t("auth.reset_sub");
     case "type": return t("auth.choose_type_sub");
     case "role": return t("auth.who_you_sub");
     case "form-individual":
@@ -233,7 +272,7 @@ function ChoiceList({ items }: { items: { icon: React.ReactNode; label: string; 
   );
 }
 
-function SigninForm({ onDone, t }: { onDone: () => void; t: (k: string) => string }) {
+function SigninForm({ onDone, onForgot, t }: { onDone: () => void; onForgot: () => void; t: (k: string) => string }) {
   return (
     <form
       className="space-y-3"
@@ -244,6 +283,11 @@ function SigninForm({ onDone, t }: { onDone: () => void; t: (k: string) => strin
     >
       <Field type="email" placeholder={t("auth.email")} required />
       <Field type="password" placeholder={t("auth.password")} required />
+      <div className="flex justify-end">
+        <button type="button" onClick={onForgot} className="text-xs font-medium text-sage-700 hover:underline">
+          {t("auth.forgot")}
+        </button>
+      </div>
       <button type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground">
         {t("auth.signin")}
       </button>
@@ -260,7 +304,58 @@ function SigninForm({ onDone, t }: { onDone: () => void; t: (k: string) => strin
   );
 }
 
-function ProfileForm({ t, onDone }: { t: (k: string) => string; onDone: () => void }) {
+function ForgotForm({ t, onDone }: { t: (k: string) => string; onDone: () => void }) {
+  const [email, setEmail] = useState("");
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!email) {
+          toast.error(t("auth.required"));
+          return;
+        }
+        toast.success(t("auth.reset_sent"));
+        onDone();
+      }}
+    >
+      <Field type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.email")} required />
+      <button type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground">
+        {t("auth.send_reset")}
+      </button>
+    </form>
+  );
+}
+
+function ResetForm({ t, onDone }: { t: (k: string) => string; onDone: () => void }) {
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (pw.length < 8) {
+          toast.error(t("auth.password_short"));
+          return;
+        }
+        if (pw !== pw2) {
+          toast.error(t("auth.password_mismatch"));
+          return;
+        }
+        onDone();
+      }}
+    >
+      <Field type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t("auth.new_password")} required />
+      <Field type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder={t("auth.confirm_password")} required />
+      <button type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground">
+        {t("auth.save")}
+      </button>
+    </form>
+  );
+}
+
+function ProfileForm({ t, onDone }: { t: (k: string) => string; onDone: (name: string) => void }) {
   const [tos, setTos] = useState(false);
   const [news, setNews] = useState(true);
   const [name, setName] = useState("");
@@ -268,9 +363,12 @@ function ProfileForm({ t, onDone }: { t: (k: string) => string; onDone: () => vo
   const [password, setPassword] = useState("");
   const [bday, setBday] = useState("");
 
+  const filled = !!(name && email && password && bday);
+  const canSubmit = filled && tos;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password || !bday) {
+    if (!filled) {
       toast.error(t("auth.required"));
       return;
     }
@@ -278,7 +376,7 @@ function ProfileForm({ t, onDone }: { t: (k: string) => string; onDone: () => vo
       toast.error(t("auth.must_accept"));
       return;
     }
-    onDone();
+    onDone(name);
   };
 
   return (
@@ -293,23 +391,35 @@ function ProfileForm({ t, onDone }: { t: (k: string) => string; onDone: () => vo
         <Field value={bday} onChange={(e) => setBday(e.target.value)} type="date" required />
       </label>
 
-      <CheckRow checked={tos} onChange={setTos} label={t("auth.tos")} />
+      <CheckRow checked={tos} onChange={setTos} label={t("auth.tos")} required />
       <CheckRow checked={news} onChange={setNews} label={t("auth.newsletter")} />
 
-      <button type="submit" className="mt-3 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground">
+      <button
+        type="submit"
+        disabled={!canSubmit}
+        className="mt-3 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+      >
         {t("auth.continue")}
       </button>
     </form>
   );
 }
 
-function ChildCodeForm({ t, onDone }: { t: (k: string) => string; onDone: () => void }) {
+function ChildCodeForm({ t, onDone }: { t: (k: string) => string; onDone: (name?: string) => void }) {
+  const { settings } = useSettings();
   const [code, setCode] = useState("");
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const codes = loadCodes();
     const clean = code.trim().toUpperCase();
-    // Accept any saved parent code, or for demo accept any 6-char alnum
+    // First look in parent's children list (preferred — assigns name)
+    const child = settings.children.find((c) => c.code.toUpperCase() === clean);
+    if (child) {
+      toast.success(t("auth.code_welcome", { name: child.name }));
+      onDone(child.name);
+      return;
+    }
+    // Fallback: any saved family code or demo 6-char code
+    const codes = loadCodes();
     const valid = codes.includes(clean) || /^[A-Z0-9]{6}$/.test(clean);
     if (!valid) {
       toast.error(t("auth.code_invalid"));
@@ -380,12 +490,14 @@ function Field(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
-function CheckRow({ checked, onChange, label }: { checked: boolean; onChange: (b: boolean) => void; label: string }) {
+function CheckRow({ checked, onChange, label, required }: { checked: boolean; onChange: (b: boolean) => void; label: string; required?: boolean }) {
   return (
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center gap-3 rounded-2xl bg-card px-4 py-3 text-left ring-1 ring-black/5"
+      className={`flex w-full items-center gap-3 rounded-2xl bg-card px-4 py-3 text-left ring-1 transition-colors ${
+        required && !checked ? "ring-sage-300" : "ring-black/5"
+      }`}
     >
       <span
         className={`grid h-5 w-5 place-items-center rounded-md ring-1 transition-colors ${
@@ -394,9 +506,10 @@ function CheckRow({ checked, onChange, label }: { checked: boolean; onChange: (b
       >
         {checked && <Check className="h-3.5 w-3.5" />}
       </span>
-      <span className="text-sm text-sage-900">{label}</span>
+      <span className="text-sm text-sage-900">
+        {label}
+        {required && <span className="ml-1 text-sage-600">*</span>}
+      </span>
     </button>
   );
 }
-
-
