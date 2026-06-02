@@ -32,7 +32,9 @@ const INITIAL_APPS: { name: string; state: AppState }[] = [
 
 function Page() {
   const { t } = useT();
+  const { settings } = useSettings();
   const [apps, setApps] = useState(INITIAL_APPS);
+  const [proOpen, setProOpen] = useState(false);
 
   const setState = (name: string, state: AppState) => {
     setApps((a) => a.map((x) => (x.name === name ? { ...x, state } : x)));
