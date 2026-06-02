@@ -26,10 +26,10 @@ function Page() {
       <div className="px-6 space-y-6">
         <section className="flex items-center gap-4 rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise">
           <span className="grid size-14 place-items-center rounded-full bg-sage-200 text-sm font-semibold uppercase tracking-widest text-sage-700">
-            LU
+            {initials}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-base font-semibold">Lukas Andersson</p>
+            <p className="text-base font-semibold">{displayName}</p>
             <p className="text-xs text-sage-600">{t("profile.meta")}</p>
           </div>
           <Link to="/settings" aria-label={t("profile.row.settings")} className="grid size-10 place-items-center rounded-full bg-sage-100 text-sage-700">
@@ -47,7 +47,9 @@ function Page() {
           <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
           <Row to="/rewards" icon={<Gift className="size-4" />} label={t("profile.row.rewards")} subtitle={t("profile.row.rewards_sub")} />
           <Row to="/leaderboards" icon={<Users className="size-4" />} label={t("profile.row.lb")} subtitle={t("profile.row.lb_sub")} />
-          <Row to="/parent" icon={<Shield className="size-4" />} label={t("profile.row.parent")} subtitle={t("profile.row.parent_sub")} />
+          {!isChild && (
+            <Row to="/parent" icon={<Shield className="size-4" />} label={t("profile.row.parent")} subtitle={t("profile.row.parent_sub")} />
+          )}
           <Row to="/settings" icon={<Settings className="size-4" />} label={t("profile.row.settings")} subtitle={t("profile.row.settings_sub")} />
         </nav>
       </div>
