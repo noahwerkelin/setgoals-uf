@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronRight, Settings, BarChart3, Gift, Users, Shield } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -13,9 +14,10 @@ export const Route = createFileRoute("/profile")({
 });
 
 function Page() {
+  const { t } = useT();
   return (
     <AppShell>
-      <PageHeader title="Profile" />
+      <PageHeader title={t("profile.title")} />
       <div className="px-6 space-y-6">
         <section className="flex items-center gap-4 rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise">
           <span className="grid size-14 place-items-center rounded-full bg-sage-200 text-sm font-semibold uppercase tracking-widest text-sage-700">
@@ -23,25 +25,25 @@ function Page() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-base font-semibold">Lukas Andersson</p>
-            <p className="text-xs text-sage-600">Age group · Teen · Joined Oct 2024</p>
+            <p className="text-xs text-sage-600">{t("profile.meta")}</p>
           </div>
-          <Link to="/settings" aria-label="Settings" className="grid size-10 place-items-center rounded-full bg-sage-100 text-sage-700">
+          <Link to="/settings" aria-label={t("profile.row.settings")} className="grid size-10 place-items-center rounded-full bg-sage-100 text-sage-700">
             <Settings className="size-4" />
           </Link>
         </section>
 
         <section className="grid grid-cols-3 gap-3 animate-rise" style={{ animationDelay: "60ms" }}>
-          <Mini label="Steps · 30d" value="184k" />
-          <Mini label="Earned" value="42h" />
-          <Mini label="Streak" value="7d" />
+          <Mini label={t("profile.mini.steps")} value="184k" />
+          <Mini label={t("profile.mini.earned")} value="42h" />
+          <Mini label={t("profile.mini.streak")} value="7d" />
         </section>
 
         <nav className="space-y-2 animate-rise" style={{ animationDelay: "120ms" }}>
-          <Row to="/stats" icon={<BarChart3 className="size-4" />} label="Statistics" subtitle="Trends, charts, and history" />
-          <Row to="/rewards" icon={<Gift className="size-4" />} label="Rewards" subtitle="Discounts, partner offers, avatars" />
-          <Row to="/leaderboards" icon={<Users className="size-4" />} label="Leaderboards" subtitle="Friends, local, national" />
-          <Row to="/parent" icon={<Shield className="size-4" />} label="Parent mode" subtitle="Approve apps and set limits" />
-          <Row to="/settings" icon={<Settings className="size-4" />} label="Settings" subtitle="Notifications, integrations, account" />
+          <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
+          <Row to="/rewards" icon={<Gift className="size-4" />} label={t("profile.row.rewards")} subtitle={t("profile.row.rewards_sub")} />
+          <Row to="/leaderboards" icon={<Users className="size-4" />} label={t("profile.row.lb")} subtitle={t("profile.row.lb_sub")} />
+          <Row to="/parent" icon={<Shield className="size-4" />} label={t("profile.row.parent")} subtitle={t("profile.row.parent_sub")} />
+          <Row to="/settings" icon={<Settings className="size-4" />} label={t("profile.row.settings")} subtitle={t("profile.row.settings_sub")} />
         </nav>
       </div>
     </AppShell>
@@ -57,22 +59,9 @@ function Mini({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Row({
-  to,
-  icon,
-  label,
-  subtitle,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  subtitle: string;
-}) {
+function Row({ to, icon, label, subtitle }: { to: string; icon: React.ReactNode; label: string; subtitle: string }) {
   return (
-    <Link
-      to={to}
-      className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-black/5"
-    >
+    <Link to={to} className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-black/5">
       <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">{icon}</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">{label}</p>

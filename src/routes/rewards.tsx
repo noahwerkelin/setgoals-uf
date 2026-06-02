@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Gift, Sparkles, Ticket } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { useT } from "@/lib/i18n";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/rewards")({
   head: () => ({
@@ -13,26 +15,27 @@ export const Route = createFileRoute("/rewards")({
 });
 
 const REWARDS = [
-  { icon: Ticket, name: "10% off Stadium", desc: "Sports gear voucher", cost: "20,000 steps" },
-  { icon: Gift, name: "Free coffee · Espresso House", desc: "Partner offer", cost: "8,000 steps" },
-  { icon: Sparkles, name: "Forest Explorer avatar", desc: "Unlockable cosmetic", cost: "7-day streak" },
+  { key: "r1", icon: Ticket },
+  { key: "r2", icon: Gift },
+  { key: "r3", icon: Sparkles },
 ];
 
 function Page() {
+  const { t } = useT();
   return (
     <AppShell>
-      <PageHeader eyebrow="Earn through activity" title="Rewards" />
+      <PageHeader eyebrow={t("rewards.eyebrow")} title={t("rewards.title")} />
       <div className="px-6 space-y-5">
         <section className="rounded-3xl bg-sage-600 p-6 text-primary-foreground ring-1 ring-sage-700/40 animate-rise">
-          <p className="text-[10px] font-medium uppercase tracking-widest text-sage-100/80">Balance</p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums">18,420 steps</p>
-          <p className="text-sm text-sage-100/80">Spend on vouchers, offers, and avatars.</p>
+          <p className="text-[10px] font-medium uppercase tracking-widest text-sage-100/80">{t("rewards.balance")}</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums">18,420 {t("parent.steps").toLowerCase()}</p>
+          <p className="text-sm text-sage-100/80">{t("rewards.balance_sub")}</p>
         </section>
 
         <div className="space-y-3">
           {REWARDS.map((r, i) => (
             <article
-              key={r.name}
+              key={r.key}
               className="flex items-center gap-4 rounded-3xl bg-card p-4 ring-1 ring-black/5 animate-rise"
               style={{ animationDelay: `${i * 60}ms` }}
             >
@@ -40,18 +43,21 @@ function Page() {
                 <r.icon className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{r.name}</p>
-                <p className="text-xs text-sage-600">{r.desc}</p>
+                <p className="truncate text-sm font-semibold">{t(`rewards.${r.key}`)}</p>
+                <p className="text-xs text-sage-600">{t(`rewards.${r.key}_sub`)}</p>
               </div>
-              <button className="rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-primary-foreground">
-                {r.cost}
+              <button
+                onClick={() => toast.success(t(`rewards.${r.key}`))}
+                className="rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-primary-foreground"
+              >
+                {t(`rewards.${r.key}_cost`)}
               </button>
             </article>
           ))}
         </div>
 
         <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
-          <h3 className="text-sm font-semibold">Your avatars</h3>
+          <h3 className="text-sm font-semibold">{t("rewards.your_avatars")}</h3>
           <div className="mt-3 grid grid-cols-4 gap-3">
             {["LU", "MA", "FX", "★", "?", "?", "?", "?"].map((a, i) => (
               <div
