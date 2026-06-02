@@ -131,7 +131,48 @@ function Page() {
             {t("parent.configure")}
           </button>
         </section>
+
+        <section className={`rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="grid size-8 place-items-center rounded-xl bg-sage-600 text-primary-foreground">
+                <Sparkles className="size-4" />
+              </span>
+              <div>
+                <h3 className="text-sm font-semibold">{t("parent.adv_title")}</h3>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">{t("pro.badge")}</p>
+              </div>
+            </div>
+            {!settings.isPro && (
+              <button
+                onClick={() => setProOpen(true)}
+                className="rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-primary-foreground"
+              >
+                {t("pro.upgrade")}
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-xs text-sage-600">{t("parent.adv_sub")}</p>
+          <ul className="mt-3 space-y-2">
+            {["parent.adv1", "parent.adv2", "parent.adv3"].map((k) => (
+              <li key={k} className="flex items-center justify-between rounded-xl bg-sage-50 px-3 py-2 text-xs">
+                <span className="font-medium text-sage-900">{t(k)}</span>
+                {settings.isPro ? (
+                  <button
+                    onClick={() => toast.success(t(k))}
+                    className="text-[11px] font-semibold text-sage-700"
+                  >
+                    {t("settings.connect")}
+                  </button>
+                ) : (
+                  <Lock className="size-3.5 text-sage-600" />
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
+      <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
     </AppShell>
   );
 }
