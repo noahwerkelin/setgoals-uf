@@ -219,6 +219,54 @@ const DICTS: Record<Lang, Dict> = {
     "hk.allow": "Allow access",
 
     "common.back": "Back",
+
+    "units.label": "Units",
+    "units.metric": "Metric (km)",
+    "units.imperial": "Imperial (mi)",
+
+    "home.bonus_eyebrow": "Pro bonus",
+    "home.bonus_text": "+{n}m carried from yesterday",
+
+    "lb.today_label": "Today · {date}",
+    "lb.refresh": "Refreshes daily at midnight",
+
+    "pro.badge": "PRO",
+    "pro.title": "SetGoals PRO",
+    "pro.subtitle": "Unlock the full experience",
+    "pro.price": "49 kr / month",
+    "pro.upgrade": "Upgrade to PRO",
+    "pro.active": "PRO active",
+    "pro.manage": "Manage subscription",
+    "pro.cancel": "Cancel PRO",
+    "pro.feature.bonus": "Carry yesterday's unused screen time as a bonus",
+    "pro.feature.avatars": "Exclusive avatars and cosmetics",
+    "pro.feature.parental": "Advanced parental controls",
+    "pro.feature.challenges": "Customizable challenges",
+    "pro.feature.stats": "Deeper statistics and insights",
+    "pro.feature.coach": "Personal AI Coach",
+    "pro.locked": "PRO feature",
+    "pro.unlock": "Unlock with PRO",
+    "pro.welcome": "Welcome to PRO ✦",
+    "pro.cancelled": "PRO cancelled",
+
+    "coach.locked_title": "AI Coach is a PRO feature",
+    "coach.locked_desc": "Get a personal wellness coach that tailors goals and routes to you.",
+
+    "parent.adv_title": "Advanced controls",
+    "parent.adv_sub": "Fine-tune limits, schedules and earning multipliers.",
+    "parent.adv1": "Per-app daily caps",
+    "parent.adv2": "School-hour blocking schedule",
+    "parent.adv3": "Weekend earning multiplier",
+
+    "challenges.pro_lock": "Custom challenges are part of PRO.",
+
+    "stats.pro_title": "Deeper insights",
+    "stats.pro_sub": "Sleep, heart-rate zones, and activity intensity trends.",
+    "stats.pro1": "Active heart-rate zones",
+    "stats.pro2": "Sleep & recovery score",
+    "stats.pro3": "Weekly intensity trend",
+
+    "rewards.locked_pro": "PRO avatar",
   },
   sv: {
     "nav.home": "Hem",
