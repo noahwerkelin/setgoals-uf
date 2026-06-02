@@ -43,7 +43,7 @@ function Home() {
       <header className="flex items-end justify-between px-6 pb-4 pt-10 animate-rise">
         <div className="space-y-1">
           <p className="text-sm font-medium text-sage-600">{date}</p>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("home.morning")}, Lukas</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("home.morning")}, {settings.displayName || "Lukas"}</h1>
         </div>
         <Link to="/profile" aria-label="Profile" className="size-10 rounded-full bg-sage-200 ring-1 ring-black/5 grid place-items-center text-[10px] font-semibold uppercase tracking-widest text-sage-700">
           LU
@@ -78,12 +78,14 @@ function Home() {
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-4 animate-rise" style={{ animationDelay: "120ms" }}>
-          <StatTile icon={<Flame className="size-4" />} label={t("home.energy")} value="342" unit="kcal" />
+        <section className={`grid gap-4 animate-rise ${settings.role === "child" ? "grid-cols-1" : "grid-cols-2"}`} style={{ animationDelay: "120ms" }}>
+          {settings.role !== "child" && (
+            <StatTile icon={<Flame className="size-4" />} label={t("home.energy")} value="342" unit="kcal" />
+          )}
           <StatTile icon={<Footprints className="size-4" />} label={t("home.distance")} value={distValue} unit={distUnit} />
         </section>
 
-        {settings.isPro && settings.bonusMinFromYesterday > 0 && (
+        {settings.role !== "child" && settings.isPro && settings.bonusMinFromYesterday > 0 && (
           <Link
             to="/settings"
             className="flex items-center gap-3 rounded-3xl bg-sage-100 p-4 ring-1 ring-sage-200 animate-rise"
