@@ -76,7 +76,41 @@ function Page() {
           </svg>
           <p className="mt-2 text-xs text-sage-600">{t("stats.trend_sub")}</p>
         </section>
+
+        <section className={`rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="grid size-8 place-items-center rounded-xl bg-sage-600 text-primary-foreground">
+                <Sparkles className="size-4" />
+              </span>
+              <h3 className="text-sm font-semibold">{t("stats.pro_title")}</h3>
+            </div>
+            {!settings.isPro && (
+              <button
+                onClick={() => setProOpen(true)}
+                className="rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-primary-foreground"
+              >
+                {t("pro.upgrade")}
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-xs text-sage-600">{t("stats.pro_sub")}</p>
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            {["stats.pro1", "stats.pro2", "stats.pro3"].map((k) => (
+              <div key={k} className="relative rounded-2xl bg-sage-50 p-3 ring-1 ring-black/5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-sage-600">{t(k)}</p>
+                <p className={`mt-1 text-base font-semibold tabular-nums ${settings.isPro ? "" : "blur-sm select-none"}`}>
+                  {k === "stats.pro1" ? "42m" : k === "stats.pro2" ? "78" : "+18%"}
+                </p>
+                {!settings.isPro && (
+                  <Lock className="absolute right-2 top-2 size-3.5 text-sage-600" />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
+      <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
     </AppShell>
   );
 }
