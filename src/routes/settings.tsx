@@ -40,11 +40,35 @@ function Page() {
   const [stepsOpen, setStepsOpen] = useState(false);
   const [capOpen, setCapOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
+  const [proOpen, setProOpen] = useState(false);
 
   return (
     <AppShell>
       <PageHeader title={t("settings.title")} />
       <div className="px-6 space-y-6">
+        {/* PRO */}
+        <button
+          onClick={() => setProOpen(true)}
+          className={`w-full text-left rounded-3xl p-5 ring-1 transition-colors ${
+            settings.isPro
+              ? "bg-sage-600 text-primary-foreground ring-sage-700/40"
+              : "bg-card ring-black/5 hover:bg-sage-50/60"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span className={`grid size-10 place-items-center rounded-2xl ${settings.isPro ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
+              <Sparkles className="size-5" />
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold">{t("pro.title")}</p>
+              <p className={`text-xs ${settings.isPro ? "text-white/80" : "text-sage-600"}`}>
+                {settings.isPro ? t("pro.active") : t("pro.subtitle")}
+              </p>
+            </div>
+            <ChevronRight className="size-4" />
+          </div>
+        </button>
+
         {/* Earning rules */}
         <Group title={t("settings.earning")}>
           <Row
