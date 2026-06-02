@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronRight, Check, Smartphone, Activity } from "lucide-react";
+import { ChevronRight, Check, Smartphone, Activity, Sparkles } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT, type Lang } from "@/lib/i18n";
