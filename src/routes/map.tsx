@@ -65,16 +65,19 @@ function MapPage() {
 
   const points = useMemo(
     () =>
-      BASE_ROUTES.filter((r) => filter === "All" || r.kind === filter).map((r) => ({
-        id: r.id,
-        name: t(`map.route.${r.id}`),
-        kind: r.kind,
-        dist: r.dist,
-        diff: t(`map.diff.${r.diffKey}`),
-        lat: center[0] + r.offset[0],
-        lng: center[1] + r.offset[1],
-      })),
-    [center, filter, t],
+      BASE_ROUTES.filter((r) => filter === "All" || r.kind === filter).map((r) => {
+        const d = kmToDisplay(r.km, settings.units);
+        return {
+          id: r.id,
+          name: t(`map.route.${r.id}`),
+          kind: r.kind,
+          dist: `${d.value.toFixed(1)} ${d.unit}`,
+          diff: t(`map.diff.${r.diffKey}`),
+          lat: center[0] + r.offset[0],
+          lng: center[1] + r.offset[1],
+        };
+      }),
+    [center, filter, t, settings.units],
   );
 
   const filters = ["All", "Hiking", "Running", "Cycling", "Swim", "Family"];
