@@ -27,7 +27,7 @@ const DICTS: Record<Lang, Dict> = {
     "home.badge.streak": "7-day streak",
     "home.badge.first5k": "First 5K",
     "home.badge.explorer": "Explorer",
-    "home.quote.text": "Take care of your body. It's the only place you have to live.",
+    
 
     "map.eyebrow": "Discover",
     "map.title": "Nearby activities",
@@ -353,7 +353,7 @@ const DICTS: Record<Lang, Dict> = {
     "home.badge.streak": "7-dagars svit",
     "home.badge.first5k": "Första 5K",
     "home.badge.explorer": "Utforskare",
-    "home.quote.text": "Ta hand om din kropp. Det är den enda plats du har att bo på.",
+    
 
     "map.eyebrow": "Upptäck",
     "map.title": "Aktiviteter nära dig",

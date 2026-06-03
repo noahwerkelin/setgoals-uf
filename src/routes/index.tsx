@@ -173,8 +173,87 @@ function Badge({ icon, label }: { icon: React.ReactNode; label: string }) {
   );
 }
 
+const QUOTES: Record<string, { text: string; author: string }[]> = {
+  en: [
+    { text: "Take care of your body. It's the only place you have to live.", author: "Jim Rohn" },
+    { text: "The only bad workout is the one that didn't happen.", author: "Unknown" },
+    { text: "Movement is a medicine for creating change in a person's physical, emotional, and mental states.", author: "Carol Welch" },
+    { text: "Don't limit your challenges. Challenge your limits.", author: "Jerry Dunn" },
+    { text: "A one-hour walk is worth more than an hour of screen time.", author: "SetGoals" },
+    { text: "The body achieves what the mind believes.", author: "Napoleon Hill" },
+    { text: "Every step you take is a step toward a healthier you.", author: "Unknown" },
+    { text: "Your health is an investment, not an expense.", author: "Unknown" },
+    { text: "Small daily improvements lead to stunning results.", author: "Unknown" },
+    { text: "Energy and persistence conquer all things.", author: "Benjamin Franklin" },
+    { text: "If it doesn't challenge you, it doesn't change you.", author: "Fred DeVito" },
+    { text: "The hardest part is starting. Once you're moving, momentum carries you.", author: "Unknown" },
+    { text: "Health is wealth.", author: "Virgil" },
+    { text: "You don't have to be extreme, just consistent.", author: "Unknown" },
+    { text: "A journey of a thousand miles begins with a single step.", author: "Lao Tzu" },
+    { text: "Fitness is not about being better than someone else. It's about being better than you used to be.", author: "Khloe Kardashian" },
+    { text: "The pain you feel today will be the strength you feel tomorrow.", author: "Arnold Schwarzenegger" },
+    { text: "Fall in love with taking care of yourself.", author: "Unknown" },
+    { text: "An active body fuels an active mind.", author: "Unknown" },
+    { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+    { text: "What seems impossible today will one day become your warm-up.", author: "Unknown" },
+    { text: "Your only limit is you.", author: "Unknown" },
+    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text: "Strive for progress, not perfection.", author: "Unknown" },
+    { text: "The best project you'll ever work on is you.", author: "Unknown" },
+  ],
+  sv: [
+    { text: "Ta hand om din kropp. Det är den enda plats du har att bo på.", author: "Jim Rohn" },
+    { text: "Det enda dåliga träningspasset är det som aldrig blev av.", author: "Okänd" },
+    { text: "Rörelse är ett läkemedel för att skapa förändring i en persons fysiska, emotionella och mentala tillstånd.", author: "Carol Welch" },
+    { text: "Begränsa inte dina utmaningar. Utmana dina gränser.", author: "Jerry Dunn" },
+    { text: "En timmes promenad är mer värd än en timmes skärmtid.", author: "SetGoals" },
+    { text: "Kroppen uppnår det som sinnet tror på.", author: "Napoleon Hill" },
+    { text: "Varje steg du tar är ett steg mot en hälsosammare du.", author: "Okänd" },
+    { text: "Din hälsa är en investering, inte en utgift.", author: "Okänd" },
+    { text: "Små dagliga förbättringar leder till fantastiska resultat.", author: "Okänd" },
+    { text: "Energi och uthållighet övervinner allt.", author: "Benjamin Franklin" },
+    { text: "Om det inte utmanar dig, förändrar det dig inte.", author: "Fred DeVito" },
+    { text: "Det svåraste är att börja. När du väl är igång bär momentum dig framåt.", author: "Okänd" },
+    { text: "Hälsa är rikedom.", author: "Virgil" },
+    { text: "Du behöver inte vara extrem, bara konsekvent.", author: "Okänd" },
+    { text: "En resa på tusen mil börjar med ett enda steg.", author: "Lao Tzu" },
+    { text: "Det handlar inte om att vara bättre än någon annan. Det handlar om att vara bättre än du brukade vara.", author: "Khloe Kardashian" },
+    { text: "Smärtan du känner idag blir styrkan du känner imorgon.", author: "Arnold Schwarzenegger" },
+    { text: "Förälska dig i att ta hand om dig själv.", author: "Okänd" },
+    { text: "En aktiv kropp bränsle till en aktiv hjärna.", author: "Okänd" },
+    { text: "Framgång är summan av små ansträngningar som upprepas dag ut och dag in.", author: "Robert Collier" },
+    { text: "Det som verkar omöjligt idag blir en dag din uppvärmning.", author: "Okänd" },
+    { text: "Din enda gräns är du själv.", author: "Okänd" },
+    { text: "Handling är grunden till all framgång.", author: "Pablo Picasso" },
+    { text: "Sträva efter framsteg, inte perfektion.", author: "Okänd" },
+    { text: "Det bästa projektet du någonsin arbetar med är du själv.", author: "Okänd" },
+  ],
+};
+
+type QuoteState = { lastDate: string; index: number };
+const QUOTE_KEY = "sg.quoteState";
+
+function getDailyQuote(lang: string) {
+  const pool = QUOTES[lang] ?? QUOTES.en;
+  const today = new Date().toISOString().split("T")[0];
+  let state: QuoteState = { lastDate: "", index: -1 };
+  try {
+    const raw = localStorage.getItem(QUOTE_KEY);
+    if (raw) state = JSON.parse(raw);
+  } catch {}
+
+  if (state.lastDate !== today) {
+    state.index = (state.index + 1) % pool.length;
+    state.lastDate = today;
+    try { localStorage.setItem(QUOTE_KEY, JSON.stringify(state)); } catch {}
+  }
+
+  return pool[state.index];
+}
+
 function Quote() {
-  const { t } = useT();
+  const { t, lang } = useT();
+  const quote = getDailyQuote(lang);
   return (
     <section
       className="rounded-3xl bg-sage-600 p-6 text-primary-foreground ring-1 ring-sage-700/40 animate-rise"
@@ -182,9 +261,9 @@ function Quote() {
     >
       <p className="text-[10px] font-medium uppercase tracking-widest text-white/70">{t("home.quote_eyebrow")}</p>
       <p className="mt-2 text-pretty text-[17px] font-medium leading-snug text-white">
-        "{t("home.quote.text")}"
+        "{quote.text}"
       </p>
-      <p className="mt-2 text-xs text-white/80">— Jim Rohn</p>
+      <p className="mt-2 text-xs text-white/80">— {quote.author}</p>
     </section>
   );
 }
