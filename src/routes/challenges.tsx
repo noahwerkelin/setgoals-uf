@@ -48,7 +48,8 @@ function buildLbRows(tab: LbTab, range: (typeof LB_RANGES)[number]) {
   }));
   rows.push({ n: "__you__", s: youSteps });
   rows.sort((a, b) => b.s - a.s);
-  return rows.slice(0, 6);
+  const youRank = rows.findIndex((x) => x.n === "__you__") + 1;
+  return { rows: rows.slice(0, 6), youRank };
 }
 
 export const Route = createFileRoute("/challenges")({
