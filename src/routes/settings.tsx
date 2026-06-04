@@ -242,6 +242,37 @@ function Page() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Report problem dialog */}
+      <Dialog open={reportOpen} onOpenChange={(o) => { if (!o) setReportText(""); setReportOpen(o); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("report.title")}</DialogTitle>
+            <DialogDescription>{t("report.desc")}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={reportText}
+            onChange={(e) => setReportText(e.target.value)}
+            placeholder={t("report.placeholder")}
+            className="min-h-[120px] mt-2"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setReportText(""); setReportOpen(false); }}>{t("settings.cancel")}</Button>
+            <Button
+              disabled={!reportText.trim()}
+              onClick={() => {
+                const body = encodeURIComponent(reportText);
+                window.open(`mailto:support@setgoals.app?subject=Problem%20report&body=${body}`, "_blank");
+                toast.success(t("report.thanks"));
+                setReportText("");
+                setReportOpen(false);
+              }}
+            >
+              {t("report.send")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
