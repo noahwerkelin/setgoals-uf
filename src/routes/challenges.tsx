@@ -157,3 +157,80 @@ function ChallengeRow({
     </article>
   );
 }
+
+function Leaderboard() {
+  const { t, lang } = useT();
+  const [tab, setTab] = useState<LbTab>("Friends");
+  const [range, setRange] = useState<(typeof LB_RANGES)[number]>("Daily");
+
+  const rows = useMemo(() => buildLbRows(tab, range), [tab, range]);
+
+  const dateLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+    [lang],
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-3 gap-1 rounded-2xl bg-card p-1 ring-1 ring-black/5">
+        {LB_TABS.map((tk) => (
+          <button
+            key={tk}
+            onClick={() => setTab(tk)}
+            className={`rounded-xl py-2 text-xs font-semibold transition-colors ${
+              tab === tk ? "bg-sage-600 text-primary-foreground" : "text-sage-700"
+            }`}
+          >
+            {t(`lb.tab.${tk}`)}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-2">
+          {LB_RANGES.map((r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-black/5 ${
+                range === r ? "bg-sage-600 text-primary-foreground" : "bg-card text-sage-700"
+              }`}
+            >
+              {t(`lb.range.${r}`)}
+            </button>
+          ))}
+        </div>
+        {range === "Daily" && (
+          <span className="text-[10px] font-medium uppercase tracking-wider text-sage-600">
+            {t("lb.today_label", { date: dateLabel })}
+          </span>
+        )}
+      </div>
+
+      <ol className="space-y-2">
+        {rows.map((row, i) => (
+          <li
+            key={row.n + i}
+            className={`flex items-center gap-4 rounded-2xl p-4 ring-1 animate-rise ${
+              row.n === "__you__" ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/5"
+            }`}
+            style={{ animationDelay: `${i * 40}ms` }}
+          >
+            <span className={`grid size-8 place-items-center rounded-full text-xs font-semibold tabular-nums ${row.n === "__you__" ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
+              {i + 1}
+            </span>
+            <span className="flex-1 text-sm font-medium">{row.n === "__you__" ? t("lb.you") : row.n}</span>
+            <span className="text-sm font-semibold tabular-nums">{row.s.toLocaleString()}</span>
+          </li>
+        ))}
+      </ol>
+
+      <p className="px-1 text-center text-xs text-sage-600">{t("lb.refresh")} · {t("lb.anon")}</p>
+    </div>
+  );
+}
