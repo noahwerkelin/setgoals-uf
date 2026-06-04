@@ -26,16 +26,43 @@ function formatMin(min: number) {
   return h ? `${h}h ${m}m` : `${m}m`;
 }
 
+const HOLIDAYS: Record<string, string> = {
+  "01-01": "home.greeting.newyear",
+  "02-14": "home.greeting.valentines",
+  "10-31": "home.greeting.halloween",
+  "12-24": "home.greeting.christmas",
+  "12-25": "home.greeting.christmas",
+  "12-26": "home.greeting.christmas",
+  "12-31": "home.greeting.nye",
+};
+
+function getLocalParts(tz: string) {
+  // Timezone-aware extraction of hour + MM-DD in the user's locale timezone
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour: "2-digit",
+    hour12: false,
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  const hour = parseInt(get("hour"), 10);
+  return { hour: isNaN(hour) ? new Date().getHours() : hour % 24, md: `${get("month")}-${get("day")}` };
+}
+
 function Home() {
   const { t, lang } = useT();
   const { settings } = useSettings();
   const now = new Date();
-  const hour = now.getHours();
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { hour, md } = getLocalParts(tz);
   let greetingKey = "home.greeting.morning";
   if (hour >= 12 && hour < 17) greetingKey = "home.greeting.afternoon";
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
+  if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
   const ringProgress = Math.min(1, STEPS / GOAL);
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
+    timeZone: tz,
     weekday: "long",
     month: "short",
     day: "numeric",
