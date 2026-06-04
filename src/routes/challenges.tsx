@@ -126,22 +126,10 @@ function Page() {
           </button>
         </section>
 
-        <Link
-          to="/leaderboards"
-          className="flex items-center justify-between rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise"
-          style={{ animationDelay: "300ms" }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">
-              <Users className="size-4" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold">{t("profile.row.lb")}</p>
-              <p className="text-xs text-sage-600">{t("profile.row.lb_sub")}</p>
-            </div>
-          </div>
-          <ChevronRight className="size-4 text-sage-600" />
-        </Link>
+        <section className="space-y-3">
+          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("lb.title")}</h2>
+          <Leaderboard />
+        </section>
       </div>
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
     </AppShell>
