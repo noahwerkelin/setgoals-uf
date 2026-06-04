@@ -45,6 +45,9 @@ function Page() {
   const [capOpen, setCapOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
   const [proOpen, setProOpen] = useState(false);
+  const [nicknameOpen, setNicknameOpen] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   const isChild = settings.role === "child";
   const [reportOpen, setReportOpen] = useState(false);
