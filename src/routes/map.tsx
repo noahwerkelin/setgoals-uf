@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import * as React from "react";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -15,12 +16,93 @@ import {
   Footprints,
   RefreshCw,
   Star,
+  ChevronDown,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, kmToDisplay } from "@/lib/settings";
 import { toast } from "sonner";
 import { findNearbyActivities, type Activity, type ActivityKind } from "@/lib/activities.functions";
+
+// Inline SVG paths (mirror src/components/ActivityMap.tsx ICON_PATHS) so list
+// icons visually match the markers on the map.
+const PIN_ICON_PATHS: Record<string, string> = {
+  Mountain:
+    "M8 3 L12 11 L17 6 L21 20 L3 20 Z",
+};
+const KIND_TO_PIN: Record<ActivityKind | "All", string> = {
+  All: "Mountain",
+  Hiking: "Mountain",
+  Running: "Running",
+  Cycling: "Cycling",
+  Swim: "Swim",
+  Family: "Family",
+  Gym: "Gym",
+  Nature: "Mountain",
+};
+
+function SagePin({ kind, size = 44 }: { kind: ActivityKind; size?: number }) {
+  const iconKey = KIND_TO_PIN[kind] ?? "Mountain";
+  const inner: Record<string, React.ReactElement> = {
+    Mountain: (
+      <path d="m8 3 4 8 5-5 4 14H3z" fill="none" stroke="white" strokeWidth={2} strokeLinejoin="round" />
+    ),
+    Running: (
+      <>
+        <circle cx={13} cy={4} r={2} fill="white" />
+        <path d="m4 22 5-7 4 2 3-4 4 5" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    Cycling: (
+      <>
+        <circle cx={5.5} cy={17.5} r={3.5} fill="none" stroke="white" strokeWidth={2} />
+        <circle cx={18.5} cy={17.5} r={3.5} fill="none" stroke="white" strokeWidth={2} />
+        <path d="M12 17.5 8 9h5l4 8" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={15} cy={5} r={1.5} fill="white" />
+      </>
+    ),
+    Swim: (
+      <>
+        <path d="M2 18c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" />
+        <path d="M2 13c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" />
+        <circle cx={17} cy={6} r={2} fill="white" />
+      </>
+    ),
+    Family: (
+      <path d="M12 2 4 8v12h6v-6h4v6h6V8z" fill="none" stroke="white" strokeWidth={2} strokeLinejoin="round" />
+    ),
+    Gym: (
+      <path d="M6 6v12M3 9v6M18 6v12M21 9v6M6 12h12" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" />
+    ),
+  };
+  const inner_size = Math.round(size * 0.5);
+  void PIN_ICON_PATHS;
+  void iconKey;
+  return (
+    <span
+      style={{ width: size, height: size + size * 0.18 }}
+      className="relative inline-block shrink-0 drop-shadow-[0_4px_6px_rgba(0,0,0,0.18)]"
+      aria-hidden
+    >
+      <svg width={size} height={size + size * 0.18} viewBox="0 0 40 48" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M20 47 C20 47 4 30 4 18 A16 16 0 1 1 36 18 C36 30 20 47 20 47 Z"
+          fill="oklch(0.58 0.038 142)"
+          stroke="white"
+          strokeWidth={2.5}
+        />
+      </svg>
+      <span
+        className="absolute grid place-items-center"
+        style={{ top: size * 0.2, left: (size - inner_size) / 2, width: inner_size, height: inner_size }}
+      >
+        <svg width={inner_size} height={inner_size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          {inner[KIND_TO_PIN[kind] ?? "Mountain"] ?? inner.Mountain}
+        </svg>
+      </span>
+    </span>
+  );
+}
 
 const ActivityMap = lazy(() =>
   import("@/components/ActivityMap").then((m) => ({ default: m.ActivityMap })),
@@ -64,6 +146,8 @@ function MapPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState(false);
+  const [pageSize, setPageSize] = useState(5);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const find = useServerFn(findNearbyActivities);
 
@@ -93,6 +177,11 @@ function MapPage() {
     requestLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setPageSize(5);
+    setExpandedId(null);
+  }, [filter]);
 
   const query = useQuery({
     queryKey: ["nearby", center?.[0].toFixed(3), center?.[1].toFixed(3)],
@@ -205,56 +294,104 @@ function MapPage() {
         )}
 
         <div className="space-y-3">
-          {visible.map((a, i) => {
-            const Icon = ICONS[a.kind] ?? Navigation;
+          {visible.slice(0, pageSize).map((a, i) => {
             const d = kmToDisplay(a.distanceM / 1000, settings.units);
+            const isOpen = expandedId === a.id;
             return (
               <article
                 key={a.id}
-                className="flex items-center gap-4 rounded-3xl bg-card p-4 ring-1 ring-black/5 animate-rise"
+                className="rounded-3xl bg-card ring-1 ring-black/5 animate-rise overflow-hidden"
                 style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
               >
-                {a.photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={a.photoUrl}
-                    alt={a.name}
-                    loading="lazy"
-                    className="size-12 rounded-2xl object-cover ring-1 ring-black/5"
-                  />
-                ) : (
-                  <span className="grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
-                    <Icon className="size-5" />
-                  </span>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{a.name}</p>
-                  <p className="truncate text-xs text-sage-600">
-                    {t(`map.kind.${a.kind}`)} · {d.value.toFixed(d.value < 10 ? 1 : 0)} {d.unit}
-                    {typeof a.rating === "number" && (
-                      <>
-                        {" · "}
-                        <Star className="inline size-3 -mt-0.5 fill-sage-600 text-sage-600" />{" "}
-                        {a.rating.toFixed(1)}
-                        {a.userRatingsTotal ? ` (${a.userRatingsTotal})` : ""}
-                      </>
-                    )}
-                  </p>
-                  <p className="truncate text-[10px] uppercase tracking-wide text-sage-500 mt-0.5">
-                    {t(`map.source.${a.source}`)}
-                    {a.openNow === true && ` · ${t("map.open_now")}`}
-                    {a.openNow === false && ` · ${t("map.closed")}`}
-                  </p>
-                </div>
                 <button
-                  onClick={() => openDirections(a)}
-                  className="rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700 hover:bg-sage-200"
+                  type="button"
+                  onClick={() => setExpandedId(isOpen ? null : a.id)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center gap-4 p-4 text-left"
                 >
-                  {t("map.start")}
+                  <SagePin kind={a.kind} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{a.name}</p>
+                    <p className="truncate text-xs text-sage-600">
+                      {t(`map.kind.${a.kind}`)} · {d.value.toFixed(d.value < 10 ? 1 : 0)} {d.unit}
+                      {typeof a.rating === "number" && (
+                        <>
+                          {" · "}
+                          <Star className="inline size-3 -mt-0.5 fill-sage-600 text-sage-600" />{" "}
+                          {a.rating.toFixed(1)}
+                        </>
+                      )}
+                    </p>
+                    <p className="truncate text-[10px] uppercase tracking-wide text-sage-500 mt-0.5">
+                      {t(`map.source.${a.source}`)}
+                      {a.openNow === true && ` · ${t("map.open_now")}`}
+                      {a.openNow === false && ` · ${t("map.closed")}`}
+                    </p>
+                  </div>
+                  <ChevronDown
+                    className={`size-4 shrink-0 text-sage-600 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
+                {isOpen && (
+                  <div className="border-t border-sage-100 px-4 pb-4 pt-3 space-y-3">
+                    {a.photoUrl && (
+                      <img
+                        src={a.photoUrl}
+                        alt={a.name}
+                        loading="lazy"
+                        className="w-full h-40 rounded-2xl object-cover ring-1 ring-black/5"
+                      />
+                    )}
+                    <dl className="grid grid-cols-2 gap-y-2 text-xs">
+                      <dt className="text-sage-500">{t("map.distance")}</dt>
+                      <dd className="text-right font-medium text-sage-900">
+                        {d.value.toFixed(d.value < 10 ? 1 : 0)} {d.unit}
+                      </dd>
+                      {typeof a.rating === "number" && (
+                        <>
+                          <dt className="text-sage-500">{t("map.rating")}</dt>
+                          <dd className="text-right font-medium text-sage-900">
+                            {a.rating.toFixed(1)}
+                            {a.userRatingsTotal ? ` (${a.userRatingsTotal})` : ""}
+                          </dd>
+                        </>
+                      )}
+                      {a.address && (
+                        <>
+                          <dt className="text-sage-500">{t("map.address")}</dt>
+                          <dd className="text-right font-medium text-sage-900 truncate">{a.address}</dd>
+                        </>
+                      )}
+                    </dl>
+                    <button
+                      onClick={() => openDirections(a)}
+                      className="w-full rounded-xl bg-sage-600 px-3 py-2.5 text-xs font-semibold text-primary-foreground hover:bg-sage-700"
+                    >
+                      {t("map.start")}
+                    </button>
+                  </div>
+                )}
               </article>
             );
           })}
+          {visible.length > pageSize && (
+            <button
+              type="button"
+              onClick={() => setPageSize((n) => n + 5)}
+              className="w-full rounded-2xl bg-card px-4 py-3 text-xs font-semibold text-sage-700 ring-1 ring-black/5 hover:bg-sage-50"
+            >
+              {t("map.show_more")} ({visible.length - pageSize})
+            </button>
+          )}
+          {visible.length > 5 && pageSize > 5 && (
+            <button
+              type="button"
+              onClick={() => setPageSize(5)}
+              className="w-full rounded-2xl px-4 py-2 text-xs font-medium text-sage-600 hover:text-sage-800"
+            >
+              {t("map.show_less")}
+            </button>
+          )}
         </div>
       </div>
     </AppShell>
