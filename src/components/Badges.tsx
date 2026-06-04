@@ -3,11 +3,13 @@ import {
   Award, Footprints, Sunrise, Moon, Route as RouteIcon, Map as MapIcon,
   Compass, Mountain, Flame, Calendar, Infinity as InfinityIcon, MapPin,
   UserPlus, CheckCircle2, Trophy, Crown, Globe, Star, Medal, Bug, Lock,
+  Share2, Twitter, Facebook, Link as LinkIcon,
   type LucideIcon,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { currentStreak, useSettings } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
+import { toast } from "sonner";
 
 export type BadgeTier = "bronze" | "silver" | "gold" | "platinum";
 
