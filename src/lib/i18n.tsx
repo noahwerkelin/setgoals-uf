@@ -423,6 +423,9 @@ const DICTS: Record<Lang, Dict> = {
 
     "challenges.eyebrow": "Dagens uppdrag",
     "challenges.title": "Utmaningar",
+    "challenges.tab.goals": "Mål",
+    "challenges.tab.badges": "Märken",
+    "challenges.tab.lb": "Topplista",
     "challenges.streak": "Svit",
     "challenges.streak_days": "{n} dagar",
     "challenges.streak_sub": "Fortsätt för att låsa upp utmärkelsen Helgutforskare.",
