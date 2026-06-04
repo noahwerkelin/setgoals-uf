@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
@@ -52,7 +52,14 @@ function buildLbRows(tab: LbTab, range: (typeof LB_RANGES)[number]) {
   return { rows: rows.slice(0, 6), youRank };
 }
 
+type ChallengesTab = "goals" | "badges" | "lb";
+
 export const Route = createFileRoute("/challenges")({
+  validateSearch: (search: Record<string, unknown>): { tab?: ChallengesTab } => {
+    const tab = search.tab;
+    if (tab === "goals" || tab === "badges" || tab === "lb") return { tab };
+    return {};
+  },
   head: () => ({
     meta: [
       { title: "Goals & Challenges — SetGoals UF" },
@@ -77,11 +84,18 @@ function Page() {
   const { t } = useT();
   const { settings } = useSettings();
   const [proOpen, setProOpen] = useState(false);
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const tab: ChallengesTab = search.tab ?? "goals";
   return (
     <AppShell>
       <PageHeader eyebrow={t("challenges.eyebrow")} title={t("challenges.title")} />
       <div className="px-6 space-y-6">
-        <Tabs defaultValue="goals" className="w-full">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => navigate({ search: { tab: v as ChallengesTab }, replace: true })}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="goals">{t("challenges.tab.goals")}</TabsTrigger>
             <TabsTrigger value="badges">{t("challenges.tab.badges")}</TabsTrigger>

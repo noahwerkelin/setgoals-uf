@@ -12,6 +12,7 @@ export function ProfileBadgeStrip() {
   return (
     <Link
       to="/challenges"
+      search={{ tab: "badges" }}
       className="block rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise"
       style={{ animationDelay: "100ms" }}
     >
