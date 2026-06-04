@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ProUpgradeDialog } from "@/components/Pro";
+import { awardBadge } from "@/components/Badges";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -264,6 +265,7 @@ function Page() {
                 const body = encodeURIComponent(reportText);
                 window.open(`mailto:support@setgoals.app?subject=Problem%20report&body=${body}`, "_blank");
                 toast.success(t("report.thanks"));
+                awardBadge("problem_solver");
                 setReportText("");
                 setReportOpen(false);
               }}

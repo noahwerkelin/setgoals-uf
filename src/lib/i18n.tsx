@@ -66,6 +66,9 @@ const DICTS: Record<Lang, Dict> = {
 
     "challenges.eyebrow": "Today's missions",
     "challenges.title": "Challenges",
+    "challenges.tab.goals": "Goals",
+    "challenges.tab.badges": "Badges",
+    "challenges.tab.lb": "Leaderboard",
     "challenges.streak": "Streak",
     "challenges.streak_days": "{n} days",
     "challenges.streak_sub": "Keep going to unlock the Weekend Explorer badge.",
@@ -420,6 +423,9 @@ const DICTS: Record<Lang, Dict> = {
 
     "challenges.eyebrow": "Dagens uppdrag",
     "challenges.title": "Utmaningar",
+    "challenges.tab.goals": "Mål",
+    "challenges.tab.badges": "Märken",
+    "challenges.tab.lb": "Topplista",
     "challenges.streak": "Svit",
     "challenges.streak_days": "{n} dagar",
     "challenges.streak_sub": "Fortsätt för att låsa upp utmärkelsen Helgutforskare.",
