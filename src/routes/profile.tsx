@@ -166,10 +166,10 @@ function Page() {
           </p>
         </section>
 
-        {/* Stats */}
+        {/* Stats — today */}
         <section className="grid grid-cols-3 gap-3 animate-rise" style={{ animationDelay: "120ms" }}>
-          <Mini label={t("profile.mini.steps")} value="184k" />
-          <Mini label={t("profile.mini.earned")} value="42h" />
+          <Mini label={t("profile.mini.steps")} value={(7240).toLocaleString()} />
+          <Mini label={t("profile.mini.earned")} value="3h 30m" />
           <Mini label={t("profile.mini.streak")} value={`${streakCount}d`} />
         </section>
 
