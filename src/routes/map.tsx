@@ -15,12 +15,93 @@ import {
   Footprints,
   RefreshCw,
   Star,
+  ChevronDown,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, kmToDisplay } from "@/lib/settings";
 import { toast } from "sonner";
 import { findNearbyActivities, type Activity, type ActivityKind } from "@/lib/activities.functions";
+
+// Inline SVG paths (mirror src/components/ActivityMap.tsx ICON_PATHS) so list
+// icons visually match the markers on the map.
+const PIN_ICON_PATHS: Record<string, string> = {
+  Mountain:
+    "M8 3 L12 11 L17 6 L21 20 L3 20 Z",
+};
+const KIND_TO_PIN: Record<ActivityKind | "All", string> = {
+  All: "Mountain",
+  Hiking: "Mountain",
+  Running: "Running",
+  Cycling: "Cycling",
+  Swim: "Swim",
+  Family: "Family",
+  Gym: "Gym",
+  Nature: "Mountain",
+};
+
+function SagePin({ kind, size = 44 }: { kind: ActivityKind; size?: number }) {
+  const iconKey = KIND_TO_PIN[kind] ?? "Mountain";
+  const inner: Record<string, JSX.Element> = {
+    Mountain: (
+      <path d="m8 3 4 8 5-5 4 14H3z" fill="none" stroke="white" strokeWidth={2} strokeLinejoin="round" />
+    ),
+    Running: (
+      <>
+        <circle cx={13} cy={4} r={2} fill="white" />
+        <path d="m4 22 5-7 4 2 3-4 4 5" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    Cycling: (
+      <>
+        <circle cx={5.5} cy={17.5} r={3.5} fill="none" stroke="white" strokeWidth={2} />
+        <circle cx={18.5} cy={17.5} r={3.5} fill="none" stroke="white" strokeWidth={2} />
+        <path d="M12 17.5 8 9h5l4 8" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={15} cy={5} r={1.5} fill="white" />
+      </>
+    ),
+    Swim: (
+      <>
+        <path d="M2 18c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" />
+        <path d="M2 13c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" />
+        <circle cx={17} cy={6} r={2} fill="white" />
+      </>
+    ),
+    Family: (
+      <path d="M12 2 4 8v12h6v-6h4v6h6V8z" fill="none" stroke="white" strokeWidth={2} strokeLinejoin="round" />
+    ),
+    Gym: (
+      <path d="M6 6v12M3 9v6M18 6v12M21 9v6M6 12h12" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" />
+    ),
+  };
+  const inner_size = Math.round(size * 0.5);
+  void PIN_ICON_PATHS;
+  void iconKey;
+  return (
+    <span
+      style={{ width: size, height: size + size * 0.18 }}
+      className="relative inline-block shrink-0 drop-shadow-[0_4px_6px_rgba(0,0,0,0.18)]"
+      aria-hidden
+    >
+      <svg width={size} height={size + size * 0.18} viewBox="0 0 40 48" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M20 47 C20 47 4 30 4 18 A16 16 0 1 1 36 18 C36 30 20 47 20 47 Z"
+          fill="oklch(0.58 0.038 142)"
+          stroke="white"
+          strokeWidth={2.5}
+        />
+      </svg>
+      <span
+        className="absolute grid place-items-center"
+        style={{ top: size * 0.2, left: (size - inner_size) / 2, width: inner_size, height: inner_size }}
+      >
+        <svg width={inner_size} height={inner_size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          {inner[KIND_TO_PIN[kind] ?? "Mountain"] ?? inner.Mountain}
+        </svg>
+      </span>
+    </span>
+  );
+}
 
 const ActivityMap = lazy(() =>
   import("@/components/ActivityMap").then((m) => ({ default: m.ActivityMap })),
