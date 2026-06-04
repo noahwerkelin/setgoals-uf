@@ -48,7 +48,7 @@ function Home() {
       <header className="flex items-end justify-between px-6 pb-4 pt-10 animate-rise">
         <div className="space-y-1">
           <p className="text-sm font-medium text-sage-600">{date}</p>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("home.morning")}, {settings.displayName || "Lukas"}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t(greetingKey)}, {settings.displayName || "Lukas"}</h1>
         </div>
         <Link to="/profile" aria-label="Profile" className="size-10 rounded-full bg-sage-200 ring-1 ring-black/5 grid place-items-center text-[10px] font-semibold uppercase tracking-widest text-sage-700">
           LU
