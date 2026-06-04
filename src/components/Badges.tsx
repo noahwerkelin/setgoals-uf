@@ -3,7 +3,7 @@ import {
   Award, Footprints, Sunrise, Moon, Route as RouteIcon, Map as MapIcon,
   Compass, Mountain, Flame, Calendar, Infinity as InfinityIcon, MapPin,
   UserPlus, CheckCircle2, Trophy, Crown, Globe, Star, Medal, Bug, Lock,
-  Share2, Twitter, Facebook, Link as LinkIcon,
+  Share2, Send, Copy, MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
