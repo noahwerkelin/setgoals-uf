@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Check, Smartphone, Activity, Sparkles } from "lucide-react";
+import { ChevronRight, Check, Smartphone, Activity, Sparkles, MessageSquare } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT, type Lang } from "@/lib/i18n";
@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -45,6 +46,8 @@ function Page() {
   const [proOpen, setProOpen] = useState(false);
 
   const isChild = settings.role === "child";
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportText, setReportText] = useState("");
 
   return (
     <AppShell>
@@ -165,6 +168,11 @@ function Page() {
           <Row label={t("settings.signout")} onClick={() => { toast.success(t("settings.signout")); navigate({ to: "/auth" }); }} />
         </Group>
 
+        {/* Support */}
+        <Group title={t("settings.support")}>
+          <Row label={t("settings.report_problem")} onClick={() => setReportOpen(true)} />
+        </Group>
+
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
       </div>
 
@@ -230,6 +238,37 @@ function Page() {
               }}
             >
               {t("hk.allow")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report problem dialog */}
+      <Dialog open={reportOpen} onOpenChange={(o) => { if (!o) setReportText(""); setReportOpen(o); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("report.title")}</DialogTitle>
+            <DialogDescription>{t("report.desc")}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={reportText}
+            onChange={(e) => setReportText(e.target.value)}
+            placeholder={t("report.placeholder")}
+            className="min-h-[120px] mt-2"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setReportText(""); setReportOpen(false); }}>{t("settings.cancel")}</Button>
+            <Button
+              disabled={!reportText.trim()}
+              onClick={() => {
+                const body = encodeURIComponent(reportText);
+                window.open(`mailto:support@setgoals.app?subject=Problem%20report&body=${body}`, "_blank");
+                toast.success(t("report.thanks"));
+                setReportText("");
+                setReportOpen(false);
+              }}
+            >
+              {t("report.send")}
             </Button>
           </DialogFooter>
         </DialogContent>
