@@ -53,7 +53,8 @@ function getLocalParts(tz: string) {
 
 function Home() {
   const { t, lang } = useT();
-  const { settings } = useSettings();
+  const { settings, recordSteps } = useSettings();
+  useEffect(() => { recordSteps(STEPS, GOAL); }, [recordSteps]);
   const now = new Date();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { hour, md } = getLocalParts(tz);
