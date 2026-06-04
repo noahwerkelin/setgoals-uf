@@ -280,6 +280,28 @@ function Page() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <NicknameDialog
+        open={nicknameOpen}
+        onOpenChange={setNicknameOpen}
+        current={settings.displayName}
+        onSave={(v) => { update("displayName", v); toast.success(t("account.updated")); }}
+        t={t}
+      />
+      <EmailDialog
+        open={emailOpen}
+        onOpenChange={setEmailOpen}
+        current={settings.email}
+        onSave={(v) => { update("email", v); toast.success(t("account.updated")); }}
+        t={t}
+      />
+      <PasswordDialog
+        open={passwordOpen}
+        onOpenChange={setPasswordOpen}
+        currentPassword={settings.password}
+        onSave={(v) => { update("password", v); toast.success(t("account.updated")); }}
+        t={t}
+      />
     </AppShell>
   );
 }
