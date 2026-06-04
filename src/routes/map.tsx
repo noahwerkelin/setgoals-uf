@@ -289,56 +289,104 @@ function MapPage() {
         )}
 
         <div className="space-y-3">
-          {visible.map((a, i) => {
-            const Icon = ICONS[a.kind] ?? Navigation;
+          {visible.slice(0, pageSize).map((a, i) => {
             const d = kmToDisplay(a.distanceM / 1000, settings.units);
+            const isOpen = expandedId === a.id;
             return (
               <article
                 key={a.id}
-                className="flex items-center gap-4 rounded-3xl bg-card p-4 ring-1 ring-black/5 animate-rise"
+                className="rounded-3xl bg-card ring-1 ring-black/5 animate-rise overflow-hidden"
                 style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
               >
-                {a.photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={a.photoUrl}
-                    alt={a.name}
-                    loading="lazy"
-                    className="size-12 rounded-2xl object-cover ring-1 ring-black/5"
-                  />
-                ) : (
-                  <span className="grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
-                    <Icon className="size-5" />
-                  </span>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{a.name}</p>
-                  <p className="truncate text-xs text-sage-600">
-                    {t(`map.kind.${a.kind}`)} · {d.value.toFixed(d.value < 10 ? 1 : 0)} {d.unit}
-                    {typeof a.rating === "number" && (
-                      <>
-                        {" · "}
-                        <Star className="inline size-3 -mt-0.5 fill-sage-600 text-sage-600" />{" "}
-                        {a.rating.toFixed(1)}
-                        {a.userRatingsTotal ? ` (${a.userRatingsTotal})` : ""}
-                      </>
-                    )}
-                  </p>
-                  <p className="truncate text-[10px] uppercase tracking-wide text-sage-500 mt-0.5">
-                    {t(`map.source.${a.source}`)}
-                    {a.openNow === true && ` · ${t("map.open_now")}`}
-                    {a.openNow === false && ` · ${t("map.closed")}`}
-                  </p>
-                </div>
                 <button
-                  onClick={() => openDirections(a)}
-                  className="rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700 hover:bg-sage-200"
+                  type="button"
+                  onClick={() => setExpandedId(isOpen ? null : a.id)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center gap-4 p-4 text-left"
                 >
-                  {t("map.start")}
+                  <SagePin kind={a.kind} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{a.name}</p>
+                    <p className="truncate text-xs text-sage-600">
+                      {t(`map.kind.${a.kind}`)} · {d.value.toFixed(d.value < 10 ? 1 : 0)} {d.unit}
+                      {typeof a.rating === "number" && (
+                        <>
+                          {" · "}
+                          <Star className="inline size-3 -mt-0.5 fill-sage-600 text-sage-600" />{" "}
+                          {a.rating.toFixed(1)}
+                        </>
+                      )}
+                    </p>
+                    <p className="truncate text-[10px] uppercase tracking-wide text-sage-500 mt-0.5">
+                      {t(`map.source.${a.source}`)}
+                      {a.openNow === true && ` · ${t("map.open_now")}`}
+                      {a.openNow === false && ` · ${t("map.closed")}`}
+                    </p>
+                  </div>
+                  <ChevronDown
+                    className={`size-4 shrink-0 text-sage-600 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
+                {isOpen && (
+                  <div className="border-t border-sage-100 px-4 pb-4 pt-3 space-y-3">
+                    {a.photoUrl && (
+                      <img
+                        src={a.photoUrl}
+                        alt={a.name}
+                        loading="lazy"
+                        className="w-full h-40 rounded-2xl object-cover ring-1 ring-black/5"
+                      />
+                    )}
+                    <dl className="grid grid-cols-2 gap-y-2 text-xs">
+                      <dt className="text-sage-500">{t("map.distance")}</dt>
+                      <dd className="text-right font-medium text-sage-900">
+                        {d.value.toFixed(d.value < 10 ? 1 : 0)} {d.unit}
+                      </dd>
+                      {typeof a.rating === "number" && (
+                        <>
+                          <dt className="text-sage-500">{t("map.rating")}</dt>
+                          <dd className="text-right font-medium text-sage-900">
+                            {a.rating.toFixed(1)}
+                            {a.userRatingsTotal ? ` (${a.userRatingsTotal})` : ""}
+                          </dd>
+                        </>
+                      )}
+                      {a.address && (
+                        <>
+                          <dt className="text-sage-500">{t("map.address")}</dt>
+                          <dd className="text-right font-medium text-sage-900 truncate">{a.address}</dd>
+                        </>
+                      )}
+                    </dl>
+                    <button
+                      onClick={() => openDirections(a)}
+                      className="w-full rounded-xl bg-sage-600 px-3 py-2.5 text-xs font-semibold text-primary-foreground hover:bg-sage-700"
+                    >
+                      {t("map.start")}
+                    </button>
+                  </div>
+                )}
               </article>
             );
           })}
+          {visible.length > pageSize && (
+            <button
+              type="button"
+              onClick={() => setPageSize((n) => n + 5)}
+              className="w-full rounded-2xl bg-card px-4 py-3 text-xs font-semibold text-sage-700 ring-1 ring-black/5 hover:bg-sage-50"
+            >
+              {t("map.show_more")} ({visible.length - pageSize})
+            </button>
+          )}
+          {visible.length > 5 && pageSize > 5 && (
+            <button
+              type="button"
+              onClick={() => setPageSize(5)}
+              className="w-full rounded-2xl px-4 py-2 text-xs font-medium text-sage-600 hover:text-sage-800"
+            >
+              {t("map.show_less")}
+            </button>
+          )}
         </div>
       </div>
     </AppShell>
