@@ -168,7 +168,9 @@ function Page() {
               { value: "imperial", label: t("units.imperial") },
             ]}
           />
-          <Row label={t("settings.email")} meta="lukas@example.com" onClick={() => toast("lukas@example.com")} />
+          <Row label={t("settings.nickname")} meta={settings.displayName} onClick={() => setNicknameOpen(true)} />
+          <Row label={t("settings.email")} meta={settings.email} onClick={() => setEmailOpen(true)} />
+          <Row label={t("settings.password")} meta="••••••••" onClick={() => setPasswordOpen(true)} />
           <Row label={t("settings.signout")} onClick={() => { toast.success(t("settings.signout")); navigate({ to: "/auth" }); }} />
         </Group>
 
