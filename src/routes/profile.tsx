@@ -46,7 +46,6 @@ function Page() {
         <nav className="space-y-2 animate-rise" style={{ animationDelay: "120ms" }}>
           <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
           <Row to="/rewards" icon={<Gift className="size-4" />} label={t("profile.row.rewards")} subtitle={t("profile.row.rewards_sub")} />
-          <Row to="/leaderboards" icon={<Users className="size-4" />} label={t("profile.row.lb")} subtitle={t("profile.row.lb_sub")} />
           {!isChild && (
             <Row to="/parent" icon={<Shield className="size-4" />} label={t("profile.row.parent")} subtitle={t("profile.row.parent_sub")} />
           )}
