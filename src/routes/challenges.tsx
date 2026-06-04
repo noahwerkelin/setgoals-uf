@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badges } from "@/components/Badges";
+import { Badges, recordLeaderboardRank } from "@/components/Badges";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { ProUpgradeDialog } from "@/components/Pro";
