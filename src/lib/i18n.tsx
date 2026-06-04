@@ -272,6 +272,13 @@ const DICTS: Record<Lang, Dict> = {
     "settings.scope.steps": "Steps",
     "settings.scope.distance": "Distance",
     "settings.scope.energy": "Active energy",
+    "settings.support": "Support",
+    "settings.report_problem": "Report a problem",
+    "report.title": "Report a problem",
+    "report.desc": "Describe what went wrong and we'll look into it.",
+    "report.placeholder": "What's happening?",
+    "report.send": "Send report",
+    "report.thanks": "Thanks for your feedback!",
 
     "hk.title": "Connect Apple HealthKit",
     "hk.desc": "We'll read your daily step count from HealthKit to credit screen time. You can disconnect any time.",
