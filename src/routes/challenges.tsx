@@ -178,7 +178,12 @@ function Leaderboard() {
   const [tab, setTab] = useState<LbTab>("Friends");
   const [range, setRange] = useState<(typeof LB_RANGES)[number]>("Daily");
 
-  const rows = useMemo(() => buildLbRows(tab, range), [tab, range]);
+  const { rows, youRank } = useMemo(() => buildLbRows(tab, range), [tab, range]);
+
+  useEffect(() => {
+    if (tab === "Local") recordLeaderboardRank("local", youRank);
+    else if (tab === "National") recordLeaderboardRank("national", youRank);
+  }, [tab, youRank]);
 
   const dateLabel = useMemo(
     () =>
