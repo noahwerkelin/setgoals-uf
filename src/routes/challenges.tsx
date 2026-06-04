@@ -80,8 +80,13 @@ function Page() {
     <AppShell>
       <PageHeader eyebrow={t("challenges.eyebrow")} title={t("challenges.title")} />
       <div className="px-6 space-y-6">
-        <section className="rounded-3xl bg-sage-600 p-6 text-primary-foreground ring-1 ring-sage-700/40 animate-rise">
-          <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-widest text-sage-100/80">
+        <Tabs defaultValue="goals" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="goals">{t("challenges.tab.goals")}</TabsTrigger>
+            <TabsTrigger value="badges">{t("challenges.tab.badges")}</TabsTrigger>
+            <TabsTrigger value="lb">{t("challenges.tab.lb")}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="goals" className="space-y-6 mt-6">
             <Flame className="size-3.5" /> {t("challenges.streak")}
           </div>
           <p className="mt-1 text-3xl font-semibold tabular-nums">{t("challenges.streak_days", { n: 7 })}</p>
