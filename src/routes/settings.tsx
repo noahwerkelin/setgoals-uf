@@ -432,3 +432,151 @@ function SliderDialog({
     </Dialog>
   );
 }
+
+function NicknameDialog({
+  open, onOpenChange, current, onSave, t,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  current: string;
+  onSave: (v: string) => void;
+  t: (k: string) => string;
+}) {
+  const [val, setVal] = useState(current);
+  useEffect(() => { if (open) setVal(current); }, [open, current]);
+  const valid = val.trim().length >= 1 && val.trim().length <= 40;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("account.nickname.title")}</DialogTitle>
+          <DialogDescription>{t("account.nickname.desc")}</DialogDescription>
+        </DialogHeader>
+        <div className="py-2 space-y-2">
+          <Label htmlFor="nickname-input">{t("settings.nickname")}</Label>
+          <Input
+            id="nickname-input"
+            value={val}
+            maxLength={40}
+            onChange={(e) => setVal(e.target.value)}
+            placeholder={t("account.nickname.placeholder")}
+            autoFocus
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
+          <Button disabled={!valid} onClick={() => { onSave(val.trim()); onOpenChange(false); }}>
+            {t("settings.save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EmailDialog({
+  open, onOpenChange, current, onSave, t,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  current: string;
+  onSave: (v: string) => void;
+  t: (k: string) => string;
+}) {
+  const [val, setVal] = useState(current);
+  const [err, setErr] = useState("");
+  useEffect(() => { if (open) { setVal(current); setErr(""); } }, [open, current]);
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("account.email.title")}</DialogTitle>
+          <DialogDescription>{t("account.email.desc")}</DialogDescription>
+        </DialogHeader>
+        <div className="py-2 space-y-2">
+          <Label htmlFor="email-input">{t("settings.email")}</Label>
+          <Input
+            id="email-input"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={val}
+            maxLength={254}
+            onChange={(e) => { setVal(e.target.value); setErr(""); }}
+            placeholder={t("account.email.placeholder")}
+            autoFocus
+          />
+          {err && <p className="text-xs text-destructive">{err}</p>}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
+          <Button
+            disabled={!isEmail}
+            onClick={() => {
+              if (!isEmail) { setErr(t("account.email.invalid")); return; }
+              onSave(val.trim());
+              onOpenChange(false);
+            }}
+          >
+            {t("settings.save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PasswordDialog({
+  open, onOpenChange, currentPassword, onSave, t,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  currentPassword: string;
+  onSave: (v: string) => void;
+  t: (k: string) => string;
+}) {
+  const [cur, setCur] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [err, setErr] = useState("");
+  useEffect(() => {
+    if (open) { setCur(""); setNext(""); setConfirm(""); setErr(""); }
+  }, [open]);
+  const submit = () => {
+    if (cur !== currentPassword) { setErr(t("account.password.wrong")); return; }
+    if (next.length < 8) { setErr(t("account.password.short")); return; }
+    if (next !== confirm) { setErr(t("account.password.mismatch")); return; }
+    onSave(next);
+    onOpenChange(false);
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("account.password.title")}</DialogTitle>
+          <DialogDescription>{t("account.password.desc")}</DialogDescription>
+        </DialogHeader>
+        <div className="py-2 space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="cur-pw">{t("account.password.current")}</Label>
+            <Input id="cur-pw" type="password" autoComplete="current-password" value={cur} onChange={(e) => { setCur(e.target.value); setErr(""); }} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="new-pw">{t("account.password.new")}</Label>
+            <Input id="new-pw" type="password" autoComplete="new-password" value={next} onChange={(e) => { setNext(e.target.value); setErr(""); }} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirm-pw">{t("account.password.confirm")}</Label>
+            <Input id="confirm-pw" type="password" autoComplete="new-password" value={confirm} onChange={(e) => { setConfirm(e.target.value); setErr(""); }} />
+          </div>
+          {err && <p className="text-xs text-destructive">{err}</p>}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
+          <Button disabled={!cur || !next || !confirm} onClick={submit}>{t("settings.save")}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
