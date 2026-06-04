@@ -617,6 +617,13 @@ const DICTS: Record<Lang, Dict> = {
     "settings.scope.steps": "Steg",
     "settings.scope.distance": "Distans",
     "settings.scope.energy": "Aktiv energi",
+    "settings.support": "Support",
+    "settings.report_problem": "Rapportera ett problem",
+    "report.title": "Rapportera ett problem",
+    "report.desc": "Beskriv vad som gick fel så tittar vi på det.",
+    "report.placeholder": "Vad händer?",
+    "report.send": "Skicka rapport",
+    "report.thanks": "Tack för din feedback!",
 
     "hk.title": "Anslut Apple HealthKit",
     "hk.desc": "Vi läser ditt dagliga stegantal från HealthKit för att tilldela skärmtid. Du kan koppla från när som helst.",
