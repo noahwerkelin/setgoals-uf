@@ -7,52 +7,50 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { currentStreak, useSettings } from "@/lib/settings";
+import { useT } from "@/lib/i18n";
 
 export type BadgeTier = "bronze" | "silver" | "gold" | "platinum";
 
 export type BadgeDef = {
   id: string;
   tier: BadgeTier;
-  name: string;
-  desc: string;
   icon: LucideIcon;
   group: string;
 };
 
-const BADGES: BadgeDef[] = [
-  { id: "first_steps", tier: "bronze", name: "First Steps", desc: "Walk 1,000 steps in a day", icon: Footprints, group: "Daily steps" },
-  { id: "daily_walker", tier: "silver", name: "Daily Walker", desc: "Walk 5,000 steps in a day", icon: Footprints, group: "Daily steps" },
-  { id: "early_bird", tier: "bronze", name: "Early Bird", desc: "Walk 2,000 steps before 8 AM", icon: Sunrise, group: "Daily steps" },
-  { id: "night_owl", tier: "bronze", name: "Night Owl", desc: "Walk 2,000 steps after 9 PM", icon: Moon, group: "Daily steps" },
+export const BADGES: BadgeDef[] = [
+  { id: "first_steps", tier: "bronze", icon: Footprints, group: "daily" },
+  { id: "daily_walker", tier: "silver", icon: Footprints, group: "daily" },
+  { id: "early_bird", tier: "bronze", icon: Sunrise, group: "daily" },
+  { id: "night_owl", tier: "bronze", icon: Moon, group: "daily" },
 
-  { id: "ten_k_club", tier: "silver", name: "10K Club", desc: "Walk 10 km in a day", icon: RouteIcon, group: "Distance" },
-  { id: "explorer", tier: "bronze", name: "Explorer", desc: "Walk 10 km total", icon: Compass, group: "Distance" },
-  { id: "adventurer", tier: "silver", name: "Adventurer", desc: "Walk 100 km total", icon: MapIcon, group: "Distance" },
-  { id: "pathfinder", tier: "gold", name: "Pathfinder", desc: "Walk 500 km total", icon: Mountain, group: "Distance" },
+  { id: "ten_k_club", tier: "silver", icon: RouteIcon, group: "distance" },
+  { id: "explorer", tier: "bronze", icon: Compass, group: "distance" },
+  { id: "adventurer", tier: "silver", icon: MapIcon, group: "distance" },
+  { id: "pathfinder", tier: "gold", icon: Mountain, group: "distance" },
 
-  { id: "consistency_king", tier: "bronze", name: "Consistency King", desc: "Hit your daily goal 7 days in a row", icon: Flame, group: "Streaks" },
-  { id: "impressive", tier: "silver", name: "Impressive", desc: "Hit your daily goal 30 days in a row", icon: Calendar, group: "Streaks" },
-  { id: "unstoppable", tier: "gold", name: "Unstoppable", desc: "Hit your daily goal 100 days in a row", icon: InfinityIcon, group: "Streaks" },
+  { id: "consistency_king", tier: "bronze", icon: Flame, group: "streaks" },
+  { id: "impressive", tier: "silver", icon: Calendar, group: "streaks" },
+  { id: "unstoppable", tier: "gold", icon: InfinityIcon, group: "streaks" },
 
-  { id: "first_adventure", tier: "silver", name: "First Adventure", desc: "Visit your first tracked location", icon: MapPin, group: "Milestones" },
-  { id: "first_friend", tier: "bronze", name: "First Friend", desc: "Add your first friend", icon: UserPlus, group: "Milestones" },
-  { id: "challenge_accepted", tier: "bronze", name: "Challenge Accepted", desc: "Complete your first challenge", icon: CheckCircle2, group: "Milestones" },
+  { id: "first_adventure", tier: "silver", icon: MapPin, group: "milestones" },
+  { id: "first_friend", tier: "bronze", icon: UserPlus, group: "milestones" },
+  { id: "challenge_accepted", tier: "bronze", icon: CheckCircle2, group: "milestones" },
 
-  { id: "local_elite", tier: "silver", name: "Local Elite", desc: "Reach top 10 on the local leaderboard", icon: Trophy, group: "Leaderboards" },
-  { id: "local_legend", tier: "gold", name: "Local Legend", desc: "Reach #1 on the local leaderboard", icon: Crown, group: "Leaderboards" },
-  { id: "national_contender", tier: "silver", name: "National Contender", desc: "Reach top 100 on the national leaderboard", icon: Globe, group: "Leaderboards" },
-  { id: "national_elite", tier: "gold", name: "National Elite", desc: "Reach top 10 on the national leaderboard", icon: Star, group: "Leaderboards" },
-  { id: "national_champion", tier: "platinum", name: "National Champion", desc: "Reach #1 on the national leaderboard", icon: Medal, group: "Leaderboards" },
+  { id: "local_elite", tier: "silver", icon: Trophy, group: "leaderboards" },
+  { id: "local_legend", tier: "gold", icon: Crown, group: "leaderboards" },
+  { id: "national_contender", tier: "silver", icon: Globe, group: "leaderboards" },
+  { id: "national_elite", tier: "gold", icon: Star, group: "leaderboards" },
+  { id: "national_champion", tier: "platinum", icon: Medal, group: "leaderboards" },
 
-  { id: "problem_solver", tier: "bronze", name: "Problem Solver", desc: "Report a problem", icon: Bug, group: "Community" },
+  { id: "problem_solver", tier: "bronze", icon: Bug, group: "community" },
 ];
 
-const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; label: string; chip: string; glow: string }> = {
+const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; chip: string; glow: string }> = {
   bronze: {
     ring: "ring-amber-700/30",
     bg: "bg-gradient-to-br from-amber-300 via-amber-500 to-amber-800",
     fg: "text-amber-50",
-    label: "Bronze",
     chip: "bg-amber-100 text-amber-800",
     glow: "shadow-[0_8px_24px_-12px_rgba(180,83,9,0.6)]",
   },
@@ -60,7 +58,6 @@ const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; labe
     ring: "ring-slate-400/40",
     bg: "bg-gradient-to-br from-slate-200 via-slate-400 to-slate-600",
     fg: "text-slate-50",
-    label: "Silver",
     chip: "bg-slate-200 text-slate-700",
     glow: "shadow-[0_8px_24px_-12px_rgba(71,85,105,0.55)]",
   },
@@ -68,7 +65,6 @@ const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; labe
     ring: "ring-yellow-500/40",
     bg: "bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600",
     fg: "text-yellow-900",
-    label: "Gold",
     chip: "bg-yellow-100 text-yellow-800",
     glow: "shadow-[0_8px_28px_-10px_rgba(202,138,4,0.65)]",
   },
@@ -76,43 +72,89 @@ const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; labe
     ring: "ring-cyan-400/40",
     bg: "bg-gradient-to-br from-cyan-100 via-sky-300 to-indigo-500",
     fg: "text-white",
-    label: "Platinum",
     chip: "bg-cyan-100 text-cyan-800",
     glow: "shadow-[0_10px_30px_-10px_rgba(56,189,248,0.7)]",
   },
 };
 
-const STORE_KEY = "sg.badges";
+export function tierStyle(tier: BadgeTier) { return TIER_STYLE[tier]; }
 
-type EarnedMap = Record<string, string>; // id -> ISO date
+const STORE_KEY = "sg.badges";
+const TOTALS_KEY = "sg.totals";
+
+type EarnedMap = Record<string, string>;
+type Totals = { lastDate: string | null; totalSteps: number; totalKm: number };
 
 function loadEarned(): EarnedMap {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  try { const raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : {}; } catch { return {}; }
 }
-
 function saveEarned(m: EarnedMap) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(m)); } catch {}
 }
+function loadTotals(): Totals {
+  try { const raw = localStorage.getItem(TOTALS_KEY); return raw ? JSON.parse(raw) : { lastDate: null, totalSteps: 0, totalKm: 0 }; }
+  catch { return { lastDate: null, totalSteps: 0, totalKm: 0 }; }
+}
+function saveTotals(t: Totals) { try { localStorage.setItem(TOTALS_KEY, JSON.stringify(t)); } catch {} }
 
-/** Award a badge by id, once. Returns true if newly awarded. */
-export function awardBadge(id: string): boolean {
-  const m = loadEarned();
-  if (m[id]) return false;
-  m[id] = new Date().toISOString();
-  saveEarned(m);
+function notifyChange() {
   window.dispatchEvent(new CustomEvent("sg:badges-changed"));
-  return true;
 }
 
-export function Badges() {
-  const { settings } = useSettings();
-  const [earned, setEarned] = useState<EarnedMap>({});
+function awardMany(ids: string[]): boolean {
+  const m = loadEarned();
+  let changed = false;
+  for (const id of ids) {
+    if (!m[id]) { m[id] = new Date().toISOString(); changed = true; }
+  }
+  if (changed) { saveEarned(m); notifyChange(); }
+  return changed;
+}
 
+/** Award a single badge by id. Returns true if newly awarded. */
+export function awardBadge(id: string): boolean {
+  return awardMany([id]);
+}
+
+/** Record today's activity. Accumulates totals once per day and awards step/distance badges. */
+export function recordDailyActivity(steps: number, km: number, hour: number) {
+  const today = new Date();
+  const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const t = loadTotals();
+  if (t.lastDate !== iso) {
+    t.totalSteps += steps;
+    t.totalKm += km;
+    t.lastDate = iso;
+    saveTotals(t);
+  }
+  const ids: string[] = [];
+  if (steps >= 1000) ids.push("first_steps");
+  if (steps >= 5000) ids.push("daily_walker");
+  if (steps >= 2000 && hour < 8) ids.push("early_bird");
+  if (steps >= 2000 && hour >= 21) ids.push("night_owl");
+  if (km >= 10) ids.push("ten_k_club");
+  if (t.totalKm >= 10) ids.push("explorer");
+  if (t.totalKm >= 100) ids.push("adventurer");
+  if (t.totalKm >= 500) ids.push("pathfinder");
+  awardMany(ids);
+}
+
+/** Record a leaderboard rank (1-based). scope: "local" | "national". */
+export function recordLeaderboardRank(scope: "local" | "national", rank: number) {
+  const ids: string[] = [];
+  if (scope === "local") {
+    if (rank <= 10) ids.push("local_elite");
+    if (rank === 1) ids.push("local_legend");
+  } else {
+    if (rank <= 100) ids.push("national_contender");
+    if (rank <= 10) ids.push("national_elite");
+    if (rank === 1) ids.push("national_champion");
+  }
+  awardMany(ids);
+}
+
+export function useEarnedBadges() {
+  const [earned, setEarned] = useState<EarnedMap>({});
   useEffect(() => {
     setEarned(loadEarned());
     const onChange = () => setEarned(loadEarned());
@@ -123,21 +165,22 @@ export function Badges() {
       window.removeEventListener("storage", onChange);
     };
   }, []);
+  return earned;
+}
 
-  // Auto-award streak badges based on current streak/best
+export function Badges() {
+  const { t } = useT();
+  const { settings } = useSettings();
+  const earned = useEarnedBadges();
+
+  // Auto-award streak badges
   useEffect(() => {
     const best = Math.max(settings.streak.best, currentStreak(settings.streak));
-    const toCheck: Array<[string, number]> = [
-      ["consistency_king", 7],
-      ["impressive", 30],
-      ["unstoppable", 100],
-    ];
-    let changed = false;
-    const m = loadEarned();
-    for (const [id, n] of toCheck) {
-      if (best >= n && !m[id]) { m[id] = new Date().toISOString(); changed = true; }
-    }
-    if (changed) { saveEarned(m); setEarned(m); }
+    const ids: string[] = [];
+    if (best >= 7) ids.push("consistency_king");
+    if (best >= 30) ids.push("impressive");
+    if (best >= 100) ids.push("unstoppable");
+    if (ids.length) awardMany(ids);
   }, [settings.streak]);
 
   const groups = useMemo(() => {
@@ -159,8 +202,8 @@ export function Badges() {
           <Award className="size-6" />
         </span>
         <div className="flex-1">
-          <p className="text-sm font-semibold">Achievements</p>
-          <p className="text-xs text-sage-600">{earnedCount} of {BADGES.length} earned</p>
+          <p className="text-sm font-semibold">{t("badges.title")}</p>
+          <p className="text-xs text-sage-600">{t("badges.earned_of", { n: String(earnedCount), total: String(BADGES.length) })}</p>
         </div>
         <span className="text-sm font-semibold tabular-nums text-sage-700">
           {Math.round((earnedCount / BADGES.length) * 100)}%
@@ -169,7 +212,9 @@ export function Badges() {
 
       {groups.map(([group, items]) => (
         <section key={group} className="space-y-3">
-          <h3 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{group}</h3>
+          <h3 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">
+            {t(`badges.group.${group}`)}
+          </h3>
           <div className="grid grid-cols-3 gap-3">
             {items.map((b, i) => {
               const isEarned = !!earned[b.id];
@@ -193,9 +238,11 @@ export function Badges() {
                       <Lock className="size-6 text-sage-500/70" />
                     )}
                   </span>
-                  <span className="text-center text-[11px] font-semibold leading-tight line-clamp-2">{b.name}</span>
+                  <span className="text-center text-[11px] font-semibold leading-tight line-clamp-2">
+                    {t(`badges.${b.id}.name`)}
+                  </span>
                   <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${style.chip}`}>
-                    {style.label}
+                    {t(`badges.tier.${b.tier}`)}
                   </span>
                 </button>
               );
@@ -221,17 +268,17 @@ export function Badges() {
                     {isEarned ? <Icon className={`size-12 ${style.fg}`} /> : <Lock className="size-10 text-sage-500/70" />}
                   </span>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${style.chip}`}>
-                    {style.label}
+                    {t(`badges.tier.${open.tier}`)}
                   </span>
                 </div>
                 <DialogHeader>
-                  <DialogTitle className="text-center">{open.name}</DialogTitle>
-                  <DialogDescription className="text-center">{open.desc}</DialogDescription>
+                  <DialogTitle className="text-center">{t(`badges.${open.id}.name`)}</DialogTitle>
+                  <DialogDescription className="text-center">{t(`badges.${open.id}.desc`)}</DialogDescription>
                 </DialogHeader>
                 <p className="text-center text-xs text-sage-600">
                   {isEarned
-                    ? `Earned ${new Date(earned[open.id]).toLocaleDateString()}`
-                    : "Keep going — this badge is still locked."}
+                    ? t("badges.earned_on", { date: new Date(earned[open.id]).toLocaleDateString() })
+                    : t("badges.locked_hint")}
                 </p>
               </>
             );

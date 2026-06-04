@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badges } from "@/components/Badges";
+import { Badges, recordLeaderboardRank } from "@/components/Badges";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { ProUpgradeDialog } from "@/components/Pro";
@@ -48,7 +48,8 @@ function buildLbRows(tab: LbTab, range: (typeof LB_RANGES)[number]) {
   }));
   rows.push({ n: "__you__", s: youSteps });
   rows.sort((a, b) => b.s - a.s);
-  return rows.slice(0, 6);
+  const youRank = rows.findIndex((x) => x.n === "__you__") + 1;
+  return { rows: rows.slice(0, 6), youRank };
 }
 
 export const Route = createFileRoute("/challenges")({
@@ -177,7 +178,12 @@ function Leaderboard() {
   const [tab, setTab] = useState<LbTab>("Friends");
   const [range, setRange] = useState<(typeof LB_RANGES)[number]>("Daily");
 
-  const rows = useMemo(() => buildLbRows(tab, range), [tab, range]);
+  const { rows, youRank } = useMemo(() => buildLbRows(tab, range), [tab, range]);
+
+  useEffect(() => {
+    if (tab === "Local") recordLeaderboardRank("local", youRank);
+    else if (tab === "National") recordLeaderboardRank("national", youRank);
+  }, [tab, youRank]);
 
   const dateLabel = useMemo(
     () =>
