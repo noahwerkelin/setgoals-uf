@@ -84,11 +84,18 @@ function Page() {
   const { t } = useT();
   const { settings } = useSettings();
   const [proOpen, setProOpen] = useState(false);
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const tab: ChallengesTab = search.tab ?? "goals";
   return (
     <AppShell>
       <PageHeader eyebrow={t("challenges.eyebrow")} title={t("challenges.title")} />
       <div className="px-6 space-y-6">
-        <Tabs defaultValue="goals" className="w-full">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => navigate({ search: { tab: v as ChallengesTab }, replace: true })}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="goals">{t("challenges.tab.goals")}</TabsTrigger>
             <TabsTrigger value="badges">{t("challenges.tab.badges")}</TabsTrigger>
