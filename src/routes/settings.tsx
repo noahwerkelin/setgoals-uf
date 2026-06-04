@@ -265,6 +265,7 @@ function Page() {
                 const body = encodeURIComponent(reportText);
                 window.open(`mailto:support@setgoals.app?subject=Problem%20report&body=${body}`, "_blank");
                 toast.success(t("report.thanks"));
+                awardBadge("problem_solver");
                 setReportText("");
                 setReportOpen(false);
               }}
