@@ -282,6 +282,7 @@ export function Badges() {
                     ? t("badges.earned_on", { date: new Date(earned[open.id]).toLocaleDateString() })
                     : t("badges.locked_hint")}
                 </p>
+                {isEarned && <ShareBadge badge={open} />}
               </>
             );
           })()}
