@@ -1,11 +1,53 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { CheckCircle2, Circle, Flame, Lock, Users, ChevronRight } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
+
+type LbTab = "Friends" | "Local" | "National";
+const LB_TABS: LbTab[] = ["Friends", "Local", "National"];
+const LB_RANGES = ["Daily", "Weekly", "Monthly"] as const;
+
+const FRIEND_NAMES = ["Maja", "Erik", "Sofia", "Anton", "Olivia", "Noah", "Linnea"];
+const LOCAL_NAMES = ["runner_42", "hiker.se", "morning.walk", "trailblazer", "fjord.go", "sunrise.run"];
+const NATIONAL_NAMES = ["stepking", "wanderlust", "trailmix", "northern.steps", "pace.master", "ultra.lina"];
+
+function lbRng(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = seed;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function dayOfYear(d = new Date()) {
+  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
+  return Math.floor((d.getTime() - start) / 86400000);
+}
+
+function buildLbRows(tab: LbTab, range: (typeof LB_RANGES)[number]) {
+  const names =
+    tab === "Friends" ? FRIEND_NAMES : tab === "Local" ? LOCAL_NAMES : NATIONAL_NAMES;
+  const base = tab === "Friends" ? 6000 : tab === "Local" ? 9000 : 15000;
+  const spread = tab === "Friends" ? 8000 : tab === "Local" ? 14000 : 22000;
+  const multiplier = range === "Daily" ? 1 : range === "Weekly" ? 6.4 : 27;
+  const day = dayOfYear();
+  const seed = day * 1000 + (tab === "Friends" ? 1 : tab === "Local" ? 2 : 3) + (range === "Daily" ? 10 : range === "Weekly" ? 20 : 30);
+  const r = lbRng(seed);
+  const youSteps = Math.round((4500 + r() * 7000) * multiplier);
+  const rows = names.map((n) => ({
+    n,
+    s: Math.round((base + r() * spread) * multiplier),
+  }));
+  rows.push({ n: "__you__", s: youSteps });
+  rows.sort((a, b) => b.s - a.s);
+  return rows.slice(0, 6);
+}
 
 export const Route = createFileRoute("/challenges")({
   head: () => ({
