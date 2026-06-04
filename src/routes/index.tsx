@@ -55,7 +55,10 @@ function getLocalParts(tz: string) {
 function Home() {
   const { t, lang } = useT();
   const { settings, recordSteps } = useSettings();
-  useEffect(() => { recordSteps(STEPS, GOAL); }, [recordSteps]);
+  useEffect(() => {
+    recordSteps(STEPS, GOAL);
+    recordDailyActivity(STEPS, 5.2, new Date().getHours());
+  }, [recordSteps]);
   const now = new Date();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { hour, md } = getLocalParts(tz);
