@@ -146,6 +146,8 @@ function MapPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState(false);
+  const [pageSize, setPageSize] = useState(5);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const find = useServerFn(findNearbyActivities);
 
