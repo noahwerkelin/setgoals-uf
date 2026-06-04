@@ -168,6 +168,11 @@ function Page() {
           <Row label={t("settings.signout")} onClick={() => { toast.success(t("settings.signout")); navigate({ to: "/auth" }); }} />
         </Group>
 
+        {/* Support */}
+        <Group title={t("settings.support")}>
+          <Row label={t("settings.report_problem")} onClick={() => setReportOpen(true)} />
+        </Group>
+
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
       </div>
 
