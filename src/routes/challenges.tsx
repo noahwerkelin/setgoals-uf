@@ -52,7 +52,14 @@ function buildLbRows(tab: LbTab, range: (typeof LB_RANGES)[number]) {
   return { rows: rows.slice(0, 6), youRank };
 }
 
+type ChallengesTab = "goals" | "badges" | "lb";
+
 export const Route = createFileRoute("/challenges")({
+  validateSearch: (search: Record<string, unknown>): { tab?: ChallengesTab } => {
+    const tab = search.tab;
+    if (tab === "goals" || tab === "badges" || tab === "lb") return { tab };
+    return {};
+  },
   head: () => ({
     meta: [
       { title: "Goals & Challenges — SetGoals UF" },
