@@ -178,6 +178,11 @@ function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    setPageSize(5);
+    setExpandedId(null);
+  }, [filter]);
+
   const query = useQuery({
     queryKey: ["nearby", center?.[0].toFixed(3), center?.[1].toFixed(3)],
     queryFn: () =>
