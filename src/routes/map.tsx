@@ -42,7 +42,7 @@ const KIND_TO_PIN: Record<ActivityKind | "All", string> = {
 
 function SagePin({ kind, size = 44 }: { kind: ActivityKind; size?: number }) {
   const iconKey = KIND_TO_PIN[kind] ?? "Mountain";
-  const inner: Record<string, JSX.Element> = {
+  const inner: Record<string, React.ReactElement> = {
     Mountain: (
       <path d="m8 3 4 8 5-5 4 14H3z" fill="none" stroke="white" strokeWidth={2} strokeLinejoin="round" />
     ),
