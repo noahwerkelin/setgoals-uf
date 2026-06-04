@@ -34,6 +34,7 @@ function Home() {
   let greetingKey = "home.greeting.morning";
   if (hour >= 12 && hour < 17) greetingKey = "home.greeting.afternoon";
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
+  const ringProgress = Math.min(1, STEPS / GOAL);
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     weekday: "long",
     month: "short",
