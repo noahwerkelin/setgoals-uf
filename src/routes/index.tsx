@@ -29,8 +29,12 @@ function formatMin(min: number) {
 function Home() {
   const { t, lang } = useT();
   const { settings } = useSettings();
-  const ringProgress = Math.min(1, STEPS / GOAL);
-  const date = new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
+  const now = new Date();
+  const hour = now.getHours();
+  let greetingKey = "home.greeting.morning";
+  if (hour >= 12 && hour < 17) greetingKey = "home.greeting.afternoon";
+  else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
+  const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     weekday: "long",
     month: "short",
     day: "numeric",
