@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Lock, Users, ChevronRight } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";

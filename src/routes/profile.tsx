@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Settings, BarChart3, Gift, Users, Shield } from "lucide-react";
+import { ChevronRight, Settings, BarChart3, Gift, Shield } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
