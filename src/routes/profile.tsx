@@ -173,6 +173,9 @@ function Page() {
           <Mini label={t("profile.mini.streak")} value={`${streakCount}d`} />
         </section>
 
+        {/* Badges */}
+        <ProfileBadgeStrip />
+
         {/* Nav */}
         <nav className="space-y-2 animate-rise" style={{ animationDelay: "180ms" }}>
           <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
