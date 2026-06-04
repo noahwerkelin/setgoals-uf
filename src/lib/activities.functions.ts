@@ -117,9 +117,7 @@ async function fetchGooglePlaces(
             userRatingsTotal: p.userRatingCount,
             address: p.formattedAddress,
             openNow: p.currentOpeningHours?.openNow,
-            photoUrl: photo
-              ? `${GATEWAY}/places/v1/${photo}/media?maxWidthPx=480`
-              : undefined,
+            photoUrl: photo ? `__resolve__:${photo}` : undefined,
           });
         }
       } catch {
