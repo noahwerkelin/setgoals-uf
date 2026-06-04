@@ -291,3 +291,86 @@ export function Badges() {
     </div>
   );
 }
+
+function ShareBadge({ badge }: { badge: BadgeDef }) {
+  const { t } = useT();
+  const name = t(`badges.${badge.id}.name`);
+  const tier = t(`badges.tier.${badge.tier}`);
+  const url = typeof window !== "undefined" ? window.location.origin : "";
+  const text = t("badges.share_text", { tier, name });
+  const shareUrl = url || "https://setgoals.app";
+
+  const nativeShare = async () => {
+    const nav = typeof navigator !== "undefined" ? navigator : undefined;
+    if (nav && typeof nav.share === "function") {
+      try {
+        await nav.share({ title: name, text, url: shareUrl });
+        return;
+      } catch {
+        // user cancelled or share failed — fall through to copy
+      }
+    }
+    await copyLink();
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${text} ${shareUrl}`);
+      toast.success(t("badges.share_copied"));
+    } catch {
+      toast.error(t("badges.share_failed"));
+    }
+  };
+
+  const openIntent = (href: string) => {
+    window.open(href, "_blank", "noopener,noreferrer");
+  };
+
+  const encoded = encodeURIComponent(`${text} ${shareUrl}`);
+  const encodedUrl = encodeURIComponent(shareUrl);
+  const encodedText = encodeURIComponent(text);
+
+  return (
+    <div className="mt-2 space-y-3">
+      <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-sage-600">
+        <Share2 className="size-3.5" /> {t("badges.share")}
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        <ShareBtn label={t("badges.share_native")} icon={<Share2 className="size-4" />} onClick={nativeShare} />
+        <ShareBtn
+          label="X"
+          icon={<Send className="size-4" />}
+          onClick={() => openIntent(`https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`)}
+        />
+        <ShareBtn
+          label="Facebook"
+          icon={<MessageCircle className="size-4" />}
+          onClick={() => openIntent(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`)}
+        />
+        <ShareBtn
+          label="WhatsApp"
+          icon={<MessageCircle className="size-4" />}
+          onClick={() => openIntent(`https://wa.me/?text=${encoded}`)}
+        />
+      </div>
+      <button
+        onClick={copyLink}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700 hover:bg-sage-200"
+      >
+        <Copy className="size-3.5" /> {t("badges.share_copy")}
+      </button>
+    </div>
+  );
+}
+
+function ShareBtn({ label, icon, onClick }: { label: string; icon: React.ReactNode; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-1 rounded-xl bg-card p-2 ring-1 ring-black/5 hover:bg-sage-50"
+    >
+      <span className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700">{icon}</span>
+      <span className="text-[10px] font-medium text-sage-700">{label}</span>
+    </button>
+  );
+}
