@@ -12,6 +12,12 @@ export type ChildProfile = {
   code: string; // 6-char login code
 };
 
+export type StreakState = {
+  count: number;
+  lastGoalMetDate: string | null; // YYYY-MM-DD in local tz
+  best: number;
+};
+
 export type SettingsState = {
   stepsPer30: number;
   dailyCapHours: number;
@@ -22,12 +28,12 @@ export type SettingsState = {
   shareLocation: "off" | "while_using" | "always";
   units: Units;
   isPro: boolean;
-  // Pro: minutes saved from yesterday usable today (cap at 60)
   bonusMinFromYesterday: number;
-  // Profile / role
   role: Role;
   displayName: string;
+  avatar: string | null;
   children: ChildProfile[];
+  streak: StreakState;
 };
 
 const DEFAULTS: SettingsState = {
@@ -43,7 +49,9 @@ const DEFAULTS: SettingsState = {
   bonusMinFromYesterday: 45,
   role: "individual",
   displayName: "Lukas",
+  avatar: null,
   children: [],
+  streak: { count: 0, lastGoalMetDate: null, best: 0 },
 };
 
 type Ctx = {
