@@ -227,5 +227,40 @@ export const findNearbyActivities = createServerFn({ method: "POST" })
       );
       if (!dup) kept.push(a);
     }
-    return { activities: kept.slice(0, 80) };
+
+    // Resolve Google Places photo references to real CDN URLs the browser can load.
+    const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+    const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+    const result = kept.slice(0, 80);
+    if (LOVABLE_API_KEY && GOOGLE_MAPS_API_KEY) {
+      await Promise.all(
+        result.map(async (a) => {
+          if (!a.photoUrl?.startsWith("__resolve__:")) return;
+          const name = a.photoUrl.slice("__resolve__:".length);
+          try {
+            const r = await fetch(
+              `${GATEWAY}/places/v1/${name}/media?maxWidthPx=640&skipHttpRedirect=true`,
+              {
+                headers: {
+                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                  "X-Connection-Api-Key": GOOGLE_MAPS_API_KEY,
+                },
+              },
+            );
+            if (!r.ok) {
+              a.photoUrl = undefined;
+              return;
+            }
+            const j = (await r.json()) as { photoUri?: string };
+            a.photoUrl = j.photoUri;
+          } catch {
+            a.photoUrl = undefined;
+          }
+        }),
+      );
+    } else {
+      // Strip unresolved markers so the client doesn't try to load them.
+      for (const a of result) if (a.photoUrl?.startsWith("__resolve__:")) a.photoUrl = undefined;
+    }
+    return { activities: result };
   });
