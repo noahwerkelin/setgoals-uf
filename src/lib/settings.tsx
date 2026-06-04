@@ -31,6 +31,8 @@ export type SettingsState = {
   bonusMinFromYesterday: number;
   role: Role;
   displayName: string;
+  email: string;
+  password: string;
   avatar: string | null;
   children: ChildProfile[];
   streak: StreakState;
@@ -49,6 +51,8 @@ const DEFAULTS: SettingsState = {
   bonusMinFromYesterday: 45,
   role: "individual",
   displayName: "Lukas",
+  email: "lukas@example.com",
+  password: "password123",
   avatar: null,
   children: [],
   streak: { count: 0, lastGoalMetDate: null, best: 0 },
