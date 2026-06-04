@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Lock, Users, ChevronRight } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
@@ -83,6 +83,23 @@ function Page() {
             {settings.isPro ? t("challenges.edit_rules") : t("pro.unlock")}
           </button>
         </section>
+
+        <Link
+          to="/leaderboards"
+          className="flex items-center justify-between rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise"
+          style={{ animationDelay: "300ms" }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">
+              <Users className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold">{t("profile.row.lb")}</p>
+              <p className="text-xs text-sage-600">{t("profile.row.lb_sub")}</p>
+            </div>
+          </div>
+          <ChevronRight className="size-4 text-sage-600" />
+        </Link>
       </div>
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
     </AppShell>
