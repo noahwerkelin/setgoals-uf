@@ -66,6 +66,9 @@ const DICTS: Record<Lang, Dict> = {
 
     "challenges.eyebrow": "Today's missions",
     "challenges.title": "Challenges",
+    "challenges.tab.goals": "Goals",
+    "challenges.tab.badges": "Badges",
+    "challenges.tab.lb": "Leaderboard",
     "challenges.streak": "Streak",
     "challenges.streak_days": "{n} days",
     "challenges.streak_sub": "Keep going to unlock the Weekend Explorer badge.",
