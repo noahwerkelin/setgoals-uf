@@ -46,6 +46,8 @@ function Page() {
   const [proOpen, setProOpen] = useState(false);
 
   const isChild = settings.role === "child";
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportText, setReportText] = useState("");
 
   return (
     <AppShell>
