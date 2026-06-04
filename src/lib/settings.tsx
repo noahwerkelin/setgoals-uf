@@ -57,10 +57,32 @@ const DEFAULTS: SettingsState = {
 type Ctx = {
   settings: SettingsState;
   update: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
+  recordSteps: (steps: number, goal: number) => void;
 };
 const SettingsCtx = createContext<Ctx | null>(null);
 
 const KEY = "sg.settings";
+
+function todayISO(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function daysBetween(a: string, b: string): number {
+  const da = new Date(a + "T00:00:00");
+  const db = new Date(b + "T00:00:00");
+  return Math.round((db.getTime() - da.getTime()) / 86400000);
+}
+
+export function currentStreak(s: StreakState): number {
+  if (!s.lastGoalMetDate) return 0;
+  const diff = daysBetween(s.lastGoalMetDate, todayISO());
+  if (diff <= 1) return s.count; // today or yesterday — still alive
+  return 0; // missed a day — reset
+}
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SettingsState>(DEFAULTS);
@@ -68,7 +90,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setSettings({ ...DEFAULTS, ...JSON.parse(raw) });
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setSettings({
+          ...DEFAULTS,
+          ...parsed,
+          streak: { ...DEFAULTS.streak, ...(parsed.streak ?? {}) },
+        });
+      }
     } catch {}
   }, []);
 
@@ -80,7 +109,32 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const value = useMemo(() => ({ settings, update }), [settings, update]);
+  const recordSteps = useCallback((steps: number, goal: number) => {
+    setSettings((prev) => {
+      const today = todayISO();
+      const s = prev.streak;
+      let next = s;
+      if (steps >= goal) {
+        if (s.lastGoalMetDate === today) {
+          next = s; // already counted today
+        } else if (s.lastGoalMetDate && daysBetween(s.lastGoalMetDate, today) === 1) {
+          const count = s.count + 1;
+          next = { count, lastGoalMetDate: today, best: Math.max(s.best, count) };
+        } else {
+          next = { count: 1, lastGoalMetDate: today, best: Math.max(s.best, 1) };
+        }
+      } else if (s.lastGoalMetDate && daysBetween(s.lastGoalMetDate, today) >= 2) {
+        // missed at least a full day -> reset count
+        next = { ...s, count: 0 };
+      }
+      if (next === s) return prev;
+      const out = { ...prev, streak: next };
+      try { localStorage.setItem(KEY, JSON.stringify(out)); } catch {}
+      return out;
+    });
+  }, []);
+
+  const value = useMemo(() => ({ settings, update, recordSteps }), [settings, update, recordSteps]);
   return <SettingsCtx.Provider value={value}>{children}</SettingsCtx.Provider>;
 }
 
