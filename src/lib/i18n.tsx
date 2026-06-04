@@ -12,7 +12,9 @@ const DICTS: Record<Lang, Dict> = {
     "nav.coach": "Coach",
     "nav.profile": "Profile",
 
-    "home.morning": "Morning",
+    "home.greeting.morning": "Good morning",
+    "home.greeting.afternoon": "Good afternoon",
+    "home.greeting.evening": "Good evening",
     "home.steps_of": "of {goal} steps",
     "home.earned": "Earned",
     "home.remaining": "Remaining",
@@ -338,7 +340,9 @@ const DICTS: Record<Lang, Dict> = {
     "nav.coach": "Coach",
     "nav.profile": "Profil",
 
-    "home.morning": "God morgon",
+    "home.greeting.morning": "God morgon",
+    "home.greeting.afternoon": "God eftermiddag",
+    "home.greeting.evening": "God kväll",
     "home.steps_of": "av {goal} steg",
     "home.earned": "Intjänat",
     "home.remaining": "Kvar",

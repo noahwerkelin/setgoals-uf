@@ -29,8 +29,13 @@ function formatMin(min: number) {
 function Home() {
   const { t, lang } = useT();
   const { settings } = useSettings();
+  const now = new Date();
+  const hour = now.getHours();
+  let greetingKey = "home.greeting.morning";
+  if (hour >= 12 && hour < 17) greetingKey = "home.greeting.afternoon";
+  else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   const ringProgress = Math.min(1, STEPS / GOAL);
-  const date = new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
+  const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     weekday: "long",
     month: "short",
     day: "numeric",
@@ -43,7 +48,7 @@ function Home() {
       <header className="flex items-end justify-between px-6 pb-4 pt-10 animate-rise">
         <div className="space-y-1">
           <p className="text-sm font-medium text-sage-600">{date}</p>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("home.morning")}, {settings.displayName || "Lukas"}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t(greetingKey)}, {settings.displayName || "Lukas"}</h1>
         </div>
         <Link to="/profile" aria-label="Profile" className="size-10 rounded-full bg-sage-200 ring-1 ring-black/5 grid place-items-center text-[10px] font-semibold uppercase tracking-widest text-sage-700">
           LU
