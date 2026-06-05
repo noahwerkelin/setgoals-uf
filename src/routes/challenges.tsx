@@ -233,9 +233,44 @@ function ChallengeRow({
 function Leaderboard() {
   const { t, lang } = useT();
   const [tab, setTab] = useState<LbTab>("Friends");
-  const [range, setRange] = useState<(typeof LB_RANGES)[number]>("Daily");
+  const { location, loading } = useUserLocation();
+  const { friends } = useFriends();
 
-  const { rows, youRank } = useMemo(() => buildLbRows(tab, range), [tab, range]);
+  const youSteps = useMemo(() => getTodaySteps(7240), []);
+
+  const { rows, youRank, scopeLabel, scopeIcon } = useMemo(() => {
+    if (tab === "Friends") {
+      const all = [
+        ...friends.map((f) => ({ n: f.name, s: f.steps })),
+        { n: "__you__", s: youSteps },
+      ].sort((a, b) => b.s - a.s);
+      const idx = all.findIndex((x) => x.n === "__you__") + 1;
+      return {
+        rows: all,
+        youRank: idx,
+        scopeLabel: t("lb.friends_count", { n: friends.length }),
+        scopeIcon: "friends" as const,
+      };
+    }
+    if (tab === "Local") {
+      const key = `local:${location.countryCode}:${location.region}`;
+      const { rows: r, youRank: yr } = buildCohort(key, location.countryCode, 30, youSteps);
+      return {
+        rows: r.slice(0, 10),
+        youRank: yr,
+        scopeLabel: t("lb.region_label", { region: location.region }),
+        scopeIcon: "local" as const,
+      };
+    }
+    const key = `national:${location.countryCode}`;
+    const { rows: r, youRank: yr } = buildCohort(key, location.countryCode, 60, youSteps);
+    return {
+      rows: r.slice(0, 10),
+      youRank: yr,
+      scopeLabel: t("lb.country_label", { country: location.country }),
+      scopeIcon: "national" as const,
+    };
+  }, [tab, friends, youSteps, location, t]);
 
   useEffect(() => {
     if (tab === "Local") recordLeaderboardRank("local", youRank);
@@ -251,6 +286,9 @@ function Leaderboard() {
       }),
     [lang],
   );
+
+  const Icon = scopeIcon === "friends" ? Users : scopeIcon === "local" ? MapPin : Globe2;
+  const showYouFloating = tab !== "Friends" && youRank > 10;
 
   return (
     <div className="space-y-5">
@@ -268,46 +306,52 @@ function Leaderboard() {
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex gap-2">
-          {LB_RANGES.map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-black/5 ${
-                range === r ? "bg-sage-600 text-primary-foreground" : "bg-card text-sage-700"
-              }`}
-            >
-              {t(`lb.range.${r}`)}
-            </button>
-          ))}
-        </div>
-        {range === "Daily" && (
-          <span className="text-[10px] font-medium uppercase tracking-wider text-sage-600">
-            {t("lb.today_label", { date: dateLabel })}
-          </span>
-        )}
+      <div className="flex items-center justify-between gap-2 px-1">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-sage-700">
+          <Icon className="size-3.5" />
+          {loading && tab !== "Friends" ? t("lb.locating") : scopeLabel}
+        </span>
+        <span className="text-[10px] font-medium uppercase tracking-wider text-sage-600">
+          {t("lb.today_label", { date: dateLabel })}
+        </span>
       </div>
 
-      <ol className="space-y-2">
-        {rows.map((row, i) => (
-          <li
-            key={row.n + i}
-            className={`flex items-center gap-4 rounded-2xl p-4 ring-1 animate-rise ${
-              row.n === "__you__" ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/5"
-            }`}
-            style={{ animationDelay: `${i * 40}ms` }}
-          >
-            <span className={`grid size-8 place-items-center rounded-full text-xs font-semibold tabular-nums ${row.n === "__you__" ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
-              {i + 1}
-            </span>
-            <span className="flex-1 text-sm font-medium">{row.n === "__you__" ? t("lb.you") : row.n}</span>
-            <span className="text-sm font-semibold tabular-nums">{row.s.toLocaleString()}</span>
-          </li>
-        ))}
-      </ol>
+      {tab === "Friends" && friends.length === 0 ? (
+        <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
+          {t("lb.no_friends")}
+        </p>
+      ) : (
+        <ol className="space-y-2">
+          {rows.map((row, i) => (
+            <li
+              key={row.n + i}
+              className={`flex items-center gap-4 rounded-2xl p-4 ring-1 animate-rise ${
+                row.n === "__you__" ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/5"
+              }`}
+              style={{ animationDelay: `${i * 30}ms` }}
+            >
+              <span className={`grid size-8 place-items-center rounded-full text-xs font-semibold tabular-nums ${row.n === "__you__" ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
+                {i + 1}
+              </span>
+              <span className="flex-1 text-sm font-medium">{row.n === "__you__" ? t("lb.you") : row.n}</span>
+              <span className="text-sm font-semibold tabular-nums">{row.s.toLocaleString()}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {showYouFloating && (
+        <div className="flex items-center gap-4 rounded-2xl bg-sage-600 p-4 text-primary-foreground ring-1 ring-sage-700/40">
+          <span className="grid size-8 place-items-center rounded-full bg-white/15 text-xs font-semibold tabular-nums">
+            {youRank}
+          </span>
+          <span className="flex-1 text-sm font-medium">{t("lb.you")}</span>
+          <span className="text-sm font-semibold tabular-nums">{youSteps.toLocaleString()}</span>
+        </div>
+      )}
 
       <p className="px-1 text-center text-xs text-sage-600">{t("lb.refresh")} · {t("lb.anon")}</p>
     </div>
   );
 }
+
