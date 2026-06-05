@@ -1,23 +1,54 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Lock, MapPin, Globe2, Users } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badges, recordLeaderboardRank } from "@/components/Badges";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
+import { useUserLocation } from "@/lib/location";
+import { useFriends } from "@/lib/friends";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 
 type LbTab = "Friends" | "Local" | "National";
 const LB_TABS: LbTab[] = ["Friends", "Local", "National"];
-const LB_RANGES = ["Daily", "Weekly", "Monthly"] as const;
 
-const FRIEND_NAMES = ["Maja", "Erik", "Sofia", "Anton", "Olivia", "Noah", "Linnea"];
-const LOCAL_NAMES = ["runner_42", "hiker.se", "morning.walk", "trailblazer", "fjord.go", "sunrise.run"];
-const NATIONAL_NAMES = ["stepking", "wanderlust", "trailmix", "northern.steps", "pace.master", "ultra.lina"];
+// Realistic name pools for plausible cohort generation.
+const NAME_POOLS: Record<string, string[]> = {
+  SE: [
+    "Maja", "Erik", "Sofia", "Anton", "Olivia", "Noah", "Linnea", "Liam",
+    "Alma", "Hugo", "Wilma", "Lucas", "Ebba", "Elias", "Astrid", "Oskar",
+    "Saga", "Axel", "Freja", "Viktor", "Selma", "Arvid", "Nora", "Vincent",
+    "Tuva", "Isak", "Klara", "Felix", "Iris", "Theo", "Maja_S", "Emil",
+  ],
+  US: [
+    "Liam", "Olivia", "Noah", "Emma", "Oliver", "Ava", "Elijah", "Sophia",
+    "Mateo", "Isabella", "Lucas", "Mia", "Levi", "Amelia", "Ethan", "Harper",
+    "James", "Evelyn", "Benjamin", "Luna", "Henry", "Ella", "Theodore", "Aria",
+  ],
+  DEFAULT: [
+    "Alex", "Sam", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn",
+    "Avery", "Rowan", "Sky", "Jamie", "Cameron", "Drew", "Hayden", "Reese",
+    "Parker", "Sage", "Eden", "Ari", "Robin", "Charlie", "Finley", "Emerson",
+  ],
+};
 
-function lbRng(seed: number) {
+function dayOfYear(d = new Date()) {
+  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
+  return Math.floor((d.getTime() - start) / 86400000);
+}
+
+function hashStr(s: string) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function rng(seed: number) {
   return () => {
     seed = (seed + 0x6d2b79f5) | 0;
     let t = seed;
@@ -27,30 +58,42 @@ function lbRng(seed: number) {
   };
 }
 
-function dayOfYear(d = new Date()) {
-  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
-  return Math.floor((d.getTime() - start) / 86400000);
+function getTodaySteps(fallback: number): number {
+  try {
+    const raw = localStorage.getItem("sg.totals");
+    if (raw) {
+      const t = JSON.parse(raw) as { lastDate: string | null; totalSteps: number };
+      const today = new Date();
+      const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      if (t.lastDate === iso) return t.totalSteps || fallback;
+    }
+  } catch {}
+  return fallback;
 }
 
-function buildLbRows(tab: LbTab, range: (typeof LB_RANGES)[number]) {
-  const names =
-    tab === "Friends" ? FRIEND_NAMES : tab === "Local" ? LOCAL_NAMES : NATIONAL_NAMES;
-  const base = tab === "Friends" ? 6000 : tab === "Local" ? 9000 : 15000;
-  const spread = tab === "Friends" ? 8000 : tab === "Local" ? 14000 : 22000;
-  const multiplier = range === "Daily" ? 1 : range === "Weekly" ? 6.4 : 27;
+function buildCohort(scopeKey: string, countryCode: string, size: number, youSteps: number) {
+  const pool = NAME_POOLS[countryCode] ?? NAME_POOLS.DEFAULT;
   const day = dayOfYear();
-  const seed = day * 1000 + (tab === "Friends" ? 1 : tab === "Local" ? 2 : 3) + (range === "Daily" ? 10 : range === "Weekly" ? 20 : 30);
-  const r = lbRng(seed);
-  const youSteps = Math.round((4500 + r() * 7000) * multiplier);
-  const rows = names.map((n) => ({
-    n,
-    s: Math.round((base + r() * spread) * multiplier),
-  }));
+  const seed = (hashStr(scopeKey) ^ (day * 2654435761)) >>> 0;
+  const r = rng(seed);
+  // Step ranges scale with cohort scope.
+  const base = scopeKey.startsWith("national:") ? 7000 : 5500;
+  const spread = scopeKey.startsWith("national:") ? 18000 : 12000;
+  const used = new Set<string>();
+  const rows: { n: string; s: number }[] = [];
+  let guard = 0;
+  while (rows.length < size && guard++ < size * 5) {
+    const name = pool[Math.floor(r() * pool.length)];
+    if (used.has(name)) continue;
+    used.add(name);
+    rows.push({ n: name, s: Math.round(base + r() * spread) });
+  }
   rows.push({ n: "__you__", s: youSteps });
   rows.sort((a, b) => b.s - a.s);
   const youRank = rows.findIndex((x) => x.n === "__you__") + 1;
-  return { rows: rows.slice(0, 6), youRank };
+  return { rows, youRank };
 }
+
 
 type ChallengesTab = "goals" | "badges" | "lb";
 
