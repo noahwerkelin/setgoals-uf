@@ -56,7 +56,7 @@ function Page() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("start");
   const [history, setHistory] = useState<Step[]>([]);
-  const [familyCode, setFamilyCode] = useState("");
+  
 
   const goto = (next: Step) => {
     setHistory((h) => [...h, step]);
