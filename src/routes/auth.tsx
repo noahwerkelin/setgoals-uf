@@ -25,7 +25,7 @@ type Step =
   | "form-individual"
   | "form-parent"
   | "child-code"
-  | "family-code";
+  | "add-children";
 
 const FAMILY_KEY = "sg.familyCodes";
 
