@@ -10,6 +10,8 @@ export type ChildProfile = {
   avatar: string; // emoji or initials
   dailyGoal: number; // steps
   code: string; // 6-char login code
+  stepsPer30: number; // earning ratio
+  dailyCapHours: number; // screen-time cap
 };
 
 export type StreakState = {
