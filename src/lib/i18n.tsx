@@ -244,6 +244,7 @@ const DICTS: Record<Lang, Dict> = {
     "parent.rules_sub": "Currently: 1,000 steps = 30 min · Max 3h per day · Unused time does not carry over.",
     "parent.configure": "Configure rules",
 
+    "splash.tagline": "Walk. Earn. Live.",
     "onb.brand": "SetGoals UF",
     "onb.headline": "Earn screen time by moving.",
     "onb.sub": "A calmer, healthier way to use your phone — for the whole family.",
@@ -706,6 +707,7 @@ const DICTS: Record<Lang, Dict> = {
     "parent.rules_sub": "Nu: 1 000 steg = 30 min · Max 3h per dag · Oanvänd tid förs inte över.",
     "parent.configure": "Konfigurera regler",
 
+    "splash.tagline": "Gå. Tjäna. Lev.",
     "onb.brand": "SetGoals UF",
     "onb.headline": "Tjäna skärmtid genom att röra dig.",
     "onb.sub": "Ett lugnare, hälsosammare sätt att använda mobilen — för hela familjen.",

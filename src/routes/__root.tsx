@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "../lib/i18n";
 import { SettingsProvider } from "../lib/settings";
 import { Toaster } from "../components/ui/sonner";
+import { Splash } from "../components/Splash";
 
 function NotFoundComponent() {
   return (
@@ -130,6 +131,7 @@ function RootComponent() {
           <main>
             <Outlet />
           </main>
+          <Splash />
           <Toaster />
         </SettingsProvider>
       </I18nProvider>
