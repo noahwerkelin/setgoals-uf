@@ -632,7 +632,7 @@ const DICTS: Record<Lang, Dict> = {
 
     "profile.title": "Profil",
     "profile.meta": "Åldersgrupp · Tonåring · Med sedan okt 2024",
-    "profile.mini.steps": "Steg · 30d",
+    "profile.mini.steps": "Steg",
     "profile.mini.earned": "Intjänat",
     "profile.mini.streak": "Svit",
     "profile.row.stats": "Statistik",
