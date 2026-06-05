@@ -175,10 +175,7 @@ function Page() {
               onDone={(name) => {
                 update("role", "parent");
                 update("displayName", name);
-                const code = genCode();
-                saveCode(code);
-                setFamilyCode(code);
-                goto("family-code");
+                goto("add-children");
               }}
             />
           )}
@@ -194,8 +191,8 @@ function Page() {
               }}
             />
           )}
-          {step === "family-code" && (
-            <FamilyCodeView code={familyCode} t={t} onDone={enterApp} />
+          {step === "add-children" && (
+            <AddChildrenView t={t} onDone={enterApp} />
           )}
         </div>
       </div>
