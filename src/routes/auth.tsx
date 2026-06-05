@@ -211,7 +211,7 @@ function titleFor(step: Step, t: (k: string) => string) {
     case "form-individual": return t("auth.individual");
     case "form-parent": return t("auth.parent");
     case "child-code": return t("auth.code_title");
-    case "family-code": return t("auth.family_created");
+    case "add-children": return t("auth.add_children_title");
   }
 }
 function subFor(step: Step, t: (k: string) => string) {
