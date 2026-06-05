@@ -655,6 +655,8 @@ const DICTS: Record<Lang, Dict> = {
     "profile.row.lb_sub": "Vänner, lokalt, nationellt",
     "profile.row.parent": "Föräldraläge",
     "profile.row.parent_sub": "Godkänn appar och sätt gränser",
+    "profile.row.screentime": "Skärmtid",
+    "profile.row.screentime_sub": "Ange dina regler och gränser",
     "profile.row.settings": "Inställningar",
     "profile.row.settings_sub": "Notiser, integrationer, konto",
     "profile.change_photo": "Byt bild",
