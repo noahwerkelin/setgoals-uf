@@ -186,7 +186,12 @@ function Page() {
           <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
           <Row to="/rewards" icon={<Gift className="size-4" />} label={t("profile.row.rewards")} subtitle={t("profile.row.rewards_sub")} />
           {!isChild && (
-            <Row to="/parent" icon={<Shield className="size-4" />} label={t("profile.row.parent")} subtitle={t("profile.row.parent_sub")} />
+            <Row
+              to="/parent"
+              icon={<Shield className="size-4" />}
+              label={settings.role === "parent" ? t("profile.row.parent") : t("profile.row.screentime")}
+              subtitle={settings.role === "parent" ? t("profile.row.parent_sub") : t("profile.row.screentime_sub")}
+            />
           )}
           <Row to="/settings" icon={<Settings className="size-4" />} label={t("profile.row.settings")} subtitle={t("profile.row.settings_sub")} />
         </nav>
