@@ -581,5 +581,3 @@ function ChildEditDialog({
   );
 }
 
-// Silence unused import warning when SettingsState helpers aren't referenced.
-export type _Unused = SettingsState;
