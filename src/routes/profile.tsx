@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { BarChart3, Camera, ChevronRight, Flame, Gift, Settings, Shield, Trash2 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
+import { FriendsCard } from "@/components/FriendsCard";
 import { useT } from "@/lib/i18n";
 import { currentStreak, useSettings } from "@/lib/settings";
 
@@ -101,7 +102,7 @@ function Page() {
             />
             <div>
               <p className="text-lg font-semibold leading-tight">{displayName}</p>
-              <p className="mt-0.5 text-xs text-sage-600">{t("profile.meta")}</p>
+              <p className="mt-0.5 text-xs text-sage-600">@{settings.username}</p>
             </div>
             <div className="flex items-center gap-2 pt-1">
               <button
@@ -175,6 +176,10 @@ function Page() {
 
         {/* Badges */}
         <ProfileBadgeStrip />
+
+        {/* Friends */}
+        <FriendsCard />
+
 
         {/* Nav */}
         <nav className="space-y-2 animate-rise" style={{ animationDelay: "180ms" }}>
