@@ -3,7 +3,7 @@ import { Footprints } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
 const SHOWN_KEY = "sg.splash.shown";
-const DURATION_MS = 1700;
+const DURATION_MS = 2500;
 
 export function Splash() {
   const { t } = useT();
