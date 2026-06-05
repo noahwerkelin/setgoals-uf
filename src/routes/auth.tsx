@@ -225,7 +225,7 @@ function subFor(step: Step, t: (k: string) => string) {
     case "form-individual":
     case "form-parent": return t("auth.sub_signup");
     case "child-code": return t("auth.code_sub");
-    case "family-code": return t("auth.family_code_label");
+    case "add-children": return t("auth.add_children_sub");
   }
 }
 
