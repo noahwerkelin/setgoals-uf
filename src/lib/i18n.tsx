@@ -181,6 +181,8 @@ const DICTS: Record<Lang, Dict> = {
     "profile.row.lb_sub": "Friends, local, national",
     "profile.row.parent": "Parent mode",
     "profile.row.parent_sub": "Approve apps and set limits",
+    "profile.row.screentime": "Screen time",
+    "profile.row.screentime_sub": "Set your earning rules and limits",
     "profile.row.settings": "Settings",
     "profile.row.settings_sub": "Notifications, integrations, account",
     "profile.change_photo": "Change photo",
