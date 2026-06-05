@@ -589,3 +589,49 @@ function PasswordDialog({
     </Dialog>
   );
 }
+
+function UsernameDialog({
+  open, onOpenChange, current, onSave, t,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  current: string;
+  onSave: (v: string) => void;
+  t: (k: string) => string;
+}) {
+  const [val, setVal] = useState(current);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => { if (open) { setVal(current); setErr(null); } }, [open, current]);
+  const submit = () => {
+    const v = val.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(v)) { setErr(t("account.username.invalid")); return; }
+    onSave(v);
+    onOpenChange(false);
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("account.username.title")}</DialogTitle>
+          <DialogDescription>{t("account.username.desc")}</DialogDescription>
+        </DialogHeader>
+        <div className="py-2 space-y-2">
+          <Label htmlFor="username-input">{t("settings.username")}</Label>
+          <Input
+            id="username-input"
+            value={val}
+            maxLength={20}
+            onChange={(e) => { setVal(e.target.value.replace(/[^a-zA-Z0-9_]/g, "")); setErr(null); }}
+            placeholder={t("account.username.placeholder")}
+            autoFocus
+          />
+          {err && <p className="text-xs text-destructive">{err}</p>}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
+          <Button onClick={submit}>{t("settings.save")}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
