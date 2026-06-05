@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Check, Copy, User, Users, Shield, Baby } from "lucide-react";
+import { ArrowLeft, Check, User, Users, Shield, Baby, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
-import { useSettings } from "@/lib/settings";
+import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -25,7 +25,7 @@ type Step =
   | "form-individual"
   | "form-parent"
   | "child-code"
-  | "family-code";
+  | "add-children";
 
 const FAMILY_KEY = "sg.familyCodes";
 
@@ -56,7 +56,7 @@ function Page() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("start");
   const [history, setHistory] = useState<Step[]>([]);
-  const [familyCode, setFamilyCode] = useState("");
+  
 
   const goto = (next: Step) => {
     setHistory((h) => [...h, step]);
@@ -175,10 +175,7 @@ function Page() {
               onDone={(name) => {
                 update("role", "parent");
                 update("displayName", name);
-                const code = genCode();
-                saveCode(code);
-                setFamilyCode(code);
-                goto("family-code");
+                goto("add-children");
               }}
             />
           )}
@@ -194,8 +191,8 @@ function Page() {
               }}
             />
           )}
-          {step === "family-code" && (
-            <FamilyCodeView code={familyCode} t={t} onDone={enterApp} />
+          {step === "add-children" && (
+            <AddChildrenView t={t} onDone={enterApp} />
           )}
         </div>
       </div>
@@ -214,7 +211,7 @@ function titleFor(step: Step, t: (k: string) => string) {
     case "form-individual": return t("auth.individual");
     case "form-parent": return t("auth.parent");
     case "child-code": return t("auth.code_title");
-    case "family-code": return t("auth.family_created");
+    case "add-children": return t("auth.add_children_title");
   }
 }
 function subFor(step: Step, t: (k: string) => string) {
@@ -228,7 +225,7 @@ function subFor(step: Step, t: (k: string) => string) {
     case "form-individual":
     case "form-parent": return t("auth.sub_signup");
     case "child-code": return t("auth.code_sub");
-    case "family-code": return t("auth.family_code_label");
+    case "add-children": return t("auth.add_children_sub");
   }
 }
 
@@ -445,37 +442,149 @@ function ChildCodeForm({ t, onDone }: { t: (k: string, vars?: Record<string, str
   );
 }
 
-function FamilyCodeView({ code, t, onDone }: { code: string; t: (k: string) => string; onDone: () => void }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      toast.success(t("auth.copied"));
-      setTimeout(() => setCopied(false), 1500);
-    } catch {}
+const CHILD_AVATARS = ["🌱", "🌳", "🐻", "🦊", "🐼", "🦁", "🐸", "🦄", "⭐️", "🚀"];
+
+function AddChildrenView({ t, onDone }: { t: (k: string, vars?: Record<string, string | number>) => string; onDone: () => void }) {
+  const { settings, update } = useSettings();
+  const [adding, setAdding] = useState(settings.children.length === 0);
+  const [name, setName] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [avatar, setAvatar] = useState(CHILD_AVATARS[0]);
+
+  const reset = () => {
+    setName("");
+    setBirthday("");
+    setAvatar(CHILD_AVATARS[0]);
   };
+
+  const submitChild = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      toast.error(t("auth.required"));
+      return;
+    }
+    const child: ChildProfile = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      birthday,
+      avatar,
+      dailyGoal: 8000,
+      code: genChildCode(),
+      stepsPer30: 1000,
+      dailyCapHours: 3,
+    };
+    update("children", [...settings.children, child]);
+    toast.success(t("auth.child_added"));
+    reset();
+    setAdding(false);
+  };
+
+  const removeChild = (id: string) => {
+    update("children", settings.children.filter((c) => c.id !== id));
+  };
+
   return (
     <div className="space-y-4">
-      <div className="rounded-3xl bg-sage-600 px-6 py-8 text-center text-primary-foreground shadow-lg">
-        <p className="text-[11px] font-semibold uppercase tracking-widest opacity-80">
-          {t("auth.family_code_label")}
-        </p>
-        <p className="mt-3 text-4xl font-semibold tracking-[0.3em]">{code}</p>
+      {settings.children.length > 0 && (
+        <ul className="space-y-2">
+          {settings.children.map((c) => (
+            <li key={c.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-black/5">
+              <span className="grid size-10 place-items-center rounded-full bg-sage-100 text-lg">{c.avatar}</span>
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-sm font-semibold text-sage-900">{c.name}</p>
+                {c.birthday && <p className="text-[11px] text-sage-600">{c.birthday}</p>}
+              </div>
+              <button
+                onClick={() => removeChild(c.id)}
+                aria-label="Remove"
+                className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {adding ? (
+        <form onSubmit={submitChild} className="space-y-3 rounded-2xl bg-card p-4 ring-1 ring-black/5">
+          <div>
+            <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
+              {t("parent.child.avatar")}
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {CHILD_AVATARS.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => setAvatar(a)}
+                  className={`grid h-10 w-10 place-items-center rounded-xl text-xl ring-1 transition-colors ${
+                    avatar === a ? "bg-sage-600 ring-sage-700" : "bg-sage-50 ring-black/5"
+                  }`}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Field
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("auth.name")}
+            required
+          />
+          <label className="block">
+            <span className="mb-1.5 ml-1 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
+              {t("auth.birthday")}
+            </span>
+            <Field
+              type="date"
+              value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
+            />
+          </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { reset(); setAdding(false); }}
+              className="flex-1 rounded-full bg-sage-100 py-3 text-sm font-semibold text-sage-700"
+            >
+              {t("settings.cancel")}
+            </button>
+            <button
+              type="submit"
+              className="flex-1 rounded-full bg-sage-600 py-3 text-sm font-semibold text-primary-foreground"
+            >
+              {t("parent.child.save")}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button
+          onClick={() => setAdding(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-sage-300 p-4 text-sm font-medium text-sage-700"
+        >
+          <Plus className="size-4" />
+          {settings.children.length === 0 ? t("auth.add_first_child") : t("auth.add_another_child")}
+        </button>
+      )}
+
+      <div className="space-y-2 pt-2">
+        <button
+          onClick={onDone}
+          className="w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground"
+        >
+          {settings.children.length > 0 ? t("auth.finish") : t("auth.skip_for_now")}
+        </button>
+        {settings.children.length > 0 && (
+          <button
+            onClick={onDone}
+            className="w-full text-center text-[11px] font-medium text-sage-600"
+          >
+            {t("auth.skip_for_now")}
+          </button>
+        )}
       </div>
-      <button
-        onClick={copy}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-card py-3 text-sm font-semibold text-sage-900 ring-1 ring-black/5"
-      >
-        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        {copied ? t("auth.copied") : t("auth.copy")}
-      </button>
-      <button
-        onClick={onDone}
-        className="w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground"
-      >
-        {t("auth.enter_app")}
-      </button>
     </div>
   );
 }
