@@ -3,7 +3,7 @@ import { Shield, Check, X, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Sm
 import { useEffect, useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings, genChildCode, type ChildProfile, type SettingsState } from "@/lib/settings";
+import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 import {
