@@ -390,6 +390,11 @@ const DICTS: Record<Lang, Dict> = {
 
     "lb.today_label": "Today · {date}",
     "lb.refresh": "Refreshes daily at midnight",
+    "lb.locating": "Detecting your location…",
+    "lb.region_label": "Region · {region}",
+    "lb.country_label": "Country · {country}",
+    "lb.friends_count": "{n} friends",
+    "lb.no_friends": "Add friends to see them here.",
 
     "pro.badge": "PRO",
     "pro.title": "SetGoals PRO",
@@ -828,6 +833,11 @@ const DICTS: Record<Lang, Dict> = {
 
     "lb.today_label": "Idag · {date}",
     "lb.refresh": "Uppdateras dagligen kl. 00:00",
+    "lb.locating": "Hämtar din plats…",
+    "lb.region_label": "Region · {region}",
+    "lb.country_label": "Land · {country}",
+    "lb.friends_count": "{n} vänner",
+    "lb.no_friends": "Lägg till vänner för att se dem här.",
 
     "pro.badge": "PRO",
     "pro.title": "SetGoals PRO",
