@@ -48,6 +48,7 @@ function Page() {
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
   const [proOpen, setProOpen] = useState(false);
   const [nicknameOpen, setNicknameOpen] = useState(false);
+  const [usernameOpen, setUsernameOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
 
@@ -171,6 +172,7 @@ function Page() {
             ]}
           />
           <Row label={t("settings.nickname")} meta={settings.displayName} onClick={() => setNicknameOpen(true)} />
+          <Row label={t("settings.username")} meta={`@${settings.username}`} onClick={() => setUsernameOpen(true)} />
           <Row label={t("settings.email")} meta={settings.email} onClick={() => setEmailOpen(true)} />
           <Row label={t("settings.password")} meta="••••••••" onClick={() => setPasswordOpen(true)} />
           <Row label={t("settings.signout")} onClick={() => { toast.success(t("settings.signout")); navigate({ to: "/auth" }); }} />
@@ -288,6 +290,13 @@ function Page() {
         onOpenChange={setNicknameOpen}
         current={settings.displayName}
         onSave={(v) => { update("displayName", v); toast.success(t("account.updated")); }}
+        t={t}
+      />
+      <UsernameDialog
+        open={usernameOpen}
+        onOpenChange={setUsernameOpen}
+        current={settings.username}
+        onSave={(v) => { update("username", v); toast.success(t("account.updated")); }}
         t={t}
       />
       <EmailDialog
