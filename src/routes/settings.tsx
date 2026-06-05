@@ -48,6 +48,7 @@ function Page() {
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
   const [proOpen, setProOpen] = useState(false);
   const [nicknameOpen, setNicknameOpen] = useState(false);
+  const [usernameOpen, setUsernameOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
 
@@ -171,6 +172,7 @@ function Page() {
             ]}
           />
           <Row label={t("settings.nickname")} meta={settings.displayName} onClick={() => setNicknameOpen(true)} />
+          <Row label={t("settings.username")} meta={`@${settings.username}`} onClick={() => setUsernameOpen(true)} />
           <Row label={t("settings.email")} meta={settings.email} onClick={() => setEmailOpen(true)} />
           <Row label={t("settings.password")} meta="••••••••" onClick={() => setPasswordOpen(true)} />
           <Row label={t("settings.signout")} onClick={() => { toast.success(t("settings.signout")); navigate({ to: "/auth" }); }} />
@@ -288,6 +290,13 @@ function Page() {
         onOpenChange={setNicknameOpen}
         current={settings.displayName}
         onSave={(v) => { update("displayName", v); toast.success(t("account.updated")); }}
+        t={t}
+      />
+      <UsernameDialog
+        open={usernameOpen}
+        onOpenChange={setUsernameOpen}
+        current={settings.username}
+        onSave={(v) => { update("username", v); toast.success(t("account.updated")); }}
         t={t}
       />
       <EmailDialog
@@ -575,6 +584,52 @@ function PasswordDialog({
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
           <Button disabled={!cur || !next || !confirm} onClick={submit}>{t("settings.save")}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UsernameDialog({
+  open, onOpenChange, current, onSave, t,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  current: string;
+  onSave: (v: string) => void;
+  t: (k: string) => string;
+}) {
+  const [val, setVal] = useState(current);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => { if (open) { setVal(current); setErr(null); } }, [open, current]);
+  const submit = () => {
+    const v = val.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(v)) { setErr(t("account.username.invalid")); return; }
+    onSave(v);
+    onOpenChange(false);
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("account.username.title")}</DialogTitle>
+          <DialogDescription>{t("account.username.desc")}</DialogDescription>
+        </DialogHeader>
+        <div className="py-2 space-y-2">
+          <Label htmlFor="username-input">{t("settings.username")}</Label>
+          <Input
+            id="username-input"
+            value={val}
+            maxLength={20}
+            onChange={(e) => { setVal(e.target.value.replace(/[^a-zA-Z0-9_]/g, "")); setErr(null); }}
+            placeholder={t("account.username.placeholder")}
+            autoFocus
+          />
+          {err && <p className="text-xs text-destructive">{err}</p>}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
+          <Button onClick={submit}>{t("settings.save")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

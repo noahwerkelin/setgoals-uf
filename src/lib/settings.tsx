@@ -31,6 +31,7 @@ export type SettingsState = {
   bonusMinFromYesterday: number;
   role: Role;
   displayName: string;
+  username: string;
   email: string;
   password: string;
   avatar: string | null;
@@ -51,6 +52,7 @@ const DEFAULTS: SettingsState = {
   bonusMinFromYesterday: 45,
   role: "individual",
   displayName: "Lukas",
+  username: "lukas",
   email: "lukas@example.com",
   password: "password123",
   avatar: null,
