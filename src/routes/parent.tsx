@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Shield, Check, X, Plus, Lock, Sparkles, Copy, Pencil, Trash2 } from "lucide-react";
+import { Shield, Check, X, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
+import { useSettings, genChildCode, type ChildProfile, type SettingsState } from "@/lib/settings";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 import {
@@ -37,6 +37,8 @@ const INITIAL_APPS: { name: string; state: AppState }[] = [
 
 const AVATAR_OPTIONS = ["🌱", "🌳", "🐻", "🦊", "🐼", "🦁", "🐸", "🦄", "⭐️", "🚀"];
 
+type ScreenTimeEdit = { stepsPer30: number; dailyCapHours: number };
+
 function Page() {
   const { t } = useT();
   const { settings, update } = useSettings();
@@ -44,6 +46,10 @@ function Page() {
   const [proOpen, setProOpen] = useState(false);
   const [editing, setEditing] = useState<ChildProfile | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [editingChildST, setEditingChildST] = useState<ChildProfile | null>(null);
+  const [editingMyST, setEditingMyST] = useState(false);
+
+  const isIndividual = settings.role === "individual";
 
   const setState = (name: string, state: AppState) => {
     setApps((a) => a.map((x) => (x.name === name ? { ...x, state } : x)));
@@ -58,6 +64,8 @@ function Page() {
       avatar: AVATAR_OPTIONS[0],
       dailyGoal: 8000,
       code: genChildCode(),
+      stepsPer30: 1000,
+      dailyCapHours: 3,
     });
     setIsNew(true);
   };
@@ -87,6 +95,20 @@ function Page() {
     toast.success(t("parent.child.removed"));
   };
 
+  const saveChildST = (id: string, v: ScreenTimeEdit) => {
+    update(
+      "children",
+      settings.children.map((c) => (c.id === id ? { ...c, ...v } : c)),
+    );
+    toast.success(t("parent.child.updated"));
+  };
+
+  const saveMyST = (v: ScreenTimeEdit) => {
+    update("stepsPer30", v.stepsPer30);
+    update("dailyCapHours", v.dailyCapHours);
+    toast.success(t("account.updated"));
+  };
+
   const copyCode = async (code: string) => {
     try {
       await navigator.clipboard.writeText(code);
@@ -97,91 +119,143 @@ function Page() {
   return (
     <AppShell>
       <PageHeader
-        eyebrow={t("parent.eyebrow")}
-        title={t("parent.title")}
+        eyebrow={isIndividual ? t("screentime.eyebrow") : t("parent.eyebrow")}
+        title={isIndividual ? t("screentime.title") : t("parent.title")}
         trailing={
           <span className="grid size-10 place-items-center rounded-full bg-sage-100 text-sage-700">
-            <Shield className="size-4" />
+            {isIndividual ? <Clock className="size-4" /> : <Shield className="size-4" />}
           </span>
         }
       />
       <div className="px-6 space-y-6">
-        <section className="space-y-3">
-          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("parent.children")}</h2>
-
-          {settings.children.length === 0 && (
-            <p className="rounded-3xl bg-card p-5 text-center text-xs text-sage-600 ring-1 ring-black/5">
-              {t("parent.child.empty")}
-            </p>
-          )}
-
-          {settings.children.map((k, i) => {
-            const steps = mockSteps(k.id);
-            return (
-              <article
-                key={k.id}
-                className="rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="grid size-11 place-items-center rounded-full bg-sage-200 text-xl">
-                    {k.avatar}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{k.name}</p>
-                    <p className="text-xs text-sage-600">{ageFromBirthday(k.birthday, t)}</p>
-                  </div>
-                  <button
-                    onClick={() => openEdit(k)}
-                    aria-label={t("parent.child.edit")}
-                    className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
-                  >
-                    <Pencil className="size-3.5" />
-                  </button>
-                  <button
-                    onClick={() => remove(k.id)}
-                    aria-label={t("parent.child.delete")}
-                    className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                </div>
-
-                <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                  <Stat label={t("parent.steps")} value={steps.toLocaleString()} />
-                  <Stat label={t("parent.child.daily_goal")} value={k.dailyGoal.toLocaleString()} />
-                  <Stat label={t("parent.goal")} value={`${Math.round((steps / k.dailyGoal) * 100)}%`} />
-                </div>
-
-                <button
-                  onClick={() => copyCode(k.code)}
-                  className="mt-4 flex w-full items-center justify-between rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200"
-                >
-                  <div className="text-left">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">
-                      {t("parent.child.code")}
-                    </p>
-                    <p className="text-base font-semibold tracking-[0.3em] text-sage-900">{k.code}</p>
-                  </div>
-                  <span className="grid size-9 place-items-center rounded-full bg-sage-600 text-primary-foreground">
-                    <Copy className="size-4" />
-                  </span>
-                </button>
-                <p className="mt-1 px-1 text-[10px] text-sage-600">{t("parent.child.code_help")}</p>
-              </article>
-            );
-          })}
-
+        {/* My screen time — both individuals & parents */}
+        <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">
+                <Clock className="size-4" />
+              </span>
+              <div>
+                <h3 className="text-sm font-semibold">{t("parent.my_screentime")}</h3>
+                <p className="text-xs text-sage-600">{t("parent.my_screentime_sub")}</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Stat label={t("parent.steps_per_30")} value={settings.stepsPer30.toLocaleString()} />
+            <Stat label={t("parent.daily_cap")} value={`${settings.dailyCapHours}${t("settings.hours")}`} />
+          </div>
           <button
-            onClick={openNew}
-            className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-sage-300 p-4 text-sm font-medium text-sage-700"
+            onClick={() => setEditingMyST(true)}
+            className="mt-4 w-full rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
           >
-            <Plus className="size-4" /> {t("parent.add_child")}
+            {t("parent.edit_screentime")}
           </button>
         </section>
 
+        {/* Children — parents only */}
+        {!isIndividual && (
+          <section className="space-y-3">
+            <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("parent.children")}</h2>
+
+            {settings.children.length === 0 && (
+              <p className="rounded-3xl bg-card p-5 text-center text-xs text-sage-600 ring-1 ring-black/5">
+                {t("parent.child.empty")}
+              </p>
+            )}
+
+            {settings.children.map((k, i) => {
+              const steps = mockSteps(k.id);
+              return (
+                <article
+                  key={k.id}
+                  className="rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-11 place-items-center rounded-full bg-sage-200 text-xl">
+                      {k.avatar}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{k.name}</p>
+                      <p className="text-xs text-sage-600">{ageFromBirthday(k.birthday, t)}</p>
+                    </div>
+                    <button
+                      onClick={() => openEdit(k)}
+                      aria-label={t("parent.child.edit")}
+                      className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
+                    >
+                      <Pencil className="size-3.5" />
+                    </button>
+                    <button
+                      onClick={() => remove(k.id)}
+                      aria-label={t("parent.child.delete")}
+                      className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+                    <Stat label={t("parent.steps")} value={steps.toLocaleString()} />
+                    <Stat label={t("parent.child.daily_goal")} value={k.dailyGoal.toLocaleString()} />
+                    <Stat label={t("parent.goal")} value={`${Math.round((steps / k.dailyGoal) * 100)}%`} />
+                  </div>
+
+                  {/* Per-child screen time */}
+                  <div className="mt-4 rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
+                    <div className="flex items-center gap-2">
+                      <Clock className="size-4 text-sage-700" />
+                      <p className="text-xs font-semibold text-sage-900">
+                        {t("parent.child_screentime", { n: k.name || "—" })}
+                      </p>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <Stat label={t("parent.steps_per_30")} value={k.stepsPer30.toLocaleString()} />
+                      <Stat label={t("parent.daily_cap")} value={`${k.dailyCapHours}${t("settings.hours")}`} />
+                    </div>
+                    <button
+                      onClick={() => setEditingChildST(k)}
+                      className="mt-3 w-full rounded-xl bg-white px-3 py-2 text-xs font-semibold text-sage-700 ring-1 ring-sage-200"
+                    >
+                      {t("parent.edit_screentime")}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => copyCode(k.code)}
+                    className="mt-4 flex w-full items-center justify-between rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200"
+                  >
+                    <div className="text-left">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">
+                        {t("parent.child.code")}
+                      </p>
+                      <p className="text-base font-semibold tracking-[0.3em] text-sage-900">{k.code}</p>
+                    </div>
+                    <span className="grid size-9 place-items-center rounded-full bg-sage-600 text-primary-foreground">
+                      <Copy className="size-4" />
+                    </span>
+                  </button>
+                  <p className="mt-1 px-1 text-[10px] text-sage-600">{t("parent.child.code_help")}</p>
+                </article>
+              );
+            })}
+
+            <button
+              onClick={openNew}
+              className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-sage-300 p-4 text-sm font-medium text-sage-700"
+            >
+              <Plus className="size-4" /> {t("parent.add_child")}
+            </button>
+          </section>
+        )}
+
         <section className="space-y-3">
-          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("parent.apps")}</h2>
+          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">
+            <span className="inline-flex items-center gap-1.5">
+              <Smartphone className="size-3.5" /> {t("parent.apps")}
+            </span>
+          </h2>
           <div className="rounded-3xl bg-card ring-1 ring-black/5">
             {apps.map((a, i) => (
               <div
@@ -208,17 +282,6 @@ function Page() {
               </div>
             ))}
           </div>
-        </section>
-
-        <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
-          <h3 className="text-sm font-semibold">{t("parent.rules")}</h3>
-          <p className="mt-1 text-xs text-sage-600">{t("parent.rules_sub")}</p>
-          <button
-            onClick={() => toast(t("parent.configure"))}
-            className="mt-3 rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
-          >
-            {t("parent.configure")}
-          </button>
         </section>
 
         <section className={`rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
@@ -270,6 +333,30 @@ function Page() {
         onOpenChange={(o) => !o && setEditing(null)}
         onSave={save}
       />
+
+      <ScreenTimeDialog
+        open={editingMyST}
+        onOpenChange={setEditingMyST}
+        title={t("parent.my_screentime")}
+        initial={{ stepsPer30: settings.stepsPer30, dailyCapHours: settings.dailyCapHours }}
+        onSave={saveMyST}
+      />
+
+      <ScreenTimeDialog
+        open={editingChildST !== null}
+        onOpenChange={(o) => !o && setEditingChildST(null)}
+        title={
+          editingChildST
+            ? t("parent.child_screentime", { n: editingChildST.name || "—" })
+            : t("parent.edit_screentime")
+        }
+        initial={
+          editingChildST
+            ? { stepsPer30: editingChildST.stepsPer30, dailyCapHours: editingChildST.dailyCapHours }
+            : { stepsPer30: 1000, dailyCapHours: 3 }
+        }
+        onSave={(v) => editingChildST && saveChildST(editingChildST.id, v)}
+      />
     </AppShell>
   );
 }
@@ -293,11 +380,76 @@ function ageFromBirthday(b: string, t: (k: string, vars?: Record<string, string 
 }
 
 function mockSteps(id: string) {
-  // Stable per-child pseudo-random for today
   let h = 0;
   const seed = id + new Date().toDateString();
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
   return 3000 + Math.abs(h % 7000);
+}
+
+function ScreenTimeDialog({
+  open, onOpenChange, title, initial, onSave,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  title: string;
+  initial: ScreenTimeEdit;
+  onSave: (v: ScreenTimeEdit) => void;
+}) {
+  const { t } = useT();
+  const [steps, setSteps] = useState(initial.stepsPer30);
+  const [cap, setCap] = useState(initial.dailyCapHours);
+
+  useEffect(() => {
+    if (open) {
+      setSteps(initial.stepsPer30);
+      setCap(initial.dailyCapHours);
+    }
+  }, [open, initial.stepsPer30, initial.dailyCapHours]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{t("parent.rules_sub")}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-6 py-2">
+          <div>
+            <label className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-sage-600">
+              <span>{t("parent.steps_per_30")}</span>
+              <span className="tabular-nums text-sage-700">{steps.toLocaleString()}</span>
+            </label>
+            <Slider
+              value={[steps]}
+              min={200}
+              max={3000}
+              step={100}
+              onValueChange={(v) => setSteps(v[0])}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-sage-600">
+              <span>{t("parent.daily_cap")}</span>
+              <span className="tabular-nums text-sage-700">{cap}{t("settings.hours")}</span>
+            </label>
+            <Slider
+              value={[cap]}
+              min={1}
+              max={8}
+              step={1}
+              onValueChange={(v) => setCap(v[0])}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
+          <Button onClick={() => { onSave({ stepsPer30: steps, dailyCapHours: cap }); onOpenChange(false); }}>
+            {t("settings.save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function ChildEditDialog({
@@ -384,6 +536,34 @@ function ChildEditDialog({
             />
           </div>
 
+          <div>
+            <label className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-sage-600">
+              <span>{t("parent.steps_per_30")}</span>
+              <span className="tabular-nums text-sage-700">{draft.stepsPer30.toLocaleString()}</span>
+            </label>
+            <Slider
+              value={[draft.stepsPer30]}
+              min={200}
+              max={3000}
+              step={100}
+              onValueChange={(v) => setDraft({ ...draft, stepsPer30: v[0] })}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-sage-600">
+              <span>{t("parent.daily_cap")}</span>
+              <span className="tabular-nums text-sage-700">{draft.dailyCapHours}{t("settings.hours")}</span>
+            </label>
+            <Slider
+              value={[draft.dailyCapHours]}
+              min={1}
+              max={8}
+              step={1}
+              onValueChange={(v) => setDraft({ ...draft, dailyCapHours: v[0] })}
+            />
+          </div>
+
           <div className="rounded-2xl bg-sage-600 px-4 py-3 text-primary-foreground">
             <p className="text-[10px] font-semibold uppercase tracking-widest opacity-80">
               {t("parent.child.code")}
@@ -400,3 +580,6 @@ function ChildEditDialog({
     </Dialog>
   );
 }
+
+// Silence unused import warning when SettingsState helpers aren't referenced.
+export type _Unused = SettingsState;
