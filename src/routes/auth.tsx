@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Check, Copy, User, Users, Shield, Baby } from "lucide-react";
+import { ArrowLeft, Check, User, Users, Shield, Baby, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
-import { useSettings } from "@/lib/settings";
+import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
