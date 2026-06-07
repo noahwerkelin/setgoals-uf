@@ -48,6 +48,7 @@ function Page() {
   const navigate = useNavigate();
   const [stepsOpen, setStepsOpen] = useState(false);
   const [capOpen, setCapOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
   const [proOpen, setProOpen] = useState(false);
   const [nicknameOpen, setNicknameOpen] = useState(false);
