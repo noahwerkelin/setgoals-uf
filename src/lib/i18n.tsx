@@ -621,6 +621,7 @@ const DICTS: Record<Lang, Dict> = {
     "badges.group.milestones": "Milstolpar",
     "badges.group.leaderboards": "Topplistor",
     "badges.group.community": "Community",
+    "badges.group.premium": "Premium",
     "badges.first_steps.name": "Första stegen",
     "badges.first_steps.desc": "Gå 1 000 steg på en dag",
     "badges.daily_walker.name": "Daglig vandrare",
