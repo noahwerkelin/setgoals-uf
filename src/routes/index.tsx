@@ -128,7 +128,7 @@ function Home() {
 
         <section className={`grid gap-4 animate-rise ${settings.role === "child" ? "grid-cols-1" : "grid-cols-2"}`} style={{ animationDelay: "120ms" }}>
           {settings.role !== "child" && (
-            <StatTile icon={<Flame className="size-4" />} label={t("home.energy")} value="342" unit="kcal" />
+            <StatTile icon={<Flame className="size-4" />} label={t("home.energy")} value={String(calories)} unit="kcal" />
           )}
           <StatTile icon={<Footprints className="size-4" />} label={t("home.distance")} value={distValue} unit={distUnit} />
         </section>
