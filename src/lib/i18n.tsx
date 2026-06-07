@@ -91,6 +91,7 @@ const DICTS: Record<Lang, Dict> = {
     "badges.group.milestones": "Milestones",
     "badges.group.leaderboards": "Leaderboards",
     "badges.group.community": "Community",
+    "badges.group.premium": "Premium",
     "badges.first_steps.name": "First Steps",
     "badges.first_steps.desc": "Walk 1,000 steps in a day",
     "badges.daily_walker.name": "Daily Walker",
