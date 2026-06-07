@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+
 import { useT } from "@/lib/i18n";
 import { useSettings, type SubPlan } from "@/lib/settings";
 import { toast } from "sonner";
