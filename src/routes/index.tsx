@@ -152,14 +152,8 @@ function Home() {
         <Quote />
 
 
-        <section className="space-y-3 animate-rise" style={{ animationDelay: "240ms" }}>
-          <SectionTitle>{t("home.achievements")}</SectionTitle>
-          <div className="grid grid-cols-3 gap-3">
-            <Badge icon={<Trophy className="size-5" />} label={t("home.badge.streak")} />
-            <Badge icon={<Footprints className="size-5" />} label={t("home.badge.first5k")} />
-            <Badge icon={<MapPin className="size-5" />} label={t("home.badge.explorer")} />
-          </div>
-        </section>
+        <RecentWins />
+
 
         <FamilyCard />
 
