@@ -5,20 +5,23 @@ import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
 import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { useTodaySteps } from "@/lib/steps";
 import { recordDailyActivity } from "@/components/Badges";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SetGoals UF — Today" },
+      { title: "SetGoals — Today" },
       { name: "description", content: "Your daily steps, earned screen time, and goals." },
     ],
   }),
   component: Home,
 });
 
-const STEPS = 7240;
 const GOAL = 10000;
+
+
+
 
 
 const HOLIDAYS: Record<string, string> = {
