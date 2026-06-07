@@ -157,6 +157,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSettings({
       stepsPer30: s?.steps_per_30 ?? DEFAULTS.stepsPer30,
       dailyCapHours: s?.daily_cap_hours ?? DEFAULTS.dailyCapHours,
+      dailyGoal: s?.daily_goal ?? DEFAULTS.dailyGoal,
       healthkitConnected: s?.healthkit_connected ?? false,
       googlefitConnected: s?.googlefit_connected ?? false,
       pushOn: s?.push_on ?? true,
