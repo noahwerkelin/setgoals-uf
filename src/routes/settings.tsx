@@ -341,6 +341,23 @@ function Page() {
         t={t}
       />
 
+      {/* Daily step goal dialog */}
+      <SliderDialog
+        open={goalOpen}
+        onOpenChange={setGoalOpen}
+        title={t("settings.daily_goal")}
+        value={settings.dailyGoal}
+        min={2000}
+        max={25000}
+        step={500}
+        unit={t("settings.steps")}
+        onSave={(v) => {
+          update("dailyGoal", v);
+          toast.success(`${t("settings.daily_goal")}: ${v.toLocaleString()}`);
+        }}
+        t={t}
+      />
+
       {/* Connect dialog */}
       <Dialog open={connectKind !== null} onOpenChange={(o) => !o && setConnectKind(null)}>
         <DialogContent>
