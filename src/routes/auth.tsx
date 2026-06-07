@@ -1,624 +1,201 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, Check, User, Users, Shield, Baby, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useT } from "@/lib/i18n";
-import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
+import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — SetGoals UF" },
-      { name: "description", content: "Sign in or create an account." },
+      { title: "Sign in — SetGoals" },
+      { name: "description", content: "Sign in or create your SetGoals account." },
     ],
   }),
   component: Page,
 });
 
-type Step =
-  | "start"
-  | "signin"
-  | "forgot"
-  | "reset"
-  | "type"
-  | "role"
-  | "form-individual"
-  | "form-parent"
-  | "child-code"
-  | "add-children";
-
-const FAMILY_KEY = "sg.familyCodes";
-
-function loadCodes(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(FAMILY_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-function saveCode(code: string) {
-  const arr = loadCodes();
-  if (!arr.includes(code)) {
-    arr.push(code);
-    localStorage.setItem(FAMILY_KEY, JSON.stringify(arr));
-  }
-}
-function genCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "";
-  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return s;
-}
+type Mode = "signin" | "signup" | "forgot";
 
 function Page() {
-  const { t } = useT();
-  const { settings, update } = useSettings();
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("start");
-  const [history, setHistory] = useState<Step[]>([]);
-  
+  const { user, loading } = useAuth();
+  const [mode, setMode] = useState<Mode>("signin");
 
-  const goto = (next: Step) => {
-    setHistory((h) => [...h, step]);
-    setStep(next);
-  };
-  const back = () => {
-    setHistory((h) => {
-      const prev = h[h.length - 1] ?? "start";
-      setStep(prev);
-      return h.slice(0, -1);
-    });
-  };
-
-  const enterApp = () => navigate({ to: "/" });
+  useEffect(() => {
+    if (!loading && user) navigate({ to: "/" });
+  }, [loading, user, navigate]);
 
   return (
     <div className="min-h-dvh bg-background font-sans">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pb-10 pt-10">
-        {step !== "start" && (
+        {mode !== "signin" && (
           <button
-            onClick={back}
+            onClick={() => setMode("signin")}
             className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-xs font-medium text-sage-700 ring-1 ring-black/5"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> {t("auth.back")}
+            <ArrowLeft className="h-3.5 w-3.5" /> Back
           </button>
         )}
-
-        <div className="space-y-2 animate-rise">
+        <div className="space-y-2">
           <span className="inline-block rounded-full bg-sage-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-sage-700">
-            {t("onb.brand")}
+            SetGoals
           </span>
-          <h1 className="text-3xl font-semibold tracking-tight">{titleFor(step, t)}</h1>
-          <p className="text-sm text-sage-600">{subFor(step, t)}</p>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            {mode === "signin" ? "Welcome back" : mode === "signup" ? "Create account" : "Reset password"}
+          </h1>
+          <p className="text-sm text-sage-600">
+            {mode === "signin"
+              ? "Sign in to keep earning screen time."
+              : mode === "signup"
+                ? "Start earning screen time by walking."
+                : "We'll email you a reset link."}
+          </p>
         </div>
 
-        <div className="mt-8 animate-rise" style={{ animationDelay: "60ms" }}>
-          {step === "start" && (
-            <StartView
-              onSignin={() => goto("signin")}
-              onSignup={() => goto("type")}
-              tSignin={t("auth.have_account")}
-              tSignup={t("auth.new_account")}
-              tGuest={t("auth.guest")}
-              onGuest={enterApp}
-            />
-          )}
-          {step === "signin" && (
-            <SigninForm
-              onDone={() => { update("role", "individual"); enterApp(); }}
-              onForgot={() => goto("forgot")}
-              t={t}
-            />
-          )}
-          {step === "forgot" && (
-            <ForgotForm t={t} onDone={() => goto("reset")} />
-          )}
-          {step === "reset" && (
-            <ResetForm
-              t={t}
-              onDone={() => {
-                toast.success(t("auth.password_updated"));
-                setHistory([]);
-                setStep("signin");
-              }}
-            />
-          )}
-          {step === "type" && (
-            <ChoiceList
-              items={[
-                {
-                  icon: <User className="h-5 w-5" />,
-                  label: t("auth.individual"),
-                  desc: t("auth.individual_desc"),
-                  onClick: () => goto("form-individual"),
-                },
-                {
-                  icon: <Users className="h-5 w-5" />,
-                  label: t("auth.family"),
-                  desc: t("auth.family_desc"),
-                  onClick: () => goto("role"),
-                },
-              ]}
-            />
-          )}
-          {step === "role" && (
-            <ChoiceList
-              items={[
-                {
-                  icon: <Shield className="h-5 w-5" />,
-                  label: t("auth.parent"),
-                  desc: t("auth.parent_desc"),
-                  onClick: () => goto("form-parent"),
-                },
-                {
-                  icon: <Baby className="h-5 w-5" />,
-                  label: t("auth.child"),
-                  desc: t("auth.child_desc"),
-                  onClick: () => goto("child-code"),
-                },
-              ]}
-            />
-          )}
-          {step === "form-individual" && (
-            <ProfileForm
-              t={t}
-              onDone={(name) => {
-                update("role", "individual");
-                update("displayName", name);
-                enterApp();
-              }}
-            />
-          )}
-          {step === "form-parent" && (
-            <ProfileForm
-              t={t}
-              onDone={(name) => {
-                update("role", "parent");
-                update("displayName", name);
-                goto("add-children");
-              }}
-            />
-          )}
-          {step === "child-code" && (
-            <ChildCodeForm
-              t={t}
-              onDone={(name) => {
-                update("role", "child");
-                if (name) update("displayName", name);
-                // children can't have Pro
-                if (settings.isPro) update("isPro", false);
-                enterApp();
-              }}
-            />
-          )}
-          {step === "add-children" && (
-            <AddChildrenView t={t} onDone={enterApp} />
-          )}
+        <div className="mt-8">
+          {mode === "signin" && <SignIn onForgot={() => setMode("forgot")} onSignup={() => setMode("signup")} />}
+          {mode === "signup" && <SignUp onSignin={() => setMode("signin")} />}
+          {mode === "forgot" && <Forgot onDone={() => setMode("signin")} />}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function titleFor(step: Step, t: (k: string) => string) {
-  switch (step) {
-    case "start": return t("auth.start_title");
-    case "signin": return t("auth.welcome");
-    case "forgot": return t("auth.forgot_title");
-    case "reset": return t("auth.reset_title");
-    case "type": return t("auth.choose_type");
-    case "role": return t("auth.who_you");
-    case "form-individual": return t("auth.individual");
-    case "form-parent": return t("auth.parent");
-    case "child-code": return t("auth.code_title");
-    case "add-children": return t("auth.add_children_title");
-  }
-}
-function subFor(step: Step, t: (k: string) => string) {
-  switch (step) {
-    case "start": return t("auth.start_sub");
-    case "signin": return t("auth.sub_signin");
-    case "forgot": return t("auth.forgot_sub");
-    case "reset": return t("auth.reset_sub");
-    case "type": return t("auth.choose_type_sub");
-    case "role": return t("auth.who_you_sub");
-    case "form-individual":
-    case "form-parent": return t("auth.sub_signup");
-    case "child-code": return t("auth.code_sub");
-    case "add-children": return t("auth.add_children_sub");
-  }
-}
-
-function StartView({
-  onSignin, onSignup, tSignin, tSignup, tGuest, onGuest,
-}: { onSignin: () => void; onSignup: () => void; tSignin: string; tSignup: string; tGuest: string; onGuest: () => void; }) {
-  return (
-    <div className="space-y-3">
-      <button onClick={onSignin} className="w-full rounded-2xl bg-sage-600 py-4 text-sm font-semibold text-primary-foreground">
-        {tSignin}
-      </button>
-      <button onClick={onSignup} className="w-full rounded-2xl bg-card py-4 text-sm font-semibold text-sage-900 ring-1 ring-black/5">
-        {tSignup}
-      </button>
-      <button onClick={onGuest} className="mt-4 w-full text-center text-[11px] font-medium text-sage-600">
-        {tGuest}
-      </button>
-    </div>
-  );
-}
-
-function ChoiceList({ items }: { items: { icon: React.ReactNode; label: string; desc: string; onClick: () => void }[] }) {
-  return (
-    <div className="space-y-3">
-      {items.map((it) => (
-        <button
-          key={it.label}
-          onClick={it.onClick}
-          className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 text-left ring-1 ring-black/5 transition-colors hover:bg-sage-50"
-        >
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-sage-100 text-sage-700">
-            {it.icon}
-          </span>
-          <span className="flex-1">
-            <span className="block text-sm font-semibold text-sage-900">{it.label}</span>
-            <span className="block text-xs text-sage-600">{it.desc}</span>
-          </span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function SigninForm({ onDone, onForgot, t }: { onDone: () => void; onForgot: () => void; t: (k: string) => string }) {
-  return (
-    <form
-      className="space-y-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onDone();
-      }}
-    >
-      <Field type="email" placeholder={t("auth.email")} required />
-      <Field type="password" placeholder={t("auth.password")} required />
-      <div className="flex justify-end">
-        <button type="button" onClick={onForgot} className="text-xs font-medium text-sage-700 hover:underline">
-          {t("auth.forgot")}
-        </button>
-      </div>
-      <button type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground">
-        {t("auth.signin")}
-      </button>
-      <div className="my-6 flex items-center gap-3 text-[11px] font-medium uppercase tracking-widest text-sage-600">
-        <span className="h-px flex-1 bg-sage-200" /> {t("auth.or")} <span className="h-px flex-1 bg-sage-200" />
-      </div>
-      <button type="button" onClick={onDone} className="w-full rounded-full bg-card py-3 text-sm font-semibold text-sage-900 ring-1 ring-black/5">
-        {t("auth.google")}
-      </button>
-      <button type="button" onClick={onDone} className="w-full rounded-full bg-sage-950 py-3 text-sm font-semibold text-sage-50">
-        {t("auth.apple")}
-      </button>
-    </form>
-  );
-}
-
-function ForgotForm({ t, onDone }: { t: (k: string) => string; onDone: () => void }) {
-  const [email, setEmail] = useState("");
-  return (
-    <form
-      className="space-y-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (!email) {
-          toast.error(t("auth.required"));
-          return;
-        }
-        toast.success(t("auth.reset_sent"));
-        onDone();
-      }}
-    >
-      <Field type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.email")} required />
-      <button type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground">
-        {t("auth.send_reset")}
-      </button>
-    </form>
-  );
-}
-
-function ResetForm({ t, onDone }: { t: (k: string) => string; onDone: () => void }) {
-  const [pw, setPw] = useState("");
-  const [pw2, setPw2] = useState("");
-  return (
-    <form
-      className="space-y-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (pw.length < 8) {
-          toast.error(t("auth.password_short"));
-          return;
-        }
-        if (pw !== pw2) {
-          toast.error(t("auth.password_mismatch"));
-          return;
-        }
-        onDone();
-      }}
-    >
-      <Field type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t("auth.new_password")} required />
-      <Field type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder={t("auth.confirm_password")} required />
-      <button type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground">
-        {t("auth.save")}
-      </button>
-    </form>
-  );
-}
-
-function ProfileForm({ t, onDone }: { t: (k: string) => string; onDone: (name: string) => void }) {
-  const [tos, setTos] = useState(false);
-  const [news, setNews] = useState(true);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [bday, setBday] = useState("");
-
-  const filled = !!(name && email && password && bday);
-  const canSubmit = filled && tos;
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!filled) {
-      toast.error(t("auth.required"));
-      return;
-    }
-    if (!tos) {
-      toast.error(t("auth.must_accept"));
-      return;
-    }
-    onDone(name);
-  };
-
-  return (
-    <form className="space-y-3" onSubmit={submit}>
-      <Field value={name} onChange={(e) => setName(e.target.value)} placeholder={t("auth.name")} required />
-      <Field value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder={t("auth.email")} required />
-      <Field value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder={t("auth.password")} required />
-      <label className="block">
-        <span className="mb-1.5 ml-1 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
-          {t("auth.birthday")}
-        </span>
-        <Field value={bday} onChange={(e) => setBday(e.target.value)} type="date" required />
-      </label>
-
-      <CheckRow checked={tos} onChange={setTos} label={t("auth.tos")} required />
-      <CheckRow checked={news} onChange={setNews} label={t("auth.newsletter")} />
-
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        className="mt-3 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {t("auth.continue")}
-      </button>
-    </form>
-  );
-}
-
-function ChildCodeForm({ t, onDone }: { t: (k: string, vars?: Record<string, string | number>) => string; onDone: (name?: string) => void }) {
-  const { settings } = useSettings();
-  const [code, setCode] = useState("");
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = code.trim().toUpperCase();
-    // First look in parent's children list (preferred — assigns name)
-    const child = settings.children.find((c) => c.code.toUpperCase() === clean);
-    if (child) {
-      toast.success(t("auth.code_welcome", { name: child.name }));
-      onDone(child.name);
-      return;
-    }
-    // Fallback: any saved family code or demo 6-char code
-    const codes = loadCodes();
-    const valid = codes.includes(clean) || /^[A-Z0-9]{6}$/.test(clean);
-    if (!valid) {
-      toast.error(t("auth.code_invalid"));
-      return;
-    }
-    toast.success(t("auth.family_created"));
-    onDone();
-  };
-  return (
-    <form className="space-y-3" onSubmit={submit}>
-      <Field
-        value={code}
-        onChange={(e) => setCode(e.target.value.toUpperCase())}
-        placeholder={t("auth.code_placeholder")}
-        maxLength={6}
-        className="text-center text-2xl font-semibold tracking-[0.4em]"
-        required
-      />
-      <button type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground">
-        {t("auth.code_join")}
-      </button>
-    </form>
-  );
-}
-
-const CHILD_AVATARS = ["🌱", "🌳", "🐻", "🦊", "🐼", "🦁", "🐸", "🦄", "⭐️", "🚀"];
-
-function AddChildrenView({ t, onDone }: { t: (k: string, vars?: Record<string, string | number>) => string; onDone: () => void }) {
-  const { settings, update } = useSettings();
-  const [adding, setAdding] = useState(settings.children.length === 0);
-  const [name, setName] = useState("");
-  const [birthday, setBirthday] = useState("");
-  const [avatar, setAvatar] = useState(CHILD_AVATARS[0]);
-
-  const reset = () => {
-    setName("");
-    setBirthday("");
-    setAvatar(CHILD_AVATARS[0]);
-  };
-
-  const submitChild = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      toast.error(t("auth.required"));
-      return;
-    }
-    const child: ChildProfile = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      birthday,
-      avatar,
-      dailyGoal: 8000,
-      code: genChildCode(),
-      stepsPer30: 1000,
-      dailyCapHours: 3,
-    };
-    update("children", [...settings.children, child]);
-    toast.success(t("auth.child_added"));
-    reset();
-    setAdding(false);
-  };
-
-  const removeChild = (id: string) => {
-    update("children", settings.children.filter((c) => c.id !== id));
-  };
-
-  return (
-    <div className="space-y-4">
-      {settings.children.length > 0 && (
-        <ul className="space-y-2">
-          {settings.children.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-black/5">
-              <span className="grid size-10 place-items-center rounded-full bg-sage-100 text-lg">{c.avatar}</span>
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-semibold text-sage-900">{c.name}</p>
-                {c.birthday && <p className="text-[11px] text-sage-600">{c.birthday}</p>}
-              </div>
-              <button
-                onClick={() => removeChild(c.id)}
-                aria-label="Remove"
-                className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {adding ? (
-        <form onSubmit={submitChild} className="space-y-3 rounded-2xl bg-card p-4 ring-1 ring-black/5">
-          <div>
-            <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
-              {t("parent.child.avatar")}
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {CHILD_AVATARS.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => setAvatar(a)}
-                  className={`grid h-10 w-10 place-items-center rounded-xl text-xl ring-1 transition-colors ${
-                    avatar === a ? "bg-sage-600 ring-sage-700" : "bg-sage-50 ring-black/5"
-                  }`}
-                >
-                  {a}
-                </button>
-              ))}
-            </div>
-          </div>
-          <Field
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t("auth.name")}
-            required
-          />
-          <label className="block">
-            <span className="mb-1.5 ml-1 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
-              {t("auth.birthday")}
-            </span>
-            <Field
-              type="date"
-              value={birthday}
-              onChange={(e) => setBirthday(e.target.value)}
-            />
-          </label>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => { reset(); setAdding(false); }}
-              className="flex-1 rounded-full bg-sage-100 py-3 text-sm font-semibold text-sage-700"
-            >
-              {t("settings.cancel")}
-            </button>
-            <button
-              type="submit"
-              className="flex-1 rounded-full bg-sage-600 py-3 text-sm font-semibold text-primary-foreground"
-            >
-              {t("parent.child.save")}
-            </button>
-          </div>
-        </form>
-      ) : (
-        <button
-          onClick={() => setAdding(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-sage-300 p-4 text-sm font-medium text-sage-700"
-        >
-          <Plus className="size-4" />
-          {settings.children.length === 0 ? t("auth.add_first_child") : t("auth.add_another_child")}
-        </button>
-      )}
-
-      <div className="space-y-2 pt-2">
-        <button
-          onClick={onDone}
-          className="w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground"
-        >
-          {settings.children.length > 0 ? t("auth.finish") : t("auth.skip_for_now")}
-        </button>
-        {settings.children.length > 0 && (
-          <button
-            onClick={onDone}
-            className="w-full text-center text-[11px] font-medium text-sage-600"
-          >
-            {t("auth.skip_for_now")}
-          </button>
-        )}
       </div>
     </div>
   );
 }
 
 function Field(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  const { className = "", ...rest } = props;
   return (
     <input
-      {...rest}
-      className={`w-full rounded-2xl bg-card px-4 py-3.5 text-sm ring-1 ring-black/5 outline-none placeholder:text-sage-600 focus:ring-sage-600 ${className}`}
+      {...props}
+      className={`w-full rounded-2xl bg-card px-4 py-3.5 text-sm ring-1 ring-black/5 outline-none focus:ring-sage-400 ${props.className ?? ""}`}
     />
   );
 }
 
-function CheckRow({ checked, onChange, label, required }: { checked: boolean; onChange: (b: boolean) => void; label: string; required?: boolean }) {
+async function withGoogle() {
+  const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+  if (r.error) toast.error(r.error.message);
+}
+async function withApple() {
+  const r = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
+  if (r.error) toast.error(r.error.message);
+}
+
+function SocialButtons() {
   return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className={`flex w-full items-center gap-3 rounded-2xl bg-card px-4 py-3 text-left ring-1 transition-colors ${
-        required && !checked ? "ring-sage-300" : "ring-black/5"
-      }`}
-    >
-      <span
-        className={`grid h-5 w-5 place-items-center rounded-md ring-1 transition-colors ${
-          checked ? "bg-sage-600 ring-sage-600 text-primary-foreground" : "bg-background ring-sage-200"
-        }`}
-      >
-        {checked && <Check className="h-3.5 w-3.5" />}
-      </span>
-      <span className="text-sm text-sage-900">
-        {label}
-        {required && <span className="ml-1 text-sage-600">*</span>}
-      </span>
-    </button>
+    <>
+      <div className="my-6 flex items-center gap-3 text-[11px] font-medium uppercase tracking-widest text-sage-600">
+        <span className="h-px flex-1 bg-sage-200" /> or <span className="h-px flex-1 bg-sage-200" />
+      </div>
+      <button type="button" onClick={withGoogle} className="mb-2 w-full rounded-full bg-card py-3 text-sm font-semibold text-sage-900 ring-1 ring-black/5">
+        Continue with Google
+      </button>
+      <button type="button" onClick={withApple} className="w-full rounded-full bg-sage-950 py-3 text-sm font-semibold text-sage-50">
+        Continue with Apple
+      </button>
+    </>
+  );
+}
+
+function SignIn({ onForgot, onSignup }: { onForgot: () => void; onSignup: () => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setBusy(false);
+    if (error) toast.error(error.message);
+  };
+
+  return (
+    <form className="space-y-3" onSubmit={submit}>
+      <Field type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+      <Field type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+      <div className="flex justify-end">
+        <button type="button" onClick={onForgot} className="text-xs font-medium text-sage-700 hover:underline">
+          Forgot password?
+        </button>
+      </div>
+      <button disabled={busy} type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+        {busy ? "Signing in…" : "Sign in"}
+      </button>
+      <SocialButtons />
+      <p className="mt-6 text-center text-xs text-sage-600">
+        No account?{" "}
+        <button type="button" onClick={onSignup} className="font-semibold text-sage-800 hover:underline">
+          Create one
+        </button>
+      </p>
+    </form>
+  );
+}
+
+function SignUp({ onSignin }: { onSignin: () => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) return toast.error("Password must be at least 8 characters");
+    setBusy(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: { display_name: displayName, birthday: birthday || null },
+      },
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Check your email to confirm your account");
+    onSignin();
+  };
+
+  return (
+    <form className="space-y-3" onSubmit={submit}>
+      <Field placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+      <Field type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+      <Field type="password" placeholder="Password (min 8 chars)" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" minLength={8} />
+      <label className="block">
+        <span className="mb-1.5 ml-1 block text-[11px] font-medium uppercase tracking-wider text-sage-600">Birthday</span>
+        <Field type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+      </label>
+      <button disabled={busy} type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+        {busy ? "Creating…" : "Create account"}
+      </button>
+      <SocialButtons />
+    </form>
+  );
+}
+
+function Forgot({ onDone }: { onDone: () => void }) {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Reset link sent. Check your email.");
+    onDone();
+  };
+  return (
+    <form className="space-y-3" onSubmit={submit}>
+      <Field type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+      <button disabled={busy} type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+        {busy ? "Sending…" : "Send reset link"}
+      </button>
+    </form>
   );
 }
