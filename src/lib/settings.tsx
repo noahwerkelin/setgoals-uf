@@ -131,6 +131,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
+  // Apply PRO color theme to <html data-theme="…"> — non-PRO always uses sage.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const active = settings.isPro ? settings.themeColor : "sage";
+    if (active === "sage") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", active);
+  }, [settings.themeColor, settings.isPro]);
+
   const update = useCallback<Ctx["update"]>((key, value) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
