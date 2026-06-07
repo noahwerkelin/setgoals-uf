@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ProUpgradeDialog } from "@/components/Pro";
+import { THEME_COLORS, type ThemeColor } from "@/lib/settings";
+import { Lock, Palette } from "lucide-react";
 import { awardBadge } from "@/components/Badges";
 
 export const Route = createFileRoute("/settings")({
