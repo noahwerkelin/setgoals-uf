@@ -3,7 +3,7 @@ import {
   Award, Footprints, Sunrise, Moon, Route as RouteIcon, Map as MapIcon,
   Compass, Mountain, Flame, Calendar, Infinity as InfinityIcon, MapPin,
   UserPlus, CheckCircle2, Trophy, Crown, Globe, Star, Medal, Bug, Lock,
-  Share2, Send, Copy, MessageCircle,
+  Share2, Send, Copy, MessageCircle, Gem, Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -46,6 +46,9 @@ export const BADGES: BadgeDef[] = [
   { id: "national_champion", tier: "platinum", icon: Medal, group: "leaderboards" },
 
   { id: "problem_solver", tier: "bronze", icon: Bug, group: "community" },
+
+  { id: "earned_elite", tier: "platinum", icon: Gem, group: "premium" },
+  { id: "unlocker", tier: "platinum", icon: Sparkles, group: "premium" },
 ];
 
 const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; chip: string; glow: string }> = {
@@ -184,6 +187,19 @@ export function Badges() {
     if (best >= 100) ids.push("unstoppable");
     if (ids.length) awardMany(ids);
   }, [settings.streak]);
+
+  // Auto-award premium "Earned Elite" when subscribed to Pro
+  useEffect(() => {
+    if (settings.isPro) awardMany(["earned_elite"]);
+  }, [settings.isPro]);
+
+  // Auto-award "Unlocker" when every other badge has been earned
+  useEffect(() => {
+    const others = BADGES.filter((b) => b.id !== "unlocker");
+    const allEarned = others.every((b) => earned[b.id]);
+    if (allEarned && !earned["unlocker"]) awardMany(["unlocker"]);
+  }, [earned]);
+
 
   const groups = useMemo(() => {
     const map = new Map<string, BadgeDef[]>();
