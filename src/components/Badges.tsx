@@ -46,6 +46,9 @@ export const BADGES: BadgeDef[] = [
   { id: "national_champion", tier: "platinum", icon: Medal, group: "leaderboards" },
 
   { id: "problem_solver", tier: "bronze", icon: Bug, group: "community" },
+
+  { id: "earned_elite", tier: "platinum", icon: Gem, group: "premium" },
+  { id: "unlocker", tier: "platinum", icon: Sparkles, group: "premium" },
 ];
 
 const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; chip: string; glow: string }> = {
