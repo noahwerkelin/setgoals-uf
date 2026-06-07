@@ -21,8 +21,10 @@ export const Route = createFileRoute("/profile")({
 function Page() {
   const { t } = useT();
   const { settings, update } = useSettings();
+  const { data: today } = useTodaySteps();
+  const stepsToday = today?.steps ?? 0;
   const isChild = settings.role === "child";
-  const displayName = settings.displayName || "Lukas Andersson";
+  const displayName = settings.displayName || settings.username || "You";
   const initials = displayName
     .split(" ")
     .map((s) => s[0])
