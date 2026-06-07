@@ -54,7 +54,7 @@ function Page() {
         </section>
 
         <section className="grid grid-cols-2 gap-4">
-          <Card label={t("stats.screen")} value="14h 30m" sub={t("stats.screen_sub")} />
+          <Card label={t("stats.screen")} value={formatScreenMin(weeklyEarnedMin)} sub={t("stats.screen_sub")} />
           <Card label={t("stats.goal")} value="86%" sub={t("stats.goal_sub")} />
           <Card label={t("stats.active")} value="6 / 7" sub={t("stats.active_sub")} />
           <Card label={t("stats.best")} value="11,200" sub={t("stats.best_sub")} />
