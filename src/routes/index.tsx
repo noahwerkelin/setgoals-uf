@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const GOAL = 10000;
+
 
 
 
