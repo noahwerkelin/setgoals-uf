@@ -36,6 +36,7 @@ export type SettingsState = {
   proPlan: SubPlan;
   proAutoRenew: boolean;
   proPaymentMethod: string; // e.g. "Visa •• 4242"
+  themeColor: ThemeColor;
   bonusMinFromYesterday: number;
   role: Role;
   displayName: string;
