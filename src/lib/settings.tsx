@@ -264,14 +264,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (profileKeys[key]) {
         await supabase
           .from("profiles")
-          .update({ [profileKeys[key]!]: value })
+          .update({ [profileKeys[key]!]: value } as never)
           .eq("id", user.id);
         return;
       }
       if (settingsKeys[key]) {
         await supabase
           .from("user_settings")
-          .update({ [settingsKeys[key]!]: value })
+          .update({ [settingsKeys[key]!]: value } as never)
           .eq("user_id", user.id);
         return;
       }
