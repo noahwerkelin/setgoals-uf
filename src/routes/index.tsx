@@ -19,8 +19,6 @@ export const Route = createFileRoute("/")({
 
 const STEPS = 7240;
 const GOAL = 10000;
-const EARNED_MIN = 210;
-const REMAINING_MIN = 72;
 
 function formatMin(min: number) {
   const h = Math.floor(min / 60);
