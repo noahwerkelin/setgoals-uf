@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+
 import { useT } from "@/lib/i18n";
 import { useSettings, type SubPlan } from "@/lib/settings";
 import { toast } from "sonner";
@@ -54,10 +54,10 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
   const features = [
     "pro.feature.bonus",
     "pro.feature.coach",
-    "pro.feature.avatars",
     "pro.feature.parental",
-    "pro.feature.challenges",
     "pro.feature.stats",
+    "pro.feature.theme",
+    "pro.feature.premium_badge",
   ];
 
   return (
@@ -180,19 +180,6 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
                 </button>
               }
             />
-            <div className="flex items-center justify-between rounded-2xl bg-card p-3 ring-1 ring-black/5">
-              <div className="flex items-center gap-2">
-                <RefreshCw className="size-4 text-sage-700" />
-                <span className="text-sm">{t("pro.auto_renew")}</span>
-              </div>
-              <Switch
-                checked={settings.proAutoRenew}
-                onCheckedChange={(v) => {
-                  update("proAutoRenew", v);
-                  toast(v ? t("pro.resumed") : t("pro.will_end", { date: formatDate(nextDate, lang) }));
-                }}
-              />
-            </div>
           </div>
 
           <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
