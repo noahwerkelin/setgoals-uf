@@ -873,6 +873,8 @@ const DICTS: Record<Lang, Dict> = {
     "settings.earning": "Intjäningsregler",
     "settings.steps_per_30": "Steg per 30 min",
     "settings.daily_cap": "Daglig skärmtidsgräns",
+    "settings.daily_goal": "Dagligt stegmål",
+    "settings.steps": "steg",
     "settings.integrations": "Integrationer",
     "settings.healthkit": "Apple HealthKit",
     "settings.googlefit": "Google Fit / Health Connect",
