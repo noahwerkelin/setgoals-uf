@@ -6,6 +6,7 @@ import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
 import { FriendsCard } from "@/components/FriendsCard";
 import { useT } from "@/lib/i18n";
 import { currentStreak, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { useTodaySteps } from "@/lib/steps";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
