@@ -207,7 +207,9 @@ function Page() {
           <Row label={t("settings.username")} meta={`@${settings.username}`} onClick={() => setUsernameOpen(true)} />
           <Row label={t("settings.email")} meta={settings.email} onClick={() => setEmailOpen(true)} />
           <Row label={t("settings.password")} meta="••••••••" onClick={() => setPasswordOpen(true)} />
-          <Row label={t("settings.signout")} onClick={() => { toast.success(t("settings.signout")); navigate({ to: "/auth" }); }} />
+          <Row label="Export my data" onClick={exportData} />
+          <Row label="Delete account" onClick={deleteAccount} />
+          <Row label={t("settings.signout")} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }} />
         </Group>
 
         {/* Support */}
@@ -369,14 +371,23 @@ function Page() {
         open={emailOpen}
         onOpenChange={setEmailOpen}
         current={settings.email}
-        onSave={(v) => { update("email", v); toast.success(t("account.updated")); }}
+        onSave={async (v) => {
+          const { error } = await supabase.auth.updateUser({ email: v });
+          if (error) return toast.error(error.message);
+          update("email", v);
+          toast.success("Confirmation email sent. Check your inbox.");
+        }}
         t={t}
       />
       <PasswordDialog
         open={passwordOpen}
         onOpenChange={setPasswordOpen}
         currentPassword={settings.password}
-        onSave={(v) => { update("password", v); toast.success(t("account.updated")); }}
+        onSave={async (v) => {
+          const { error } = await supabase.auth.updateUser({ password: v });
+          if (error) return toast.error(error.message);
+          toast.success("Password updated");
+        }}
         t={t}
       />
     </AppShell>
