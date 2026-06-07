@@ -64,6 +64,9 @@ function Home() {
   if (hour >= 12 && hour < 17) greetingKey = "home.greeting.afternoon";
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
+  const capMin = settings.dailyCapHours * 60;
+  const earnedMin = Math.min(capMin, Math.floor(STEPS / Math.max(1, settings.stepsPer30)) * 30);
+  const remainingMin = Math.max(0, capMin - earnedMin);
   const ringProgress = Math.min(1, STEPS / GOAL);
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     timeZone: tz,
