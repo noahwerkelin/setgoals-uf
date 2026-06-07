@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Sparkles, Send } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { ProLockCard, ProUpgradeDialog } from "@/components/Pro";
+import { coachChat } from "@/lib/coach.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/coach")({
   head: () => ({
@@ -16,24 +19,56 @@ export const Route = createFileRoute("/coach")({
   component: Page,
 });
 
-type Msg = { from: "ai" | "me"; text: string };
+type Msg = { role: "user" | "assistant"; content: string };
 
 function Page() {
   const { t } = useT();
   const { settings } = useSettings();
-  const [msgs, setMsgs] = useState<Msg[]>([{ from: "ai", text: t("coach.seed") }]);
+  const sendChat = useServerFn(coachChat);
+  const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: t("coach.seed") }]);
   const [text, setText] = useState("");
   const [proOpen, setProOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const locRef = useRef<{ lat: number; lng: number } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  function send(v: string) {
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        locRef.current = { lat: p.coords.latitude, lng: p.coords.longitude };
+      },
+      () => {},
+      { enableHighAccuracy: false, timeout: 6000, maximumAge: 1000 * 60 * 30 },
+    );
+  }, []);
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [msgs, busy]);
+
+  async function send(v: string) {
     const value = v.trim();
-    if (!value) return;
-    setMsgs((m) => [
-      ...m,
-      { from: "me", text: value },
-      { from: "ai", text: t("coach.reply") },
-    ]);
+    if (!value || busy) return;
+    const next: Msg[] = [...msgs, { role: "user", content: value }];
+    setMsgs(next);
     setText("");
+    setBusy(true);
+    try {
+      const res = await sendChat({
+        data: {
+          messages: next.map((m) => ({ role: m.role, content: m.content })),
+          location: locRef.current ?? undefined,
+        },
+      });
+      setMsgs((m) => [...m, { role: "assistant", content: res.reply }]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Coach is unavailable right now.";
+      toast.error(msg);
+      setMsgs((m) => [...m, { role: "assistant", content: "Sorry, I couldn't reach my brain just now. Try again in a moment." }]);
+    } finally {
+      setBusy(false);
+    }
   }
 
   const suggestions = [t("coach.s1"), t("coach.s2"), t("coach.s3")];
@@ -79,31 +114,44 @@ function Page() {
           </span>
         }
       />
-      <div className="flex flex-col gap-3 px-6">
+      <div className="flex flex-col gap-3 px-6 pb-40">
         {msgs.map((m, i) => (
           <div
             key={i}
-            className={`max-w-[85%] rounded-3xl px-4 py-3 text-sm animate-rise ${
-              m.from === "ai"
+            className={`max-w-[85%] whitespace-pre-wrap rounded-3xl px-4 py-3 text-sm animate-rise ${
+              m.role === "assistant"
                 ? "self-start bg-card text-sage-900 ring-1 ring-black/5 rounded-tl-md"
                 : "self-end bg-sage-600 text-primary-foreground rounded-tr-md"
             }`}
           >
-            {m.text}
+            {m.content}
           </div>
         ))}
+        {busy && (
+          <div className="self-start rounded-3xl rounded-tl-md bg-card px-4 py-3 text-sm text-sage-600 ring-1 ring-black/5">
+            <span className="inline-flex gap-1">
+              <span className="size-1.5 animate-bounce rounded-full bg-sage-500" />
+              <span className="size-1.5 animate-bounce rounded-full bg-sage-500 [animation-delay:120ms]" />
+              <span className="size-1.5 animate-bounce rounded-full bg-sage-500 [animation-delay:240ms]" />
+            </span>
+          </div>
+        )}
+        <div ref={scrollRef} />
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              onClick={() => send(s)}
-              className="rounded-full bg-card px-3 py-1.5 text-xs font-medium text-sage-700 ring-1 ring-black/5"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        {msgs.length <= 1 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {suggestions.map((s) => (
+              <button
+                key={s}
+                onClick={() => send(s)}
+                disabled={busy}
+                className="rounded-full bg-card px-3 py-1.5 text-xs font-medium text-sage-700 ring-1 ring-black/5 disabled:opacity-50"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <form
@@ -116,12 +164,14 @@ function Page() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={t("coach.placeholder")}
-          className="flex-1 bg-transparent text-sm outline-none placeholder:text-sage-600"
+          disabled={busy}
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-sage-600 disabled:opacity-50"
         />
         <button
           type="submit"
+          disabled={busy || !text.trim()}
           aria-label={t("coach.send")}
-          className="grid size-10 place-items-center rounded-full bg-sage-600 text-primary-foreground"
+          className="grid size-10 place-items-center rounded-full bg-sage-600 text-primary-foreground disabled:opacity-50"
         >
           <Send className="size-4" />
         </button>
