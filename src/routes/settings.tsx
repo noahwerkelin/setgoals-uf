@@ -166,6 +166,11 @@ function Page() {
         {!isChild && (
           <Group title={t("settings.earning")}>
             <Row
+              label={t("settings.daily_goal")}
+              meta={`${settings.dailyGoal.toLocaleString()} ${t("settings.steps")}`}
+              onClick={() => setGoalOpen(true)}
+            />
+            <Row
               label={t("settings.steps_per_30")}
               meta={settings.stepsPer30.toLocaleString()}
               onClick={() => setStepsOpen(true)}
