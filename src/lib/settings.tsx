@@ -38,6 +38,7 @@ export const THEME_COLORS: { id: ThemeColor; swatch: string }[] = [
 export type SettingsState = {
   stepsPer30: number;
   dailyCapHours: number;
+  dailyGoal: number;
   healthkitConnected: boolean;
   googlefitConnected: boolean;
   pushOn: boolean;
