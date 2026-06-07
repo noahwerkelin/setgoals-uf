@@ -55,12 +55,13 @@ function Home() {
   const stepsToday = today?.steps ?? 0;
   const distanceKm = today?.distance_km ?? 0;
   const calories = today?.calories ?? 0;
+  const goal = settings.dailyGoal || 8000;
   useEffect(() => {
     if (today) {
-      recordSteps(stepsToday, GOAL);
+      recordSteps(stepsToday, goal);
       recordDailyActivity(stepsToday, distanceKm, new Date().getHours());
     }
-  }, [today, stepsToday, distanceKm, recordSteps]);
+  }, [today, stepsToday, distanceKm, recordSteps, goal]);
   const now = new Date();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { hour, md } = getLocalParts(tz);
@@ -71,7 +72,7 @@ function Home() {
   const capMin = settings.dailyCapHours * 60;
   const earnedMin = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);
   const remainingMin = Math.max(0, capMin - earnedMin);
-  const ringProgress = Math.min(1, stepsToday / GOAL);
+  const ringProgress = Math.min(1, stepsToday / goal);
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     timeZone: tz,
     weekday: "long",
