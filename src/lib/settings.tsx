@@ -203,3 +203,15 @@ export function genChildCode(): string {
   for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
   return s;
 }
+
+export function earnedMinFromSteps(steps: number, stepsPer30: number, dailyCapHours: number): number {
+  const cap = dailyCapHours * 60;
+  const earned = Math.floor(steps / Math.max(1, stepsPer30)) * 30;
+  return Math.min(cap, earned);
+}
+
+export function formatScreenMin(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h ? `${h}h ${m}m` : `${m}m`;
+}
