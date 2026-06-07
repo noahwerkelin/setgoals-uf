@@ -138,19 +138,24 @@ function SignUp({ onSignin }: { onSignin: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
   const [birthday, setBirthday] = useState("");
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) return toast.error("Password must be at least 8 characters");
+    const uname = username.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(uname)) {
+      return toast.error("Username must be 3–20 chars: letters, numbers, or underscores");
+    }
     setBusy(true);
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: { display_name: displayName, birthday: birthday || null },
+        data: { display_name: displayName, username: uname, birthday: birthday || null },
       },
     });
     setBusy(false);
@@ -162,6 +167,15 @@ function SignUp({ onSignin }: { onSignin: () => void }) {
   return (
     <form className="space-y-3" onSubmit={submit}>
       <Field placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+      <Field
+        placeholder="Username (letters, numbers, _)"
+        value={username}
+        onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+        required
+        minLength={3}
+        maxLength={20}
+        autoComplete="username"
+      />
       <Field type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
       <Field type="password" placeholder="Password (min 8 chars)" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" minLength={8} />
       <label className="block">
