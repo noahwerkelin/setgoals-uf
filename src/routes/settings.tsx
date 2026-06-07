@@ -674,7 +674,7 @@ function PasswordDialog({
     if (open) { setCur(""); setNext(""); setConfirm(""); setErr(""); }
   }, [open]);
   const submit = () => {
-    if (cur !== currentPassword) { setErr(t("account.password.wrong")); return; }
+    if (currentPassword && cur !== currentPassword) { setErr(t("account.password.wrong")); return; }
     if (next.length < 8) { setErr(t("account.password.short")); return; }
     if (next !== confirm) { setErr(t("account.password.mismatch")); return; }
     onSave(next);
