@@ -53,6 +53,7 @@ function Page() {
   const [usernameOpen, setUsernameOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const isChild = settings.role === "child";
   const [reportOpen, setReportOpen] = useState(false);
