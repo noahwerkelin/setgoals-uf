@@ -1,98 +1,28 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Circle, Flame, Lock, MapPin, Globe2, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badges, recordLeaderboardRank } from "@/components/Badges";
 import { useT } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
-import { useUserLocation } from "@/lib/location";
-import { useFriends } from "@/lib/friends";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 
-type LbTab = "Friends" | "Local" | "National";
-const LB_TABS: LbTab[] = ["Friends", "Local", "National"];
+type LbPeriod = "daily" | "weekly" | "monthly" | "alltime";
+const LB_PERIODS: LbPeriod[] = ["daily", "weekly", "monthly", "alltime"];
 
-// Realistic name pools for plausible cohort generation.
-const NAME_POOLS: Record<string, string[]> = {
-  SE: [
-    "Maja", "Erik", "Sofia", "Anton", "Olivia", "Noah", "Linnea", "Liam",
-    "Alma", "Hugo", "Wilma", "Lucas", "Ebba", "Elias", "Astrid", "Oskar",
-    "Saga", "Axel", "Freja", "Viktor", "Selma", "Arvid", "Nora", "Vincent",
-    "Tuva", "Isak", "Klara", "Felix", "Iris", "Theo", "Maja_S", "Emil",
-  ],
-  US: [
-    "Liam", "Olivia", "Noah", "Emma", "Oliver", "Ava", "Elijah", "Sophia",
-    "Mateo", "Isabella", "Lucas", "Mia", "Levi", "Amelia", "Ethan", "Harper",
-    "James", "Evelyn", "Benjamin", "Luna", "Henry", "Ella", "Theodore", "Aria",
-  ],
-  DEFAULT: [
-    "Alex", "Sam", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn",
-    "Avery", "Rowan", "Sky", "Jamie", "Cameron", "Drew", "Hayden", "Reese",
-    "Parker", "Sage", "Eden", "Ari", "Robin", "Charlie", "Finley", "Emerson",
-  ],
+type LeaderboardRow = {
+  user_id: string;
+  display_name: string;
+  username: string;
+  avatar_url: string | null;
+  total_steps: number;
+  rank: number;
 };
-
-function dayOfYear(d = new Date()) {
-  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
-  return Math.floor((d.getTime() - start) / 86400000);
-}
-
-function hashStr(s: string) {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function rng(seed: number) {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = seed;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function getTodaySteps(fallback: number): number {
-  try {
-    const raw = localStorage.getItem("sg.totals");
-    if (raw) {
-      const t = JSON.parse(raw) as { lastDate: string | null; totalSteps: number };
-      const today = new Date();
-      const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-      if (t.lastDate === iso) return t.totalSteps || fallback;
-    }
-  } catch {}
-  return fallback;
-}
-
-function buildCohort(scopeKey: string, countryCode: string, size: number, youSteps: number) {
-  const pool = NAME_POOLS[countryCode] ?? NAME_POOLS.DEFAULT;
-  const day = dayOfYear();
-  const seed = (hashStr(scopeKey) ^ (day * 2654435761)) >>> 0;
-  const r = rng(seed);
-  // Step ranges scale with cohort scope.
-  const base = scopeKey.startsWith("national:") ? 7000 : 5500;
-  const spread = scopeKey.startsWith("national:") ? 18000 : 12000;
-  const used = new Set<string>();
-  const rows: { n: string; s: number }[] = [];
-  let guard = 0;
-  while (rows.length < size && guard++ < size * 5) {
-    const name = pool[Math.floor(r() * pool.length)];
-    if (used.has(name)) continue;
-    used.add(name);
-    rows.push({ n: name, s: Math.round(base + r() * spread) });
-  }
-  rows.push({ n: "__you__", s: youSteps });
-  rows.sort((a, b) => b.s - a.s);
-  const youRank = rows.findIndex((x) => x.n === "__you__") + 1;
-  return { rows, youRank };
-}
 
 
 type ChallengesTab = "goals" | "badges" | "lb";
@@ -231,127 +161,107 @@ function ChallengeRow({
 }
 
 function Leaderboard() {
-  const { t, lang } = useT();
-  const [tab, setTab] = useState<LbTab>("Friends");
-  const { location, loading } = useUserLocation();
-  const { friends } = useFriends();
+  const { t } = useT();
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [period, setPeriod] = useState<LbPeriod>("daily");
 
-  const youSteps = useMemo(() => getTodaySteps(7240), []);
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["leaderboard", period],
+    enabled: !!user,
+    queryFn: async (): Promise<LeaderboardRow[]> => {
+      const { data, error } = await supabase.rpc("leaderboard", { _period: period });
+      if (error) throw error;
+      return (data ?? []) as LeaderboardRow[];
+    },
+  });
 
-  const { rows, youRank, scopeLabel, scopeIcon } = useMemo(() => {
-    if (tab === "Friends") {
-      const all = [
-        ...friends.map((f) => ({ n: f.name, s: f.steps })),
-        { n: "__you__", s: youSteps },
-      ].sort((a, b) => b.s - a.s);
-      const idx = all.findIndex((x) => x.n === "__you__") + 1;
-      return {
-        rows: all,
-        youRank: idx,
-        scopeLabel: t("lb.friends_count", { n: friends.length }),
-        scopeIcon: "friends" as const,
-      };
-    }
-    if (tab === "Local") {
-      const key = `local:${location.countryCode}:${location.region}`;
-      const { rows: r, youRank: yr } = buildCohort(key, location.countryCode, 30, youSteps);
-      return {
-        rows: r.slice(0, 10),
-        youRank: yr,
-        scopeLabel: t("lb.region_label", { region: location.region }),
-        scopeIcon: "local" as const,
-      };
-    }
-    const key = `national:${location.countryCode}`;
-    const { rows: r, youRank: yr } = buildCohort(key, location.countryCode, 60, youSteps);
-    return {
-      rows: r.slice(0, 10),
-      youRank: yr,
-      scopeLabel: t("lb.country_label", { country: location.country }),
-      scopeIcon: "national" as const,
+  // realtime — refresh leaderboard when any activity_steps changes
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel("lb-activity")
+      .on("postgres_changes", { event: "*", schema: "public", table: "activity_steps" }, () => {
+        qc.invalidateQueries({ queryKey: ["leaderboard"] });
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
     };
-  }, [tab, friends, youSteps, location, t]);
+  }, [user, qc]);
+
+  const youRow = rows.find((r) => r.user_id === user?.id);
+  const youRank = youRow?.rank ?? 0;
+  const top = rows.slice(0, 50);
 
   useEffect(() => {
-    if (tab === "Local") recordLeaderboardRank("local", youRank);
-    else if (tab === "National") recordLeaderboardRank("national", youRank);
-  }, [tab, youRank]);
-
-  const dateLabel = useMemo(
-    () =>
-      new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }),
-    [lang],
-  );
-
-  const Icon = scopeIcon === "friends" ? Users : scopeIcon === "local" ? MapPin : Globe2;
-  const showYouFloating = tab !== "Friends" && youRank > 10;
+    if (period === "daily" && youRank > 0) recordLeaderboardRank("national", youRank);
+  }, [period, youRank]);
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-1 rounded-2xl bg-card p-1 ring-1 ring-black/5">
-        {LB_TABS.map((tk) => (
+      <div className="grid grid-cols-4 gap-1 rounded-2xl bg-card p-1 ring-1 ring-black/5">
+        {LB_PERIODS.map((p) => (
           <button
-            key={tk}
-            onClick={() => setTab(tk)}
-            className={`rounded-xl py-2 text-xs font-semibold transition-colors ${
-              tab === tk ? "bg-sage-600 text-primary-foreground" : "text-sage-700"
+            key={p}
+            onClick={() => setPeriod(p)}
+            className={`rounded-xl py-2 text-[11px] font-semibold capitalize transition-colors ${
+              period === p ? "bg-sage-600 text-primary-foreground" : "text-sage-700"
             }`}
           >
-            {t(`lb.tab.${tk}`)}
+            {p === "alltime" ? "All-time" : p}
           </button>
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-2 px-1">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-sage-700">
-          <Icon className="size-3.5" />
-          {loading && tab !== "Friends" ? t("lb.locating") : scopeLabel}
-        </span>
-        <span className="text-[10px] font-medium uppercase tracking-wider text-sage-600">
-          {t("lb.today_label", { date: dateLabel })}
-        </span>
-      </div>
-
-      {tab === "Friends" && friends.length === 0 ? (
+      {isLoading ? (
         <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
-          {t("lb.no_friends")}
+          Loading leaderboard…
+        </p>
+      ) : top.length === 0 ? (
+        <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
+          No verified activity yet. Be the first!
         </p>
       ) : (
         <ol className="space-y-2">
-          {rows.map((row, i) => (
-            <li
-              key={row.n + i}
-              className={`flex items-center gap-4 rounded-2xl p-4 ring-1 animate-rise ${
-                row.n === "__you__" ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/5"
-              }`}
-              style={{ animationDelay: `${i * 30}ms` }}
-            >
-              <span className={`grid size-8 place-items-center rounded-full text-xs font-semibold tabular-nums ${row.n === "__you__" ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
-                {i + 1}
-              </span>
-              <span className="flex-1 text-sm font-medium">{row.n === "__you__" ? t("lb.you") : row.n}</span>
-              <span className="text-sm font-semibold tabular-nums">{row.s.toLocaleString()}</span>
-            </li>
-          ))}
+          {top.map((row, i) => {
+            const isYou = row.user_id === user?.id;
+            return (
+              <li
+                key={row.user_id}
+                className={`flex items-center gap-4 rounded-2xl p-4 ring-1 animate-rise ${
+                  isYou ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/5"
+                }`}
+                style={{ animationDelay: `${i * 20}ms` }}
+              >
+                <span className={`grid size-8 place-items-center rounded-full text-xs font-semibold tabular-nums ${isYou ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
+                  {row.rank}
+                </span>
+                <span className="flex-1 text-sm font-medium truncate">
+                  {isYou ? t("lb.you") : row.display_name}
+                </span>
+                <span className="text-sm font-semibold tabular-nums">{row.total_steps.toLocaleString()}</span>
+              </li>
+            );
+          })}
         </ol>
       )}
 
-      {showYouFloating && (
+      {youRank > 50 && youRow && (
         <div className="flex items-center gap-4 rounded-2xl bg-sage-600 p-4 text-primary-foreground ring-1 ring-sage-700/40">
           <span className="grid size-8 place-items-center rounded-full bg-white/15 text-xs font-semibold tabular-nums">
-            {youRank}
+            {youRow.rank}
           </span>
           <span className="flex-1 text-sm font-medium">{t("lb.you")}</span>
-          <span className="text-sm font-semibold tabular-nums">{youSteps.toLocaleString()}</span>
+          <span className="text-sm font-semibold tabular-nums">{youRow.total_steps.toLocaleString()}</span>
         </div>
       )}
 
-      <p className="px-1 text-center text-xs text-sage-600">{t("lb.refresh")} · {t("lb.anon")}</p>
+      <p className="px-1 text-center text-xs text-sage-600">
+        Live updates · Verified step data only
+      </p>
     </div>
   );
 }
+
 

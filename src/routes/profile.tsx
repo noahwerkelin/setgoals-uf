@@ -6,6 +6,7 @@ import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
 import { FriendsCard } from "@/components/FriendsCard";
 import { useT } from "@/lib/i18n";
 import { currentStreak, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { useTodaySteps } from "@/lib/steps";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -20,8 +21,10 @@ export const Route = createFileRoute("/profile")({
 function Page() {
   const { t } = useT();
   const { settings, update } = useSettings();
+  const { data: today } = useTodaySteps();
+  const stepsToday = today?.steps ?? 0;
   const isChild = settings.role === "child";
-  const displayName = settings.displayName || "Lukas Andersson";
+  const displayName = settings.displayName || settings.username || "You";
   const initials = displayName
     .split(" ")
     .map((s) => s[0])
@@ -169,8 +172,8 @@ function Page() {
 
         {/* Stats — today */}
         <section className="grid grid-cols-3 gap-3 animate-rise" style={{ animationDelay: "120ms" }}>
-          <Mini label={t("profile.mini.steps")} value={(7240).toLocaleString()} />
-          <Mini label={t("profile.mini.earned")} value={formatScreenMin(earnedMinFromSteps(7240, settings.stepsPer30, settings.dailyCapHours))} />
+          <Mini label={t("profile.mini.steps")} value={stepsToday.toLocaleString()} />
+          <Mini label={t("profile.mini.earned")} value={formatScreenMin(earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours))} />
           <Mini label={t("profile.mini.streak")} value={`${streakCount}d`} />
         </section>
 

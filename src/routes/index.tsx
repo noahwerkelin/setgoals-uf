@@ -5,20 +5,23 @@ import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
 import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { useTodaySteps } from "@/lib/steps";
 import { recordDailyActivity } from "@/components/Badges";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SetGoals UF — Today" },
+      { title: "SetGoals — Today" },
       { name: "description", content: "Your daily steps, earned screen time, and goals." },
     ],
   }),
   component: Home,
 });
 
-const STEPS = 7240;
 const GOAL = 10000;
+
+
+
 
 
 const HOLIDAYS: Record<string, string> = {
@@ -48,10 +51,16 @@ function getLocalParts(tz: string) {
 function Home() {
   const { t, lang } = useT();
   const { settings, recordSteps } = useSettings();
+  const { data: today } = useTodaySteps();
+  const stepsToday = today?.steps ?? 0;
+  const distanceKm = today?.distance_km ?? 0;
+  const calories = today?.calories ?? 0;
   useEffect(() => {
-    recordSteps(STEPS, GOAL);
-    recordDailyActivity(STEPS, 5.2, new Date().getHours());
-  }, [recordSteps]);
+    if (today) {
+      recordSteps(stepsToday, GOAL);
+      recordDailyActivity(stepsToday, distanceKm, new Date().getHours());
+    }
+  }, [today, stepsToday, distanceKm, recordSteps]);
   const now = new Date();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { hour, md } = getLocalParts(tz);
@@ -60,17 +69,18 @@ function Home() {
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
   const capMin = settings.dailyCapHours * 60;
-  const earnedMin = earnedMinFromSteps(STEPS, settings.stepsPer30, settings.dailyCapHours);
+  const earnedMin = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);
   const remainingMin = Math.max(0, capMin - earnedMin);
-  const ringProgress = Math.min(1, STEPS / GOAL);
+  const ringProgress = Math.min(1, stepsToday / GOAL);
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     timeZone: tz,
     weekday: "long",
     month: "short",
     day: "numeric",
   });
-  const distance = formatDistance(5.2, settings.units);
+  const distance = formatDistance(distanceKm, settings.units);
   const [distValue, distUnit] = distance.split(" ");
+
 
   return (
     <AppShell>
@@ -96,7 +106,7 @@ function Home() {
           <ProgressRing progress={ringProgress} size={224}>
             <div className="text-center space-y-1">
               <span className="block text-4xl font-semibold leading-none tabular-nums">
-                {STEPS.toLocaleString()}
+                {stepsToday.toLocaleString()}
               </span>
               <span className="block text-sm font-medium text-sage-600">
                 {t("home.steps_of", { goal: GOAL.toLocaleString() })}
@@ -118,7 +128,7 @@ function Home() {
 
         <section className={`grid gap-4 animate-rise ${settings.role === "child" ? "grid-cols-1" : "grid-cols-2"}`} style={{ animationDelay: "120ms" }}>
           {settings.role !== "child" && (
-            <StatTile icon={<Flame className="size-4" />} label={t("home.energy")} value="342" unit="kcal" />
+            <StatTile icon={<Flame className="size-4" />} label={t("home.energy")} value={String(calories)} unit="kcal" />
           )}
           <StatTile icon={<Footprints className="size-4" />} label={t("home.distance")} value={distValue} unit={distUnit} />
         </section>

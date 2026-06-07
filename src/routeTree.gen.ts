@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RewardsRouteImport } from './routes/rewards'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ParentRouteImport } from './routes/parent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -21,6 +22,7 @@ import { Route as CoachRouteImport } from './routes/coach'
 import { Route as ChallengesRouteImport } from './routes/challenges'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
 
 const StatsRoute = StatsRouteImport.update({
   id: '/stats',
@@ -35,6 +37,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const RewardsRoute = RewardsRouteImport.update({
   id: '/rewards',
   path: '/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -82,6 +89,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicIngestStepsRoute = ApiPublicIngestStepsRouteImport.update({
+  id: '/api/public/ingest-steps',
+  path: '/api/public/ingest-steps',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -93,9 +105,11 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/parent': typeof ParentRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,9 +121,11 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/parent': typeof ParentRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,9 +138,11 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/parent': typeof ParentRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,9 +156,11 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/parent'
     | '/profile'
+    | '/reset-password'
     | '/rewards'
     | '/settings'
     | '/stats'
+    | '/api/public/ingest-steps'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -152,9 +172,11 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/parent'
     | '/profile'
+    | '/reset-password'
     | '/rewards'
     | '/settings'
     | '/stats'
+    | '/api/public/ingest-steps'
   id:
     | '__root__'
     | '/'
@@ -166,9 +188,11 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/parent'
     | '/profile'
+    | '/reset-password'
     | '/rewards'
     | '/settings'
     | '/stats'
+    | '/api/public/ingest-steps'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -181,9 +205,11 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ParentRoute: typeof ParentRoute
   ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RewardsRoute: typeof RewardsRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
+  ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -207,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/rewards'
       fullPath: '/rewards'
       preLoaderRoute: typeof RewardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -272,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ingest-steps': {
+      id: '/api/public/ingest-steps'
+      path: '/api/public/ingest-steps'
+      fullPath: '/api/public/ingest-steps'
+      preLoaderRoute: typeof ApiPublicIngestStepsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -285,9 +325,11 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ParentRoute: ParentRoute,
   ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RewardsRoute: RewardsRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
+  ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
