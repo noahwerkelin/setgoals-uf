@@ -60,7 +60,7 @@ function Home() {
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
   const capMin = settings.dailyCapHours * 60;
-  const earnedMin = Math.min(capMin, Math.floor(STEPS / Math.max(1, settings.stepsPer30)) * 30);
+  const earnedMin = earnedMinFromSteps(STEPS, settings.stepsPer30, settings.dailyCapHours);
   const remainingMin = Math.max(0, capMin - earnedMin);
   const ringProgress = Math.min(1, STEPS / GOAL);
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
@@ -107,11 +107,11 @@ function Home() {
           <div className="grid w-full grid-cols-2 divide-x divide-sage-950/5 text-center">
             <div className="space-y-1">
               <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{t("home.earned")}</p>
-              <p className="text-lg font-medium tabular-nums">{formatMin(earnedMin)}</p>
+              <p className="text-lg font-medium tabular-nums">{formatScreenMin(earnedMin)}</p>
             </div>
             <div className="space-y-1">
               <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{t("home.remaining")}</p>
-              <p className="text-lg font-medium tabular-nums text-sage-600">{formatMin(remainingMin)}</p>
+              <p className="text-lg font-medium tabular-nums text-sage-600">{formatScreenMin(remainingMin)}</p>
             </div>
           </div>
         </section>
