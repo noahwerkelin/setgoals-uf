@@ -213,6 +213,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const settingsKeys: Partial<Record<keyof SettingsState, string>> = {
         stepsPer30: "steps_per_30",
         dailyCapHours: "daily_cap_hours",
+        dailyGoal: "daily_goal",
         healthkitConnected: "healthkit_connected",
         googlefitConnected: "googlefit_connected",
         pushOn: "push_on",
