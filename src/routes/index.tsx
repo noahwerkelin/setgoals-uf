@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
-import { formatDistance, useSettings } from "@/lib/settings";
+import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
 import { recordDailyActivity } from "@/components/Badges";
 
 export const Route = createFileRoute("/")({
