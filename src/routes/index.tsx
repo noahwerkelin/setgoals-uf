@@ -20,11 +20,6 @@ export const Route = createFileRoute("/")({
 const STEPS = 7240;
 const GOAL = 10000;
 
-function formatMin(min: number) {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return h ? `${h}h ${m}m` : `${m}m`;
-}
 
 const HOLIDAYS: Record<string, string> = {
   "01-01": "home.greeting.newyear",
