@@ -14,16 +14,373 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      account_deletion_requests: {
+        Row: {
+          id: string
+          processed_at: string | null
+          reason: string | null
+          requested_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          processed_at?: string | null
+          reason?: string | null
+          requested_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          processed_at?: string | null
+          reason?: string | null
+          requested_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      activity_steps: {
+        Row: {
+          calories: number
+          day: string
+          distance_km: number
+          exercise_minutes: number
+          id: string
+          recorded_at: string
+          source: Database["public"]["Enums"]["step_source"]
+          steps: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calories?: number
+          day: string
+          distance_km?: number
+          exercise_minutes?: number
+          id?: string
+          recorded_at?: string
+          source: Database["public"]["Enums"]["step_source"]
+          steps: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calories?: number
+          day?: string
+          distance_km?: number
+          exercise_minutes?: number
+          id?: string
+          recorded_at?: string
+          source?: Database["public"]["Enums"]["step_source"]
+          steps?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      children: {
+        Row: {
+          avatar: string | null
+          birthday: string | null
+          code: string
+          created_at: string
+          daily_cap_hours: number
+          daily_goal: number
+          id: string
+          name: string
+          parent_id: string
+          steps_per_30: number
+          updated_at: string
+        }
+        Insert: {
+          avatar?: string | null
+          birthday?: string | null
+          code: string
+          created_at?: string
+          daily_cap_hours?: number
+          daily_goal?: number
+          id?: string
+          name: string
+          parent_id: string
+          steps_per_30?: number
+          updated_at?: string
+        }
+        Update: {
+          avatar?: string | null
+          birthday?: string | null
+          code?: string
+          created_at?: string
+          daily_cap_hours?: number
+          daily_goal?: number
+          id?: string
+          name?: string
+          parent_id?: string
+          steps_per_30?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      data_export_requests: {
+        Row: {
+          completed_at: string | null
+          download_url: string | null
+          id: string
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          download_url?: string | null
+          id?: string
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          download_url?: string | null
+          id?: string
+          requested_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      earned_balances: {
+        Row: {
+          consumed_min: number
+          day: string
+          earned_min: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consumed_min?: number
+          day?: string
+          earned_min?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consumed_min?: number
+          day?: string
+          earned_min?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          birthday: string | null
+          created_at: string
+          display_name: string
+          email: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role_kind"]
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          birthday?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          id: string
+          role?: Database["public"]["Enums"]["user_role_kind"]
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          birthday?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role_kind"]
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      restriction_settings: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          identifier: string
+          kind: Database["public"]["Enums"]["restriction_kind"]
+          label: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          identifier: string
+          kind: Database["public"]["Enums"]["restriction_kind"]
+          label: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          identifier?: string
+          kind?: Database["public"]["Enums"]["restriction_kind"]
+          label?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      streaks: {
+        Row: {
+          best: number
+          count: number
+          last_goal_met_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best?: number
+          count?: number
+          last_goal_met_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best?: number
+          count?: number
+          last_goal_met_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          anonymous_leaderboard: boolean
+          created_at: string
+          daily_cap_hours: number
+          daily_goal: number
+          googlefit_connected: boolean
+          healthkit_connected: boolean
+          is_pro: boolean
+          pro_auto_renew: boolean
+          pro_payment_method: string | null
+          pro_plan: Database["public"]["Enums"]["sub_plan"]
+          pro_since: string | null
+          push_on: boolean
+          share_location: Database["public"]["Enums"]["share_location_mode"]
+          steps_per_30: number
+          theme_color: Database["public"]["Enums"]["theme_color"]
+          units: Database["public"]["Enums"]["units_kind"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anonymous_leaderboard?: boolean
+          created_at?: string
+          daily_cap_hours?: number
+          daily_goal?: number
+          googlefit_connected?: boolean
+          healthkit_connected?: boolean
+          is_pro?: boolean
+          pro_auto_renew?: boolean
+          pro_payment_method?: string | null
+          pro_plan?: Database["public"]["Enums"]["sub_plan"]
+          pro_since?: string | null
+          push_on?: boolean
+          share_location?: Database["public"]["Enums"]["share_location_mode"]
+          steps_per_30?: number
+          theme_color?: Database["public"]["Enums"]["theme_color"]
+          units?: Database["public"]["Enums"]["units_kind"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anonymous_leaderboard?: boolean
+          created_at?: string
+          daily_cap_hours?: number
+          daily_goal?: number
+          googlefit_connected?: boolean
+          healthkit_connected?: boolean
+          is_pro?: boolean
+          pro_auto_renew?: boolean
+          pro_payment_method?: string | null
+          pro_plan?: Database["public"]["Enums"]["sub_plan"]
+          pro_since?: string | null
+          push_on?: boolean
+          share_location?: Database["public"]["Enums"]["share_location_mode"]
+          steps_per_30?: number
+          theme_color?: Database["public"]["Enums"]["theme_color"]
+          units?: Database["public"]["Enums"]["units_kind"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      leaderboard: {
+        Args: { _period: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          rank: number
+          total_steps: number
+          user_id: string
+          username: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      restriction_kind: "app" | "category" | "website"
+      share_location_mode: "off" | "while_using" | "always"
+      step_source: "api" | "manual" | "healthkit" | "healthconnect"
+      sub_plan: "monthly" | "yearly"
+      theme_color:
+        | "sage"
+        | "rose"
+        | "blue"
+        | "pink"
+        | "lavender"
+        | "amber"
+        | "slate"
+      units_kind: "metric" | "imperial"
+      user_role_kind: "individual" | "parent" | "child"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +507,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      restriction_kind: ["app", "category", "website"],
+      share_location_mode: ["off", "while_using", "always"],
+      step_source: ["api", "manual", "healthkit", "healthconnect"],
+      sub_plan: ["monthly", "yearly"],
+      theme_color: [
+        "sage",
+        "rose",
+        "blue",
+        "pink",
+        "lavender",
+        "amber",
+        "slate",
+      ],
+      units_kind: ["metric", "imperial"],
+      user_role_kind: ["individual", "parent", "child"],
+    },
   },
 } as const
