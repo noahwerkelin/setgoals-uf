@@ -112,11 +112,11 @@ function Home() {
           <div className="grid w-full grid-cols-2 divide-x divide-sage-950/5 text-center">
             <div className="space-y-1">
               <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{t("home.earned")}</p>
-              <p className="text-lg font-medium tabular-nums">{formatMin(EARNED_MIN)}</p>
+              <p className="text-lg font-medium tabular-nums">{formatMin(earnedMin)}</p>
             </div>
             <div className="space-y-1">
               <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{t("home.remaining")}</p>
-              <p className="text-lg font-medium tabular-nums text-sage-600">{formatMin(REMAINING_MIN)}</p>
+              <p className="text-lg font-medium tabular-nums text-sage-600">{formatMin(remainingMin)}</p>
             </div>
           </div>
         </section>
