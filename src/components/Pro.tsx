@@ -54,10 +54,10 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
   const features = [
     "pro.feature.bonus",
     "pro.feature.coach",
-    "pro.feature.avatars",
     "pro.feature.parental",
-    "pro.feature.challenges",
     "pro.feature.stats",
+    "pro.feature.theme",
+    "pro.feature.premium_badge",
   ];
 
   return (
