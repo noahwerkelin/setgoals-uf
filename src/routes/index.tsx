@@ -106,7 +106,7 @@ function Home() {
           <ProgressRing progress={ringProgress} size={224}>
             <div className="text-center space-y-1">
               <span className="block text-4xl font-semibold leading-none tabular-nums">
-                {STEPS.toLocaleString()}
+                {stepsToday.toLocaleString()}
               </span>
               <span className="block text-sm font-medium text-sage-600">
                 {t("home.steps_of", { goal: GOAL.toLocaleString() })}
