@@ -72,6 +72,7 @@ const DEFAULTS: SettingsState = {
   proPlan: "monthly",
   proAutoRenew: true,
   proPaymentMethod: "Visa •• 4242",
+  themeColor: "sage",
   bonusMinFromYesterday: 45,
   role: "individual",
   displayName: "Lukas",
