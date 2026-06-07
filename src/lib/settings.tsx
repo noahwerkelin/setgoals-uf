@@ -20,6 +20,8 @@ export type StreakState = {
   best: number;
 };
 
+export type SubPlan = "monthly" | "yearly";
+
 export type SettingsState = {
   stepsPer30: number;
   dailyCapHours: number;
@@ -30,6 +32,10 @@ export type SettingsState = {
   shareLocation: "off" | "while_using" | "always";
   units: Units;
   isPro: boolean;
+  proSince: string | null; // ISO date subscription started / last renewed
+  proPlan: SubPlan;
+  proAutoRenew: boolean;
+  proPaymentMethod: string; // e.g. "Visa •• 4242"
   bonusMinFromYesterday: number;
   role: Role;
   displayName: string;
