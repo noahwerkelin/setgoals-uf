@@ -188,6 +188,19 @@ export function Badges() {
     if (ids.length) awardMany(ids);
   }, [settings.streak]);
 
+  // Auto-award premium "Earned Elite" when subscribed to Pro
+  useEffect(() => {
+    if (settings.isPro) awardMany(["earned_elite"]);
+  }, [settings.isPro]);
+
+  // Auto-award "Unlocker" when every other badge has been earned
+  useEffect(() => {
+    const others = BADGES.filter((b) => b.id !== "unlocker");
+    const allEarned = others.every((b) => earned[b.id]);
+    if (allEarned && !earned["unlocker"]) awardMany(["unlocker"]);
+  }, [earned]);
+
+
   const groups = useMemo(() => {
     const map = new Map<string, BadgeDef[]>();
     for (const b of BADGES) {
