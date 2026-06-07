@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { THEME_COLORS, type ThemeColor } from "@/lib/settings";
+import { supabase } from "@/integrations/supabase/client";
 import { Lock, Palette } from "lucide-react";
 import { awardBadge } from "@/components/Badges";
 
@@ -56,6 +57,49 @@ function Page() {
   const [themeOpen, setThemeOpen] = useState(false);
 
   const isChild = settings.role === "child";
+
+  const exportData = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const [profile, userSettings, children, steps, streaks, restrictions] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
+      supabase.from("user_settings").select("*").eq("user_id", u.user.id).maybeSingle(),
+      supabase.from("children").select("*").eq("parent_id", u.user.id),
+      supabase.from("activity_steps").select("*").eq("user_id", u.user.id),
+      supabase.from("streaks").select("*").eq("user_id", u.user.id).maybeSingle(),
+      supabase.from("restriction_settings").select("*").eq("user_id", u.user.id),
+    ]);
+    await supabase.from("data_export_requests").insert({ user_id: u.user.id, status: "completed" });
+    const payload = {
+      exported_at: new Date().toISOString(),
+      profile: profile.data,
+      settings: userSettings.data,
+      children: children.data,
+      activity_steps: steps.data,
+      streaks: streaks.data,
+      restrictions: restrictions.data,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `setgoals-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Your data has been exported");
+  };
+
+  const deleteAccount = async () => {
+    if (!window.confirm("Permanently delete your account and all data? This cannot be undone.")) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    await supabase.from("account_deletion_requests").insert({ user_id: u.user.id });
+    // Cascade-delete by removing profile row (FK ON DELETE CASCADE handles related tables)
+    await supabase.from("profiles").delete().eq("id", u.user.id);
+    await supabase.auth.signOut();
+    toast.success("Account deletion submitted");
+    navigate({ to: "/auth" });
+  };
   const [reportOpen, setReportOpen] = useState(false);
   const [reportText, setReportText] = useState("");
 
