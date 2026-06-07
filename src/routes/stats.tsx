@@ -25,6 +25,7 @@ function Page() {
   const { settings } = useSettings();
   const [proOpen, setProOpen] = useState(false);
   const avg = Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length);
+  const weeklyEarnedMin = WEEK.reduce((a, s) => a + earnedMinFromSteps(s, settings.stepsPer30, settings.dailyCapHours), 0);
   return (
     <AppShell>
       <PageHeader eyebrow={t("stats.eyebrow")} title={t("stats.title")} />
