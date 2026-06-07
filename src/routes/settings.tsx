@@ -48,6 +48,7 @@ function Page() {
   const navigate = useNavigate();
   const [stepsOpen, setStepsOpen] = useState(false);
   const [capOpen, setCapOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
   const [proOpen, setProOpen] = useState(false);
   const [nicknameOpen, setNicknameOpen] = useState(false);
@@ -164,6 +165,11 @@ function Page() {
         {/* Earning rules — only parents/individuals can change */}
         {!isChild && (
           <Group title={t("settings.earning")}>
+            <Row
+              label={t("settings.daily_goal")}
+              meta={`${settings.dailyGoal.toLocaleString()} ${t("settings.steps")}`}
+              onClick={() => setGoalOpen(true)}
+            />
             <Row
               label={t("settings.steps_per_30")}
               meta={settings.stepsPer30.toLocaleString()}
@@ -331,6 +337,23 @@ function Page() {
         onSave={(v) => {
           update("dailyCapHours", v);
           toast.success(`${t("settings.daily_cap")}: ${v}${t("settings.hours")}`);
+        }}
+        t={t}
+      />
+
+      {/* Daily step goal dialog */}
+      <SliderDialog
+        open={goalOpen}
+        onOpenChange={setGoalOpen}
+        title={t("settings.daily_goal")}
+        value={settings.dailyGoal}
+        min={2000}
+        max={25000}
+        step={500}
+        unit={t("settings.steps")}
+        onSave={(v) => {
+          update("dailyGoal", v);
+          toast.success(`${t("settings.daily_goal")}: ${v.toLocaleString()}`);
         }}
         t={t}
       />

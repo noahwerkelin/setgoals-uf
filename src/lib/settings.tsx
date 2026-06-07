@@ -38,6 +38,7 @@ export const THEME_COLORS: { id: ThemeColor; swatch: string }[] = [
 export type SettingsState = {
   stepsPer30: number;
   dailyCapHours: number;
+  dailyGoal: number;
   healthkitConnected: boolean;
   googlefitConnected: boolean;
   pushOn: boolean;
@@ -64,6 +65,7 @@ export type SettingsState = {
 const DEFAULTS: SettingsState = {
   stepsPer30: 1000,
   dailyCapHours: 3,
+  dailyGoal: 8000,
   healthkitConnected: false,
   googlefitConnected: false,
   pushOn: true,
@@ -155,6 +157,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSettings({
       stepsPer30: s?.steps_per_30 ?? DEFAULTS.stepsPer30,
       dailyCapHours: s?.daily_cap_hours ?? DEFAULTS.dailyCapHours,
+      dailyGoal: s?.daily_goal ?? DEFAULTS.dailyGoal,
       healthkitConnected: s?.healthkit_connected ?? false,
       googlefitConnected: s?.googlefit_connected ?? false,
       pushOn: s?.push_on ?? true,
@@ -210,6 +213,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const settingsKeys: Partial<Record<keyof SettingsState, string>> = {
         stepsPer30: "steps_per_30",
         dailyCapHours: "daily_cap_hours",
+        dailyGoal: "daily_goal",
         healthkitConnected: "healthkit_connected",
         googlefitConnected: "googlefit_connected",
         pushOn: "push_on",
