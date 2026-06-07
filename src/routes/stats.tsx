@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Lock, Sparkles } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings } from "@/lib/settings";
+import { useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
 import { ProUpgradeDialog } from "@/components/Pro";
 
 export const Route = createFileRoute("/stats")({
@@ -25,6 +25,7 @@ function Page() {
   const { settings } = useSettings();
   const [proOpen, setProOpen] = useState(false);
   const avg = Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length);
+  const weeklyEarnedMin = WEEK.reduce((a, s) => a + earnedMinFromSteps(s, settings.stepsPer30, settings.dailyCapHours), 0);
   return (
     <AppShell>
       <PageHeader eyebrow={t("stats.eyebrow")} title={t("stats.title")} />
@@ -53,7 +54,7 @@ function Page() {
         </section>
 
         <section className="grid grid-cols-2 gap-4">
-          <Card label={t("stats.screen")} value="14h 30m" sub={t("stats.screen_sub")} />
+          <Card label={t("stats.screen")} value={formatScreenMin(weeklyEarnedMin)} sub={t("stats.screen_sub")} />
           <Card label={t("stats.goal")} value="86%" sub={t("stats.goal_sub")} />
           <Card label={t("stats.active")} value="6 / 7" sub={t("stats.active_sub")} />
           <Card label={t("stats.best")} value="11,200" sub={t("stats.best_sub")} />

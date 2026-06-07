@@ -5,7 +5,7 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
 import { FriendsCard } from "@/components/FriendsCard";
 import { useT } from "@/lib/i18n";
-import { currentStreak, useSettings } from "@/lib/settings";
+import { currentStreak, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -170,7 +170,7 @@ function Page() {
         {/* Stats — today */}
         <section className="grid grid-cols-3 gap-3 animate-rise" style={{ animationDelay: "120ms" }}>
           <Mini label={t("profile.mini.steps")} value={(7240).toLocaleString()} />
-          <Mini label={t("profile.mini.earned")} value="3h 30m" />
+          <Mini label={t("profile.mini.earned")} value={formatScreenMin(earnedMinFromSteps(7240, settings.stepsPer30, settings.dailyCapHours))} />
           <Mini label={t("profile.mini.streak")} value={`${streakCount}d`} />
         </section>
 

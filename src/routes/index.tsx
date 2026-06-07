@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
-import { formatDistance, useSettings } from "@/lib/settings";
+import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
 import { recordDailyActivity } from "@/components/Badges";
 
 export const Route = createFileRoute("/")({
@@ -20,11 +20,6 @@ export const Route = createFileRoute("/")({
 const STEPS = 7240;
 const GOAL = 10000;
 
-function formatMin(min: number) {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return h ? `${h}h ${m}m` : `${m}m`;
-}
 
 const HOLIDAYS: Record<string, string> = {
   "01-01": "home.greeting.newyear",
@@ -65,7 +60,7 @@ function Home() {
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
   const capMin = settings.dailyCapHours * 60;
-  const earnedMin = Math.min(capMin, Math.floor(STEPS / Math.max(1, settings.stepsPer30)) * 30);
+  const earnedMin = earnedMinFromSteps(STEPS, settings.stepsPer30, settings.dailyCapHours);
   const remainingMin = Math.max(0, capMin - earnedMin);
   const ringProgress = Math.min(1, STEPS / GOAL);
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
@@ -112,11 +107,11 @@ function Home() {
           <div className="grid w-full grid-cols-2 divide-x divide-sage-950/5 text-center">
             <div className="space-y-1">
               <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{t("home.earned")}</p>
-              <p className="text-lg font-medium tabular-nums">{formatMin(earnedMin)}</p>
+              <p className="text-lg font-medium tabular-nums">{formatScreenMin(earnedMin)}</p>
             </div>
             <div className="space-y-1">
               <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{t("home.remaining")}</p>
-              <p className="text-lg font-medium tabular-nums text-sage-600">{formatMin(remainingMin)}</p>
+              <p className="text-lg font-medium tabular-nums text-sage-600">{formatScreenMin(remainingMin)}</p>
             </div>
           </div>
         </section>
