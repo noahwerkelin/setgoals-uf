@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Flame, Footprints, MapPin, Sparkles, Trophy, Zap } from "lucide-react";
-import { useEffect } from "react";
+import { CheckCircle2, ChevronRight, Flame, Footprints, MapPin, Sparkles, Trophy, Zap } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
 import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
 import { useTodaySteps } from "@/lib/steps";
-import { recordDailyActivity } from "@/components/Badges";
+import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
 
 export const Route = createFileRoute("/")({
   head: () => ({
