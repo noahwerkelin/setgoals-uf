@@ -220,6 +220,40 @@ function Page() {
 
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
 
+      <Dialog open={themeOpen} onOpenChange={setThemeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("theme.title")}</DialogTitle>
+            <DialogDescription>{t("theme.desc")}</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-3 py-2">
+            {THEME_COLORS.map((c) => {
+              const active = settings.themeColor === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    update("themeColor", c.id as ThemeColor);
+                    toast.success(t("theme.updated"));
+                  }}
+                  className={`flex flex-col items-center gap-2 rounded-2xl p-3 ring-1 transition-colors ${
+                    active ? "ring-sage-700/40 bg-sage-50" : "ring-black/10 bg-card hover:bg-sage-50/60"
+                  }`}
+                >
+                  <span
+                    className="grid size-10 place-items-center rounded-full ring-2 ring-white shadow"
+                    style={{ background: c.swatch }}
+                  >
+                    {active && <Check className="size-4 text-white" />}
+                  </span>
+                  <span className="text-xs font-medium">{t(`theme.${c.id}`)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Steps per 30 dialog */}
       <SliderDialog
