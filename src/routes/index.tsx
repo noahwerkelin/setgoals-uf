@@ -206,14 +206,77 @@ function StatTile({
   );
 }
 
-function Badge({ icon, label }: { icon: React.ReactNode; label: string }) {
+function RecentWins() {
+  const { t } = useT();
+  const earned = useEarnedBadges();
+  const items = useMemo(() => {
+    return Object.entries(earned)
+      .map(([id, when]) => {
+        const def = BADGES.find((b) => b.id === id);
+        if (!def) return null;
+        return { id, def, when: new Date(when).getTime() };
+      })
+      .filter((x): x is { id: string; def: typeof BADGES[number]; when: number } => !!x)
+      .sort((a, b) => b.when - a.when)
+      .slice(0, 6);
+  }, [earned]);
+
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl bg-card p-4 ring-1 ring-black/5">
-      <span className="grid size-10 place-items-center rounded-full bg-sage-100 text-sage-700">{icon}</span>
-      <span className="text-center text-[11px] font-medium leading-tight text-sage-900">{label}</span>
-    </div>
+    <section className="space-y-3 animate-rise" style={{ animationDelay: "240ms" }}>
+      <div className="flex items-center justify-between">
+        <SectionTitle>{t("home.recent_wins")}</SectionTitle>
+        <Link to="/challenges" search={{ tab: "badges" }} className="text-[11px] font-semibold uppercase tracking-widest text-sage-700 hover:underline">
+          {t("home.recent_wins.view_all")}
+        </Link>
+      </div>
+      {items.length === 0 ? (
+        <Link
+          to="/challenges"
+          className="block rounded-3xl bg-sage-100 p-5 ring-1 ring-sage-200"
+        >
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 place-items-center rounded-2xl bg-sage-600 text-primary-foreground">
+              <Sparkles className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-sage-900">{t("home.recent_wins.empty_title")}</p>
+              <p className="mt-1 text-xs text-sage-700">{t("home.recent_wins.empty_desc")}</p>
+              <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-sage-800">
+                {t("home.recent_wins.cta")} <ChevronRight className="size-3" />
+              </span>
+            </div>
+          </div>
+        </Link>
+      ) : (
+        <div className="grid grid-cols-3 gap-3">
+          {items.map(({ id, def }) => {
+            const style = tierStyle(def.tier);
+            const Icon = def.icon;
+            return (
+              <Link
+                key={id}
+                to="/challenges"
+                search={{ tab: "badges" }}
+                className="flex flex-col items-center gap-2 rounded-2xl bg-card p-3 ring-1 ring-black/5"
+              >
+                <span className={`grid size-12 place-items-center rounded-full ring-2 ${style.ring} ${style.bg} ${style.glow}`}>
+                  <Icon className={`size-5 ${style.fg}`} />
+                </span>
+                <span className="line-clamp-2 text-center text-[10px] font-semibold leading-tight">
+                  {t(`badges.${id}.name`)}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
+
+// Unused legacy helpers kept intentionally to avoid breaking other imports.
+void Trophy; void MapPin; void Footprints;
+
 
 const QUOTES: Record<string, { text: string; author: string }[]> = {
   en: [
