@@ -161,127 +161,107 @@ function ChallengeRow({
 }
 
 function Leaderboard() {
-  const { t, lang } = useT();
-  const [tab, setTab] = useState<LbTab>("Friends");
-  const { location, loading } = useUserLocation();
-  const { friends } = useFriends();
+  const { t } = useT();
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [period, setPeriod] = useState<LbPeriod>("daily");
 
-  const youSteps = useMemo(() => getTodaySteps(7240), []);
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["leaderboard", period],
+    enabled: !!user,
+    queryFn: async (): Promise<LeaderboardRow[]> => {
+      const { data, error } = await supabase.rpc("leaderboard", { _period: period });
+      if (error) throw error;
+      return (data ?? []) as LeaderboardRow[];
+    },
+  });
 
-  const { rows, youRank, scopeLabel, scopeIcon } = useMemo(() => {
-    if (tab === "Friends") {
-      const all = [
-        ...friends.map((f) => ({ n: f.name, s: f.steps })),
-        { n: "__you__", s: youSteps },
-      ].sort((a, b) => b.s - a.s);
-      const idx = all.findIndex((x) => x.n === "__you__") + 1;
-      return {
-        rows: all,
-        youRank: idx,
-        scopeLabel: t("lb.friends_count", { n: friends.length }),
-        scopeIcon: "friends" as const,
-      };
-    }
-    if (tab === "Local") {
-      const key = `local:${location.countryCode}:${location.region}`;
-      const { rows: r, youRank: yr } = buildCohort(key, location.countryCode, 30, youSteps);
-      return {
-        rows: r.slice(0, 10),
-        youRank: yr,
-        scopeLabel: t("lb.region_label", { region: location.region }),
-        scopeIcon: "local" as const,
-      };
-    }
-    const key = `national:${location.countryCode}`;
-    const { rows: r, youRank: yr } = buildCohort(key, location.countryCode, 60, youSteps);
-    return {
-      rows: r.slice(0, 10),
-      youRank: yr,
-      scopeLabel: t("lb.country_label", { country: location.country }),
-      scopeIcon: "national" as const,
+  // realtime — refresh leaderboard when any activity_steps changes
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel("lb-activity")
+      .on("postgres_changes", { event: "*", schema: "public", table: "activity_steps" }, () => {
+        qc.invalidateQueries({ queryKey: ["leaderboard"] });
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
     };
-  }, [tab, friends, youSteps, location, t]);
+  }, [user, qc]);
+
+  const youRow = rows.find((r) => r.user_id === user?.id);
+  const youRank = youRow?.rank ?? 0;
+  const top = rows.slice(0, 50);
 
   useEffect(() => {
-    if (tab === "Local") recordLeaderboardRank("local", youRank);
-    else if (tab === "National") recordLeaderboardRank("national", youRank);
-  }, [tab, youRank]);
-
-  const dateLabel = useMemo(
-    () =>
-      new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }),
-    [lang],
-  );
-
-  const Icon = scopeIcon === "friends" ? Users : scopeIcon === "local" ? MapPin : Globe2;
-  const showYouFloating = tab !== "Friends" && youRank > 10;
+    if (period === "daily" && youRank > 0) recordLeaderboardRank("national", youRank);
+  }, [period, youRank]);
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-1 rounded-2xl bg-card p-1 ring-1 ring-black/5">
-        {LB_TABS.map((tk) => (
+      <div className="grid grid-cols-4 gap-1 rounded-2xl bg-card p-1 ring-1 ring-black/5">
+        {LB_PERIODS.map((p) => (
           <button
-            key={tk}
-            onClick={() => setTab(tk)}
-            className={`rounded-xl py-2 text-xs font-semibold transition-colors ${
-              tab === tk ? "bg-sage-600 text-primary-foreground" : "text-sage-700"
+            key={p}
+            onClick={() => setPeriod(p)}
+            className={`rounded-xl py-2 text-[11px] font-semibold capitalize transition-colors ${
+              period === p ? "bg-sage-600 text-primary-foreground" : "text-sage-700"
             }`}
           >
-            {t(`lb.tab.${tk}`)}
+            {p === "alltime" ? "All-time" : p}
           </button>
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-2 px-1">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-sage-700">
-          <Icon className="size-3.5" />
-          {loading && tab !== "Friends" ? t("lb.locating") : scopeLabel}
-        </span>
-        <span className="text-[10px] font-medium uppercase tracking-wider text-sage-600">
-          {t("lb.today_label", { date: dateLabel })}
-        </span>
-      </div>
-
-      {tab === "Friends" && friends.length === 0 ? (
+      {isLoading ? (
         <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
-          {t("lb.no_friends")}
+          Loading leaderboard…
+        </p>
+      ) : top.length === 0 ? (
+        <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
+          No verified activity yet. Be the first!
         </p>
       ) : (
         <ol className="space-y-2">
-          {rows.map((row, i) => (
-            <li
-              key={row.n + i}
-              className={`flex items-center gap-4 rounded-2xl p-4 ring-1 animate-rise ${
-                row.n === "__you__" ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/5"
-              }`}
-              style={{ animationDelay: `${i * 30}ms` }}
-            >
-              <span className={`grid size-8 place-items-center rounded-full text-xs font-semibold tabular-nums ${row.n === "__you__" ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
-                {i + 1}
-              </span>
-              <span className="flex-1 text-sm font-medium">{row.n === "__you__" ? t("lb.you") : row.n}</span>
-              <span className="text-sm font-semibold tabular-nums">{row.s.toLocaleString()}</span>
-            </li>
-          ))}
+          {top.map((row, i) => {
+            const isYou = row.user_id === user?.id;
+            return (
+              <li
+                key={row.user_id}
+                className={`flex items-center gap-4 rounded-2xl p-4 ring-1 animate-rise ${
+                  isYou ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/5"
+                }`}
+                style={{ animationDelay: `${i * 20}ms` }}
+              >
+                <span className={`grid size-8 place-items-center rounded-full text-xs font-semibold tabular-nums ${isYou ? "bg-white/15 text-white" : "bg-sage-100 text-sage-700"}`}>
+                  {row.rank}
+                </span>
+                <span className="flex-1 text-sm font-medium truncate">
+                  {isYou ? t("lb.you") : row.display_name}
+                </span>
+                <span className="text-sm font-semibold tabular-nums">{row.total_steps.toLocaleString()}</span>
+              </li>
+            );
+          })}
         </ol>
       )}
 
-      {showYouFloating && (
+      {youRank > 50 && youRow && (
         <div className="flex items-center gap-4 rounded-2xl bg-sage-600 p-4 text-primary-foreground ring-1 ring-sage-700/40">
           <span className="grid size-8 place-items-center rounded-full bg-white/15 text-xs font-semibold tabular-nums">
-            {youRank}
+            {youRow.rank}
           </span>
           <span className="flex-1 text-sm font-medium">{t("lb.you")}</span>
-          <span className="text-sm font-semibold tabular-nums">{youSteps.toLocaleString()}</span>
+          <span className="text-sm font-semibold tabular-nums">{youRow.total_steps.toLocaleString()}</span>
         </div>
       )}
 
-      <p className="px-1 text-center text-xs text-sage-600">{t("lb.refresh")} · {t("lb.anon")}</p>
+      <p className="px-1 text-center text-xs text-sage-600">
+        Live updates · Verified step data only
+      </p>
     </div>
   );
 }
+
 
