@@ -348,6 +348,8 @@ const DICTS: Record<Lang, Dict> = {
     "settings.earning": "Earning rules",
     "settings.steps_per_30": "Steps per 30 min",
     "settings.daily_cap": "Daily screen-time cap",
+    "settings.daily_goal": "Daily step goal",
+    "settings.steps": "steps",
     "settings.integrations": "Integrations",
     "settings.healthkit": "Apple HealthKit",
     "settings.googlefit": "Google Fit / Health Connect",
