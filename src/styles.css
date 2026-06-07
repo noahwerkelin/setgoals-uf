@@ -129,7 +129,7 @@
   --sage-900: oklch(0.3 0.02 250);
   --sage-950: oklch(0.18 0.014 250);
 }
-
+:root {
   --background: var(--sage-50);
   --foreground: var(--sage-950);
   --card: oklch(1 0 0);
