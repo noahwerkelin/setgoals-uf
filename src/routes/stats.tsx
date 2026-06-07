@@ -4,27 +4,29 @@ import { Lock, Sparkles } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { useWeekSteps } from "@/lib/steps";
 import { ProUpgradeDialog } from "@/components/Pro";
 
 export const Route = createFileRoute("/stats")({
   head: () => ({
     meta: [
-      { title: "Statistics — SetGoals UF" },
+      { title: "Statistics — SetGoals" },
       { name: "description", content: "Daily, weekly, and monthly trends for steps and screen time." },
     ],
   }),
   component: Page,
 });
 
-const WEEK = [5200, 8100, 6400, 9200, 7240, 11200, 4300];
-const MAX = Math.max(...WEEK);
 const DAY_KEYS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 function Page() {
   const { t } = useT();
   const { settings } = useSettings();
+  const { data: week = [] } = useWeekSteps();
+  const WEEK = week.map((d) => d.steps);
+  const MAX = Math.max(1, ...WEEK);
   const [proOpen, setProOpen] = useState(false);
-  const avg = Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length);
+  const avg = WEEK.length ? Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length) : 0;
   const weeklyEarnedMin = WEEK.reduce((a, s) => a + earnedMinFromSteps(s, settings.stepsPer30, settings.dailyCapHours), 0);
   return (
     <AppShell>
