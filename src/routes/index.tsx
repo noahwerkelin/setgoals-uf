@@ -51,10 +51,16 @@ function getLocalParts(tz: string) {
 function Home() {
   const { t, lang } = useT();
   const { settings, recordSteps } = useSettings();
+  const { data: today } = useTodaySteps();
+  const stepsToday = today?.steps ?? 0;
+  const distanceKm = today?.distance_km ?? 0;
+  const calories = today?.calories ?? 0;
   useEffect(() => {
-    recordSteps(STEPS, GOAL);
-    recordDailyActivity(STEPS, 5.2, new Date().getHours());
-  }, [recordSteps]);
+    if (today) {
+      recordSteps(stepsToday, GOAL);
+      recordDailyActivity(stepsToday, distanceKm, new Date().getHours());
+    }
+  }, [today, stepsToday, distanceKm, recordSteps]);
   const now = new Date();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { hour, md } = getLocalParts(tz);
@@ -63,17 +69,18 @@ function Home() {
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
   const capMin = settings.dailyCapHours * 60;
-  const earnedMin = earnedMinFromSteps(STEPS, settings.stepsPer30, settings.dailyCapHours);
+  const earnedMin = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);
   const remainingMin = Math.max(0, capMin - earnedMin);
-  const ringProgress = Math.min(1, STEPS / GOAL);
+  const ringProgress = Math.min(1, stepsToday / GOAL);
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     timeZone: tz,
     weekday: "long",
     month: "short",
     day: "numeric",
   });
-  const distance = formatDistance(5.2, settings.units);
+  const distance = formatDistance(distanceKm, settings.units);
   const [distValue, distUnit] = distance.split(" ");
+
 
   return (
     <AppShell>
