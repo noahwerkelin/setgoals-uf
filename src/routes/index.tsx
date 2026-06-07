@@ -110,7 +110,7 @@ function Home() {
                 {stepsToday.toLocaleString()}
               </span>
               <span className="block text-sm font-medium text-sage-600">
-                {t("home.steps_of", { goal: GOAL.toLocaleString() })}
+                {t("home.steps_of", { goal: goal.toLocaleString() })}
               </span>
             </div>
           </ProgressRing>
