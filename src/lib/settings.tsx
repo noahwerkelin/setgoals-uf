@@ -21,6 +21,16 @@ export type StreakState = {
 };
 
 export type SubPlan = "monthly" | "yearly";
+export type ThemeColor = "sage" | "rose" | "blue" | "pink" | "lavender" | "amber" | "slate";
+export const THEME_COLORS: { id: ThemeColor; swatch: string }[] = [
+  { id: "sage", swatch: "oklch(0.58 0.038 142)" },
+  { id: "rose", swatch: "oklch(0.58 0.07 24)" },
+  { id: "blue", swatch: "oklch(0.58 0.07 248)" },
+  { id: "pink", swatch: "oklch(0.58 0.07 350)" },
+  { id: "lavender", swatch: "oklch(0.58 0.068 295)" },
+  { id: "amber", swatch: "oklch(0.58 0.078 72)" },
+  { id: "slate", swatch: "oklch(0.58 0.025 250)" },
+];
 
 export type SettingsState = {
   stepsPer30: number;
@@ -36,6 +46,7 @@ export type SettingsState = {
   proPlan: SubPlan;
   proAutoRenew: boolean;
   proPaymentMethod: string; // e.g. "Visa •• 4242"
+  themeColor: ThemeColor;
   bonusMinFromYesterday: number;
   role: Role;
   displayName: string;
@@ -61,6 +72,7 @@ const DEFAULTS: SettingsState = {
   proPlan: "monthly",
   proAutoRenew: true,
   proPaymentMethod: "Visa •• 4242",
+  themeColor: "sage",
   bonusMinFromYesterday: 45,
   role: "individual",
   displayName: "Lukas",
@@ -118,6 +130,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
     } catch {}
   }, []);
+
+  // Apply PRO color theme to <html data-theme="…"> — non-PRO always uses sage.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const active = settings.isPro ? settings.themeColor : "sage";
+    if (active === "sage") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", active);
+  }, [settings.themeColor, settings.isPro]);
 
   const update = useCallback<Ctx["update"]>((key, value) => {
     setSettings((prev) => {

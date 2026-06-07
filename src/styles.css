@@ -48,7 +48,7 @@
 :root {
   --radius: 1rem;
 
-  /* Sage scale */
+  /* Sage scale (default) */
   --sage-50: oklch(0.985 0.005 130);
   --sage-100: oklch(0.965 0.008 130);
   --sage-200: oklch(0.92 0.014 130);
@@ -58,7 +58,78 @@
   --sage-700: oklch(0.5 0.04 144);
   --sage-900: oklch(0.3 0.025 145);
   --sage-950: oklch(0.18 0.018 145);
+}
 
+/* PRO color themes — override the sage scale; everything in the app that
+   references --sage-* (incl. --primary, --accent, --ring) follows. Hues differ
+   per theme but lightness/chroma mirror sage for the same washed-out feel. */
+:root[data-theme="rose"] {
+  --sage-50: oklch(0.985 0.006 20);
+  --sage-100: oklch(0.965 0.012 20);
+  --sage-200: oklch(0.92 0.022 20);
+  --sage-300: oklch(0.85 0.034 22);
+  --sage-500: oklch(0.66 0.06 22);
+  --sage-600: oklch(0.58 0.07 24);
+  --sage-700: oklch(0.5 0.072 26);
+  --sage-900: oklch(0.3 0.04 26);
+  --sage-950: oklch(0.18 0.028 26);
+}
+:root[data-theme="blue"] {
+  --sage-50: oklch(0.985 0.006 240);
+  --sage-100: oklch(0.965 0.012 240);
+  --sage-200: oklch(0.92 0.024 240);
+  --sage-300: oklch(0.85 0.038 242);
+  --sage-500: oklch(0.66 0.06 245);
+  --sage-600: oklch(0.58 0.07 248);
+  --sage-700: oklch(0.5 0.07 250);
+  --sage-900: oklch(0.3 0.04 250);
+  --sage-950: oklch(0.18 0.028 250);
+}
+:root[data-theme="pink"] {
+  --sage-50: oklch(0.985 0.006 350);
+  --sage-100: oklch(0.965 0.012 350);
+  --sage-200: oklch(0.92 0.024 350);
+  --sage-300: oklch(0.85 0.036 350);
+  --sage-500: oklch(0.66 0.06 350);
+  --sage-600: oklch(0.58 0.07 350);
+  --sage-700: oklch(0.5 0.072 350);
+  --sage-900: oklch(0.3 0.04 350);
+  --sage-950: oklch(0.18 0.028 350);
+}
+:root[data-theme="lavender"] {
+  --sage-50: oklch(0.985 0.006 295);
+  --sage-100: oklch(0.965 0.012 295);
+  --sage-200: oklch(0.92 0.024 295);
+  --sage-300: oklch(0.85 0.036 295);
+  --sage-500: oklch(0.66 0.06 295);
+  --sage-600: oklch(0.58 0.068 295);
+  --sage-700: oklch(0.5 0.07 295);
+  --sage-900: oklch(0.3 0.04 295);
+  --sage-950: oklch(0.18 0.028 295);
+}
+:root[data-theme="amber"] {
+  --sage-50: oklch(0.985 0.006 80);
+  --sage-100: oklch(0.965 0.014 80);
+  --sage-200: oklch(0.92 0.028 78);
+  --sage-300: oklch(0.85 0.042 76);
+  --sage-500: oklch(0.66 0.07 74);
+  --sage-600: oklch(0.58 0.078 72);
+  --sage-700: oklch(0.5 0.078 70);
+  --sage-900: oklch(0.3 0.045 70);
+  --sage-950: oklch(0.18 0.03 70);
+}
+:root[data-theme="slate"] {
+  --sage-50: oklch(0.985 0.003 250);
+  --sage-100: oklch(0.965 0.006 250);
+  --sage-200: oklch(0.92 0.01 250);
+  --sage-300: oklch(0.85 0.015 250);
+  --sage-500: oklch(0.66 0.022 250);
+  --sage-600: oklch(0.58 0.025 250);
+  --sage-700: oklch(0.5 0.028 250);
+  --sage-900: oklch(0.3 0.02 250);
+  --sage-950: oklch(0.18 0.014 250);
+}
+:root {
   --background: var(--sage-50);
   --foreground: var(--sage-950);
   --card: oklch(1 0 0);

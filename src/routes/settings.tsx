@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ProUpgradeDialog } from "@/components/Pro";
+import { THEME_COLORS, type ThemeColor } from "@/lib/settings";
+import { Lock, Palette } from "lucide-react";
 import { awardBadge } from "@/components/Badges";
 
 export const Route = createFileRoute("/settings")({
@@ -51,6 +53,7 @@ function Page() {
   const [usernameOpen, setUsernameOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const isChild = settings.role === "child";
   const [reportOpen, setReportOpen] = useState(false);
@@ -84,6 +87,35 @@ function Page() {
             </div>
           </button>
         )}
+
+        {/* Personalization — PRO-gated color theme */}
+        {!isChild && (
+          <Group title={t("theme.title")}>
+            <button
+              onClick={() => (settings.isPro ? setThemeOpen(true) : setProOpen(true))}
+              className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-black/5 text-left"
+            >
+              <span className="grid size-10 place-items-center rounded-2xl bg-sage-100 text-sage-700">
+                <Palette className="size-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold capitalize">
+                  {t(`theme.${settings.isPro ? settings.themeColor : "sage"}`)}
+                </p>
+                <p className="text-xs text-sage-600">
+                  {settings.isPro ? t("theme.desc") : t("pro.unlock")}
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                {THEME_COLORS.slice(0, 5).map((c) => (
+                  <span key={c.id} className="size-3.5 rounded-full ring-1 ring-black/10" style={{ background: c.swatch }} />
+                ))}
+              </div>
+              {settings.isPro ? <ChevronRight className="size-4" /> : <Lock className="size-4 text-sage-600" />}
+            </button>
+          </Group>
+        )}
+
 
         {/* Earning rules — only parents/individuals can change */}
         {!isChild && (
@@ -187,6 +219,40 @@ function Page() {
       </div>
 
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
+
+      <Dialog open={themeOpen} onOpenChange={setThemeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("theme.title")}</DialogTitle>
+            <DialogDescription>{t("theme.desc")}</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-3 py-2">
+            {THEME_COLORS.map((c) => {
+              const active = settings.themeColor === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    update("themeColor", c.id as ThemeColor);
+                    toast.success(t("theme.updated"));
+                  }}
+                  className={`flex flex-col items-center gap-2 rounded-2xl p-3 ring-1 transition-colors ${
+                    active ? "ring-sage-700/40 bg-sage-50" : "ring-black/10 bg-card hover:bg-sage-50/60"
+                  }`}
+                >
+                  <span
+                    className="grid size-10 place-items-center rounded-full ring-2 ring-white shadow"
+                    style={{ background: c.swatch }}
+                  >
+                    {active && <Check className="size-4 text-white" />}
+                  </span>
+                  <span className="text-xs font-medium">{t(`theme.${c.id}`)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
 
 
       {/* Steps per 30 dialog */}
