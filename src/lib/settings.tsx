@@ -21,6 +21,16 @@ export type StreakState = {
 };
 
 export type SubPlan = "monthly" | "yearly";
+export type ThemeColor = "sage" | "rose" | "blue" | "pink" | "lavender" | "amber" | "slate";
+export const THEME_COLORS: { id: ThemeColor; swatch: string }[] = [
+  { id: "sage", swatch: "oklch(0.58 0.038 142)" },
+  { id: "rose", swatch: "oklch(0.58 0.07 24)" },
+  { id: "blue", swatch: "oklch(0.58 0.07 248)" },
+  { id: "pink", swatch: "oklch(0.58 0.07 350)" },
+  { id: "lavender", swatch: "oklch(0.58 0.068 295)" },
+  { id: "amber", swatch: "oklch(0.58 0.078 72)" },
+  { id: "slate", swatch: "oklch(0.58 0.025 250)" },
+];
 
 export type SettingsState = {
   stepsPer30: number;
