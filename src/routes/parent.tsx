@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Shield, Check, X, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone } from "lucide-react";
+import { Shield, Check, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone, Infinity as InfinityIcon, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
