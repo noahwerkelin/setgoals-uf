@@ -361,13 +361,17 @@ function ScreenTimeDialog({
   const { t } = useT();
   const [steps, setSteps] = useState(initial.stepsPer30);
   const [cap, setCap] = useState(initial.dailyCapHours);
+  const [rolloverOn, setRolloverOn] = useState(false);
 
   useEffect(() => {
     if (open) {
       setSteps(initial.stepsPer30);
       setCap(initial.dailyCapHours);
+      const pst = loadProST();
+      setRolloverOn(pst.rollover);
     }
   }, [open, initial.stepsPer30, initial.dailyCapHours]);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -403,7 +407,14 @@ function ScreenTimeDialog({
               onValueChange={(v) => setCap(v[0])}
             />
           </div>
+          {rolloverOn && (
+            <div className="flex items-start gap-2 rounded-2xl bg-sage-50 p-3 ring-1 ring-sage-200">
+              <Sparkles className="mt-0.5 size-4 shrink-0 text-sage-700" />
+              <p className="text-xs text-sage-700">{t("parent.rollover_on")}</p>
+            </div>
+          )}
         </div>
+
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
           <Button onClick={() => { onSave({ stepsPer30: steps, dailyCapHours: cap }); onOpenChange(false); }}>
@@ -602,35 +613,8 @@ function CategoryToggle({
   );
 }
 
-type ProST = {
-  rollover: boolean;
-  weekend2x: boolean;
-  splitCaps: boolean;
-  weekdayCap: number;
-  weekendCap: number;
-  catLimits: Record<string, number>;
-};
+import { loadProST, saveProST, DEFAULT_PRO_ST, type ProST } from "@/lib/screentime";
 
-const PRO_ST_KEY = "sg.st.pro.v1";
-const DEFAULT_PRO_ST: ProST = {
-  rollover: false,
-  weekend2x: false,
-  splitCaps: false,
-  weekdayCap: 3,
-  weekendCap: 5,
-  catLimits: {},
-};
-
-function loadProST(): ProST {
-  if (typeof window === "undefined") return DEFAULT_PRO_ST;
-  try {
-    const raw = window.localStorage.getItem(PRO_ST_KEY);
-    if (!raw) return DEFAULT_PRO_ST;
-    return { ...DEFAULT_PRO_ST, ...JSON.parse(raw) };
-  } catch {
-    return DEFAULT_PRO_ST;
-  }
-}
 
 function ProScreenTimeSection({
   isPro,
@@ -650,10 +634,9 @@ function ProScreenTimeSection({
 
   const save = (next: ProST) => {
     setState(next);
-    try {
-      window.localStorage.setItem(PRO_ST_KEY, JSON.stringify(next));
-    } catch {}
+    saveProST(next);
   };
+
 
   const disabled = !isPro;
 

@@ -5,8 +5,10 @@ import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
 import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
-import { useTodaySteps } from "@/lib/steps";
+import { useTodaySteps, useHistorySteps } from "@/lib/steps";
 import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
+import { loadProST, computeRolloverMin } from "@/lib/screentime";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -69,10 +71,16 @@ function Home() {
   if (hour >= 12 && hour < 17) greetingKey = "home.greeting.afternoon";
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
+  const { data: hist } = useHistorySteps(2);
+  const yesterdaySteps = hist && hist.length >= 2 ? hist[hist.length - 2].steps : 0;
+  const proST = useMemo(() => loadProST(), []);
+  const rolloverMin = computeRolloverMin(yesterdaySteps, settings.stepsPer30, settings.dailyCapHours, proST, settings.isPro);
   const capMin = settings.dailyCapHours * 60;
-  const earnedMin = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);
-  const remainingMin = Math.max(0, capMin - earnedMin);
+  const baseEarned = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);
+  const earnedMin = Math.min(capMin + rolloverMin, baseEarned + rolloverMin);
+  const remainingMin = Math.max(0, capMin + rolloverMin - earnedMin);
   const ringProgress = Math.min(1, stepsToday / goal);
+
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
     timeZone: tz,
     weekday: "long",
@@ -134,7 +142,7 @@ function Home() {
           <StatTile icon={<Footprints className="size-4" />} label={t("home.distance")} value={distValue} unit={distUnit} />
         </section>
 
-        {settings.role !== "child" && settings.isPro && settings.bonusMinFromYesterday > 0 && (
+        {settings.role !== "child" && settings.isPro && rolloverMin > 0 && (
           <Link
             to="/settings"
             className="flex items-center gap-3 rounded-3xl bg-sage-100 p-4 ring-1 ring-sage-200 animate-rise"
@@ -145,7 +153,8 @@ function Home() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-700">{t("home.bonus_eyebrow")}</p>
-              <p className="text-sm font-medium text-sage-900">{t("home.bonus_text", { n: settings.bonusMinFromYesterday })}</p>
+              <p className="text-sm font-medium text-sage-900">{t("home.bonus_text", { n: rolloverMin })}</p>
+
             </div>
           </Link>
         )}
