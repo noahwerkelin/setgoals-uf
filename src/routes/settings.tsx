@@ -398,6 +398,41 @@ function Page() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); if (!o) setDeletePassword(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">{t("delete.title")}</DialogTitle>
+            <DialogDescription>{t("delete.desc")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="delete-pw">{t("delete.password")}</Label>
+            <Input
+              id="delete-pw"
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setDeleteOpen(false); setDeletePassword(""); }}>{t("settings.cancel")}</Button>
+            <Button
+              variant="destructive"
+              disabled={!deletePassword || deleting}
+              onClick={async () => {
+                setDeleting(true);
+                const ok = await deleteAccount(deletePassword);
+                setDeleting(false);
+                if (ok) { setDeleteOpen(false); setDeletePassword(""); }
+              }}
+            >
+              {t("delete.confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       <NicknameDialog
         open={nicknameOpen}
         onOpenChange={setNicknameOpen}
