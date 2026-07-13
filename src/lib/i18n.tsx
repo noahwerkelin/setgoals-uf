@@ -265,6 +265,7 @@ const DICTS: Record<Lang, Dict> = {
     "parent.rules_sub": "Currently: {steps} steps = 30 min · Max {cap}h per day · {carry}",
     "parent.rules_carry_on": "Unused time carries over to next day.",
     "parent.rules_carry_off": "Unused time does not carry over.",
+    "parent.no_cap": "No cap",
     "parent.rollover_on": "Unused screen time from yesterday carries over to today.",
 
     "parent.configure": "Configure rules",
@@ -818,6 +819,7 @@ const DICTS: Record<Lang, Dict> = {
     "parent.rules_sub": "Nu: {steps} steg = 30 min · Max {cap}h per dag · {carry}",
     "parent.rules_carry_on": "Oanvänd tid förs över till nästa dag.",
     "parent.rules_carry_off": "Oanvänd tid förs inte över.",
+    "parent.no_cap": "Ingen gräns",
     "parent.rollover_on": "Oanvänd skärmtid från igår förs över till idag.",
 
     "parent.configure": "Konfigurera regler",

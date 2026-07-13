@@ -149,7 +149,7 @@ function Page() {
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Stat label={t("parent.steps_per_30")} value={settings.stepsPer30.toLocaleString()} />
-            <Stat label={t("parent.daily_cap")} value={`${settings.dailyCapHours}${t("settings.hours")}`} />
+            <Stat label={t("parent.daily_cap")} value={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`} />
           </div>
           <button
             onClick={() => setEditingMyST(true)}
@@ -218,7 +218,7 @@ function Page() {
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3">
                       <Stat label={t("parent.steps_per_30")} value={k.stepsPer30.toLocaleString()} />
-                      <Stat label={t("parent.daily_cap")} value={`${k.dailyCapHours}${t("settings.hours")}`} />
+                      <Stat label={t("parent.daily_cap")} value={k.dailyCapHours >= 24 ? t("parent.no_cap") : `${k.dailyCapHours}${t("settings.hours")}`} />
                     </div>
                     <button
                       onClick={() => setEditingChildST(k)}
@@ -378,7 +378,7 @@ function ScreenTimeDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{t("parent.rules_sub", { steps: steps.toLocaleString(), cap, carry: t(rolloverOn ? "parent.rules_carry_on" : "parent.rules_carry_off") })}</DialogDescription>
+          <DialogDescription>{t("parent.rules_sub", { steps: steps.toLocaleString(), cap: cap >= 24 ? "∞" : cap, carry: t(rolloverOn ? "parent.rules_carry_on" : "parent.rules_carry_off") })}</DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-2">
           <div>
@@ -397,14 +397,14 @@ function ScreenTimeDialog({
           <div>
             <label className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-sage-600">
               <span>{t("parent.daily_cap")}</span>
-              <span className="tabular-nums text-sage-700">{cap}{t("settings.hours")}</span>
+              <span className="tabular-nums text-sage-700">{cap >= 24 ? t("parent.no_cap") : `${cap}${t("settings.hours")}`}</span>
             </label>
             <Slider
-              value={[cap]}
+              value={[cap >= 24 ? 9 : cap]}
               min={1}
-              max={8}
+              max={9}
               step={1}
-              onValueChange={(v) => setCap(v[0])}
+              onValueChange={(v) => setCap(v[0] >= 9 ? 24 : v[0])}
             />
           </div>
           {rolloverOn && (
