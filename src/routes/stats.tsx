@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Lock, Sparkles } from "lucide-react";
+import { Lock, Sparkles, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
-import { useWeekSteps } from "@/lib/steps";
+import { useWeekSteps, useHistorySteps } from "@/lib/steps";
 import { ProUpgradeDialog } from "@/components/Pro";
+import { computeInsights, buildMessages } from "@/lib/insights";
 
 export const Route = createFileRoute("/stats")({
   head: () => ({
