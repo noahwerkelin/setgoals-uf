@@ -285,8 +285,8 @@ const DICTS: Record<Lang, Dict> = {
     "onb.s1.desc": "Default: 1,000 steps unlocks 30 minutes of your favorite apps.",
     "onb.s2.title": "Family-friendly controls",
     "onb.s2.desc": "Parents can approve apps, set goals, and grant bonus minutes.",
-    "onb.s3.title": "Coach, routes & rewards",
-    "onb.s3.desc": "Personal AI coach, nearby trails, badges, and partner offers.",
+    "onb.s3.title": "Coach, routes & badges",
+    "onb.s3.desc": "Personal AI coach, nearby trails, badges, and achievements.",
     "onb.cta": "Get started",
     "onb.skip": "Skip — explore the app",
 
@@ -544,8 +544,6 @@ const DICTS: Record<Lang, Dict> = {
     "stats.pro.forecast": "Estimated tomorrow",
     "stats.pro.forecast_sub": "based on your last 30 days",
     "stats.pro.locked": "Unlock personal insights, trends, and a next-day forecast.",
-
-    "rewards.locked_pro": "PRO avatar",
 
     "parent.child.code": "Login code",
     "parent.child.edit": "Edit profile",
@@ -1100,8 +1098,6 @@ const DICTS: Record<Lang, Dict> = {
     "stats.pro.forecast": "Prognos för imorgon",
     "stats.pro.forecast_sub": "baserat på senaste 30 dagarna",
     "stats.pro.locked": "Lås upp personliga insikter, trender och morgondagens prognos.",
-
-    "rewards.locked_pro": "PRO-avatar",
 
     "parent.child.code": "Inloggningskod",
     "parent.child.edit": "Redigera profil",
