@@ -263,6 +263,8 @@ const DICTS: Record<Lang, Dict> = {
     "cat.utilities": "Utilities",
     "parent.rules": "Custom earning rules",
     "parent.rules_sub": "Currently: 1,000 steps = 30 min · Max 3h per day · Unused time does not carry over.",
+    "parent.rollover_on": "Unused screen time from yesterday carries over to today.",
+
     "parent.configure": "Configure rules",
     "parent.my_screentime": "My screen time",
     "parent.my_screentime_sub": "Your personal earning rules and daily cap.",
