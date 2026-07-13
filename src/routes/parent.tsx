@@ -602,35 +602,8 @@ function CategoryToggle({
   );
 }
 
-type ProST = {
-  rollover: boolean;
-  weekend2x: boolean;
-  splitCaps: boolean;
-  weekdayCap: number;
-  weekendCap: number;
-  catLimits: Record<string, number>;
-};
+import { loadProST, saveProST, PRO_ST_KEY as _PRO_ST_KEY, DEFAULT_PRO_ST, type ProST } from "@/lib/screentime";
 
-const PRO_ST_KEY = "sg.st.pro.v1";
-const DEFAULT_PRO_ST: ProST = {
-  rollover: false,
-  weekend2x: false,
-  splitCaps: false,
-  weekdayCap: 3,
-  weekendCap: 5,
-  catLimits: {},
-};
-
-function loadProST(): ProST {
-  if (typeof window === "undefined") return DEFAULT_PRO_ST;
-  try {
-    const raw = window.localStorage.getItem(PRO_ST_KEY);
-    if (!raw) return DEFAULT_PRO_ST;
-    return { ...DEFAULT_PRO_ST, ...JSON.parse(raw) };
-  } catch {
-    return DEFAULT_PRO_ST;
-  }
-}
 
 function ProScreenTimeSection({
   isPro,
