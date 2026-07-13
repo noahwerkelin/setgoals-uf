@@ -183,3 +183,51 @@ function Card({ label, value, sub }: { label: string; value: string; sub: string
     </div>
   );
 }
+
+function ScoreRing({ score }: { score: number }) {
+  const size = 72;
+  const stroke = 8;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c * (1 - Math.max(0, Math.min(100, score)) / 100);
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="text-sage-100" stroke="currentColor" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          className="text-sage-600"
+          stroke="currentColor"
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-sm font-semibold tabular-nums">
+        {score}
+      </div>
+    </div>
+  );
+}
+
+function TrendCard({ label, value }: { label: string; value: number }) {
+  const rounded = Math.round(value);
+  const up = rounded > 1;
+  const down = rounded < -1;
+  const Icon = up ? TrendingUp : down ? TrendingDown : Minus;
+  const color = up ? "text-emerald-600" : down ? "text-rose-600" : "text-sage-600";
+  const sign = rounded > 0 ? "+" : "";
+  return (
+    <div className="rounded-2xl bg-sage-50 p-3 ring-1 ring-black/5">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-sage-600">{label}</p>
+      <div className={`mt-1 flex items-center gap-1 ${color}`}>
+        <Icon className="size-4" />
+        <p className="text-base font-semibold tabular-nums">{sign}{rounded}%</p>
+      </div>
+    </div>
+  );
+}
