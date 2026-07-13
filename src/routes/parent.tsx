@@ -361,13 +361,17 @@ function ScreenTimeDialog({
   const { t } = useT();
   const [steps, setSteps] = useState(initial.stepsPer30);
   const [cap, setCap] = useState(initial.dailyCapHours);
+  const [rolloverOn, setRolloverOn] = useState(false);
 
   useEffect(() => {
     if (open) {
       setSteps(initial.stepsPer30);
       setCap(initial.dailyCapHours);
+      const pst = loadProST();
+      setRolloverOn(pst.rollover);
     }
   }, [open, initial.stepsPer30, initial.dailyCapHours]);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
