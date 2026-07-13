@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Circle, Flame, Lock, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Sparkles } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,8 +16,6 @@ import { useSettings } from "@/lib/settings";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ProUpgradeDialog } from "@/components/Pro";
-import { toast } from "sonner";
 import { useTodaySteps, useWeekSteps } from "@/lib/steps";
 import {
   todaysDailyChallenges,
@@ -61,7 +59,6 @@ export const Route = createFileRoute("/challenges")({
 function Page() {
   const { t, lang } = useT();
   const { settings } = useSettings();
-  const [proOpen, setProOpen] = useState(false);
   const [detail, setDetail] = useState<Challenge | null>(null);
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -135,31 +132,6 @@ function Page() {
               })}
             </section>
 
-            <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">{t("challenges.custom")}</h3>
-                {!settings.isPro && (
-                  <span className="rounded-full bg-sage-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-sage-700">
-                    {t("pro.badge")}
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-xs text-sage-600">
-                {settings.isPro ? t("challenges.custom_desc") : t("challenges.pro_lock")}
-              </p>
-              <button
-                onClick={() => {
-                  if (!settings.isPro) setProOpen(true);
-                  else toast(t("challenges.edit_rules"));
-                }}
-                className={`mt-3 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold ${
-                  settings.isPro ? "bg-sage-100 text-sage-700" : "bg-sage-600 text-primary-foreground"
-                }`}
-              >
-                {!settings.isPro && <Lock className="size-3.5" />}
-                {settings.isPro ? t("challenges.edit_rules") : t("pro.unlock")}
-              </button>
-            </section>
           </TabsContent>
 
           <TabsContent value="badges" className="mt-6">
@@ -169,9 +141,8 @@ function Page() {
           <TabsContent value="lb" className="mt-6">
             <Leaderboard />
           </TabsContent>
-        </Tabs>
+      </Tabs>
       </div>
-      <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
       <ChallengeDetailDialog challenge={detail} onOpenChange={(o) => !o && setDetail(null)} ctx={ctx} lang={lang} />
     </AppShell>
   );
