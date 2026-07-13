@@ -10,7 +10,9 @@ export type Friend = {
 
 const KEY = "sg.friends";
 
-const DEFAULT_FRIENDS: Friend[] = [
+const DEFAULT_FRIENDS: Friend[] = [];
+
+const SEED_USERS: Friend[] = [
   { id: "f1", username: "maja_w", name: "Maja", steps: 9120 },
   { id: "f2", username: "erikrun", name: "Erik", steps: 6740 },
   { id: "f3", username: "sofia.s", name: "Sofia", steps: 11_430 },
