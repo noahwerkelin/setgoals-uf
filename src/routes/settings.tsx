@@ -448,11 +448,11 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Row({ label, meta, onClick }: { label: string; meta?: string; onClick?: () => void }) {
+function Row({ label, meta, onClick, danger }: { label: string; meta?: string; onClick?: () => void; danger?: boolean }) {
   return (
-    <button onClick={onClick} className="flex w-full items-center justify-between p-4 text-left hover:bg-sage-50/60 transition-colors">
-      <span className="text-sm font-medium">{label}</span>
-      <span className="flex items-center gap-1 text-xs font-medium text-sage-600">
+    <button onClick={onClick} className={`flex w-full items-center justify-between p-4 text-left transition-colors ${danger ? "hover:bg-destructive/10" : "hover:bg-sage-50/60"}`}>
+      <span className={`text-sm font-medium ${danger ? "text-destructive" : ""}`}>{label}</span>
+      <span className={`flex items-center gap-1 text-xs font-medium ${danger ? "text-destructive" : "text-sage-600"}`}>
         {meta} <ChevronRight className="size-4" />
       </span>
     </button>
