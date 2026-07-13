@@ -8,7 +8,7 @@ export type Friend = {
   steps: number;
 };
 
-const KEY = "sg.friends";
+const KEY = "sg.friends.v2";
 
 const DEFAULT_FRIENDS: Friend[] = [];
 
