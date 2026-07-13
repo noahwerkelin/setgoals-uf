@@ -136,7 +136,6 @@ function RootComponent() {
               </main>
             </AuthGate>
             <Splash />
-            <Toaster />
           </SettingsProvider>
         </AuthProvider>
       </I18nProvider>
