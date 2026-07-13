@@ -156,7 +156,7 @@ function Page() {
             />
             <Row
               label={t("settings.daily_cap")}
-              meta={`${settings.dailyCapHours}${t("settings.hours")}`}
+              meta={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`}
               onClick={() => setCapOpen(true)}
             />
           </Group>
