@@ -100,6 +100,36 @@ export function useWeekSteps() {
   });
 }
 
+export function useHistorySteps(days: number) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["history-steps", user?.id, days],
+    enabled: !!user,
+    queryFn: async (): Promise<DayTotals[]> => {
+      const since = daysAgoISO(days - 1);
+      const { data } = await supabase
+        .from("activity_steps")
+        .select("day, steps, distance_km, calories, exercise_minutes")
+        .eq("user_id", user!.id)
+        .gte("day", since);
+      const map = new Map<string, DayTotals>();
+      for (let i = days - 1; i >= 0; i--) {
+        const d = daysAgoISO(i);
+        map.set(d, { day: d, steps: 0, distance_km: 0, calories: 0, exercise_minutes: 0 });
+      }
+      for (const r of data ?? []) {
+        const cur = map.get(r.day);
+        if (!cur) continue;
+        cur.steps += r.steps;
+        cur.distance_km += Number(r.distance_km);
+        cur.calories += r.calories;
+        cur.exercise_minutes += r.exercise_minutes;
+      }
+      return [...map.values()];
+    },
+  });
+}
+
 export async function logManualSteps(input: {
   steps: number;
   distance_km?: number;

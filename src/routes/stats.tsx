@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Lock, Sparkles } from "lucide-react";
+import { Lock, Sparkles, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
-import { useWeekSteps } from "@/lib/steps";
+import { useWeekSteps, useHistorySteps } from "@/lib/steps";
 import { ProUpgradeDialog } from "@/components/Pro";
+import { computeInsights, buildMessages } from "@/lib/insights";
 
 export const Route = createFileRoute("/stats")({
   head: () => ({
@@ -20,9 +21,12 @@ export const Route = createFileRoute("/stats")({
 const DAY_KEYS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 function Page() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { settings } = useSettings();
   const { data: week = [] } = useWeekSteps();
+  const { data: history = [] } = useHistorySteps(180);
+  const insights = computeInsights(history, settings.dailyGoal, settings.stepsPer30, settings.dailyCapHours);
+  const messages = buildMessages(insights, lang);
   const WEEK = week.map((d) => d.steps);
   const MAX = Math.max(1, ...WEEK);
   const [proOpen, setProOpen] = useState(false);
@@ -80,7 +84,7 @@ function Page() {
           <p className="mt-2 text-xs text-sage-600">{t("stats.trend_sub")}</p>
         </section>
 
-        <section className={`rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
+        <section className={`relative overflow-hidden rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="grid size-8 place-items-center rounded-xl bg-sage-600 text-primary-foreground">
@@ -97,20 +101,72 @@ function Page() {
               </button>
             )}
           </div>
-          <p className="mt-2 text-xs text-sage-600">{t("stats.pro_sub")}</p>
-          <div className="mt-3 grid grid-cols-3 gap-3">
-            {["stats.pro1", "stats.pro2", "stats.pro3"].map((k) => (
-              <div key={k} className="relative rounded-2xl bg-sage-50 p-3 ring-1 ring-black/5">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-sage-600">{t(k)}</p>
-                <p className={`mt-1 text-base font-semibold tabular-nums ${settings.isPro ? "" : "blur-sm select-none"}`}>
-                  {k === "stats.pro1" ? "42m" : k === "stats.pro2" ? "78" : "+18%"}
+          <p className="mt-2 text-xs text-sage-600">
+            {settings.isPro ? t("stats.pro_sub") : t("stats.pro.locked")}
+          </p>
+
+          <div className={`mt-4 space-y-4 ${settings.isPro ? "" : "pointer-events-none select-none blur-sm"}`}>
+            {/* Activity score */}
+            <div className="flex items-center gap-4 rounded-2xl bg-sage-50 p-4 ring-1 ring-black/5">
+              <ScoreRing score={insights.activityScore} />
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-sage-600">
+                  {t("stats.pro.score")}
                 </p>
-                {!settings.isPro && (
-                  <Lock className="absolute right-2 top-2 size-3.5 text-sage-600" />
-                )}
+                <p className="text-2xl font-semibold tabular-nums">
+                  {insights.activityScore}
+                  <span className="ml-1 text-sm font-normal text-sage-600">/ 100</span>
+                </p>
+                <p className="text-xs text-sage-600">{t("stats.pro.score_sub")}</p>
               </div>
-            ))}
+            </div>
+
+            {/* Personal messages */}
+            {messages.length > 0 && (
+              <div className="rounded-2xl bg-sage-50 p-4 ring-1 ring-black/5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-sage-600">
+                  {t("stats.pro.messages")}
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {messages.map((m, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-foreground">
+                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-sage-600" />
+                      <span>{m}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Trends */}
+            <div>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-sage-600">
+                {t("stats.pro.trends")}
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <TrendCard label={t("stats.pro.trend7")} value={insights.trend7} />
+                <TrendCard label={t("stats.pro.trend30")} value={insights.trend30} />
+                <TrendCard label={t("stats.pro.trend90")} value={insights.trend90} />
+              </div>
+            </div>
+
+            {/* Forecast */}
+            <div className="rounded-2xl bg-sage-50 p-4 ring-1 ring-black/5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-sage-600">
+                {t("stats.pro.forecast")}
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {insights.forecastSteps.toLocaleString()}
+              </p>
+              <p className="text-xs text-sage-600">{t("stats.pro.forecast_sub")}</p>
+            </div>
           </div>
+
+          {!settings.isPro && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <Lock className="size-6 text-sage-700" />
+            </div>
+          )}
         </section>
       </div>
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
@@ -124,6 +180,54 @@ function Card({ label, value, sub }: { label: string; value: string; sub: string
       <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{label}</p>
       <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
       <p className="text-xs text-sage-600">{sub}</p>
+    </div>
+  );
+}
+
+function ScoreRing({ score }: { score: number }) {
+  const size = 72;
+  const stroke = 8;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c * (1 - Math.max(0, Math.min(100, score)) / 100);
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="text-sage-100" stroke="currentColor" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          className="text-sage-600"
+          stroke="currentColor"
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-sm font-semibold tabular-nums">
+        {score}
+      </div>
+    </div>
+  );
+}
+
+function TrendCard({ label, value }: { label: string; value: number }) {
+  const rounded = Math.round(value);
+  const up = rounded > 1;
+  const down = rounded < -1;
+  const Icon = up ? TrendingUp : down ? TrendingDown : Minus;
+  const color = up ? "text-emerald-600" : down ? "text-rose-600" : "text-sage-600";
+  const sign = rounded > 0 ? "+" : "";
+  return (
+    <div className="rounded-2xl bg-sage-50 p-3 ring-1 ring-black/5">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-sage-600">{label}</p>
+      <div className={`mt-1 flex items-center gap-1 ${color}`}>
+        <Icon className="size-4" />
+        <p className="text-base font-semibold tabular-nums">{sign}{rounded}%</p>
+      </div>
     </div>
   );
 }

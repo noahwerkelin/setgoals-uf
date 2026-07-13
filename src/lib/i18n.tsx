@@ -550,10 +550,17 @@ const DICTS: Record<Lang, Dict> = {
     "challenges.pro_lock": "Custom challenges are part of PRO.",
 
     "stats.pro_title": "Deeper insights",
-    "stats.pro_sub": "Sleep, heart-rate zones, and activity intensity trends.",
-    "stats.pro1": "Active heart-rate zones",
-    "stats.pro2": "Sleep & recovery score",
-    "stats.pro3": "Weekly intensity trend",
+    "stats.pro_sub": "Personal patterns, trends, and a forecast built from your activity.",
+    "stats.pro.score": "Activity score",
+    "stats.pro.score_sub": "out of 100",
+    "stats.pro.messages": "For you",
+    "stats.pro.trends": "Trends",
+    "stats.pro.trend7": "7-day",
+    "stats.pro.trend30": "30-day",
+    "stats.pro.trend90": "90-day",
+    "stats.pro.forecast": "Estimated tomorrow",
+    "stats.pro.forecast_sub": "based on your last 30 days",
+    "stats.pro.locked": "Unlock personal insights, trends, and a next-day forecast.",
 
     "rewards.locked_pro": "PRO avatar",
 
@@ -1116,10 +1123,17 @@ const DICTS: Record<Lang, Dict> = {
     "challenges.pro_lock": "Anpassade utmaningar ingår i PRO.",
 
     "stats.pro_title": "Djupare insikter",
-    "stats.pro_sub": "Sömn, pulszoner och intensitetstrender.",
-    "stats.pro1": "Aktiva pulszoner",
-    "stats.pro2": "Sömn & återhämtning",
-    "stats.pro3": "Veckans intensitet",
+    "stats.pro_sub": "Personliga mönster, trender och prognos baserat på din aktivitet.",
+    "stats.pro.score": "Aktivitetspoäng",
+    "stats.pro.score_sub": "av 100",
+    "stats.pro.messages": "För dig",
+    "stats.pro.trends": "Trender",
+    "stats.pro.trend7": "7 dagar",
+    "stats.pro.trend30": "30 dagar",
+    "stats.pro.trend90": "90 dagar",
+    "stats.pro.forecast": "Prognos för imorgon",
+    "stats.pro.forecast_sub": "baserat på senaste 30 dagarna",
+    "stats.pro.locked": "Lås upp personliga insikter, trender och morgondagens prognos.",
 
     "rewards.locked_pro": "PRO-avatar",
 
