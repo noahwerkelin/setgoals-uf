@@ -82,7 +82,8 @@ export function computeInsights(
   }
   const dayAvgs = buckets.map((b) => avg(b));
   const maxIdx = dayAvgs.indexOf(Math.max(...dayAvgs));
-  const minIdx = dayAvgs.indexOf(Math.min(...dayAvgs.filter((v) => v > 0).length ? dayAvgs.map((v) => (v === 0 ? Infinity : v)) : dayAvgs));
+  const nonZero = dayAvgs.map((v) => (v === 0 ? Infinity : v));
+  const minIdx = nonZero.indexOf(Math.min(...nonZero));
 
   // Weekend vs weekday screen time bias
   let weekendMin = 0;
