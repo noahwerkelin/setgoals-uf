@@ -378,7 +378,7 @@ function ScreenTimeDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{t("parent.rules_sub", { steps: steps.toLocaleString(), cap, carry: t(rolloverOn ? "parent.rules_carry_on" : "parent.rules_carry_off") })}</DialogDescription>
+          <DialogDescription>{t("parent.rules_sub", { steps: steps.toLocaleString(), cap: cap >= 24 ? "∞" : cap, carry: t(rolloverOn ? "parent.rules_carry_on" : "parent.rules_carry_off") })}</DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-2">
           <div>
