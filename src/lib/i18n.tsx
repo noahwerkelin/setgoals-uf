@@ -815,7 +815,9 @@ const DICTS: Record<Lang, Dict> = {
     "cat.shopping": "Shopping & mat",
     "cat.utilities": "Verktyg",
     "parent.rules": "Anpassade regler",
-    "parent.rules_sub": "Nu: 1 000 steg = 30 min · Max 3h per dag · Oanvänd tid förs inte över.",
+    "parent.rules_sub": "Nu: {steps} steg = 30 min · Max {cap}h per dag · {carry}",
+    "parent.rules_carry_on": "Oanvänd tid förs över till nästa dag.",
+    "parent.rules_carry_off": "Oanvänd tid förs inte över.",
     "parent.rollover_on": "Oanvänd skärmtid från igår förs över till idag.",
 
     "parent.configure": "Konfigurera regler",
