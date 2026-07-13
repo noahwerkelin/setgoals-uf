@@ -312,9 +312,10 @@ function Page() {
         max={8}
         step={1}
         unit={t("settings.hours")}
+        unlimited={{ sentinel: 24, label: t("parent.no_cap") }}
         onSave={(v) => {
           update("dailyCapHours", v);
-          toast.success(`${t("settings.daily_cap")}: ${v}${t("settings.hours")}`);
+          toast.success(`${t("settings.daily_cap")}: ${v >= 24 ? t("parent.no_cap") : `${v}${t("settings.hours")}`}`);
         }}
         t={t}
       />
