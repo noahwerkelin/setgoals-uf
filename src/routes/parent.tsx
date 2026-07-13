@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Shield, Check, X, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone } from "lucide-react";
+import { Shield, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone, Infinity as InfinityIcon, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
@@ -261,73 +262,30 @@ function Page() {
               <Smartphone className="size-3.5" /> {t("parent.apps")}
             </span>
           </h2>
-          <div className="rounded-3xl bg-card ring-1 ring-black/5">
+          <p className="px-1 text-[11px] text-sage-600">{t("stmode.hint")}</p>
+          <div className="rounded-3xl bg-card ring-1 ring-black/5 overflow-hidden">
             {apps.map((a, i) => (
               <div
                 key={a.key}
-                className={`flex items-center justify-between p-4 ${i > 0 ? "border-t border-sage-100" : ""}`}
+                className={`flex items-center justify-between gap-3 p-4 ${i > 0 ? "border-t border-sage-100" : ""}`}
               >
-                <span className="text-sm font-medium">{t(a.key)}</span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setState(a.key, "approved")}
-                    aria-label={t("parent.approve", { n: t(a.key) })}
-                    className={`grid size-8 place-items-center rounded-full ${a.state === "approved" ? "bg-sage-600 text-white" : "bg-sage-100 text-sage-600"}`}
-                  >
-                    <Check className="size-4" />
-                  </button>
-                  <button
-                    onClick={() => setState(a.key, "blocked")}
-                    aria-label={t("parent.block", { n: t(a.key) })}
-                    className={`grid size-8 place-items-center rounded-full ${a.state === "blocked" ? "bg-destructive text-white" : "bg-sage-100 text-sage-600"}`}
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
+                <span className="text-sm font-medium truncate">{t(a.key)}</span>
+                <CategoryToggle
+                  value={a.state}
+                  onChange={(next) => setState(a.key, next)}
+                  labelAlways={t("stmode.always_short")}
+                  labelEarned={t("stmode.earned_short")}
+                  ariaAlways={t("stmode.always") + " — " + t(a.key)}
+                  ariaEarned={t("stmode.earned") + " — " + t(a.key)}
+                />
               </div>
             ))}
           </div>
         </section>
 
-        <section className={`rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="grid size-8 place-items-center rounded-xl bg-sage-600 text-primary-foreground">
-                <Sparkles className="size-4" />
-              </span>
-              <div>
-                <h3 className="text-sm font-semibold">{t("parent.adv_title")}</h3>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">{t("pro.badge")}</p>
-              </div>
-            </div>
-            {!settings.isPro && (
-              <button
-                onClick={() => setProOpen(true)}
-                className="rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-primary-foreground"
-              >
-                {t("pro.upgrade")}
-              </button>
-            )}
-          </div>
-          <p className="mt-2 text-xs text-sage-600">{t("parent.adv_sub")}</p>
-          <ul className="mt-3 space-y-2">
-            {["parent.adv1", "parent.adv2", "parent.adv3"].map((k) => (
-              <li key={k} className="flex items-center justify-between rounded-xl bg-sage-50 px-3 py-2 text-xs">
-                <span className="font-medium text-sage-900">{t(k)}</span>
-                {settings.isPro ? (
-                  <button
-                    onClick={() => toast.success(t(k))}
-                    className="text-[11px] font-semibold text-sage-700"
-                  >
-                    {t("settings.connect")}
-                  </button>
-                ) : (
-                  <Lock className="size-3.5 text-sage-600" />
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
+        {/* Advanced PRO screen time */}
+        <ProScreenTimeSection isPro={settings.isPro} onUpgrade={() => setProOpen(true)} categoryKeys={apps.map((a) => a.key)} />
+
       </div>
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
 
@@ -586,3 +544,273 @@ function ChildEditDialog({
   );
 }
 
+
+function CategoryToggle({
+  value,
+  onChange,
+  labelAlways,
+  labelEarned,
+  ariaAlways,
+  ariaEarned,
+}: {
+  value: AppState;
+  onChange: (next: AppState) => void;
+  labelAlways: string;
+  labelEarned: string;
+  ariaAlways: string;
+  ariaEarned: string;
+}) {
+  const isAlways = value === "approved";
+  return (
+    <div
+      role="radiogroup"
+      className="relative inline-flex shrink-0 items-center rounded-full bg-sage-50 p-1 ring-1 ring-black/5"
+    >
+      <span
+        aria-hidden
+        className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full shadow-sm transition-all duration-300 ease-out ${
+          isAlways ? "left-1 bg-sage-600" : "left-1/2 bg-amber-500"
+        }`}
+      />
+      <button
+        type="button"
+        role="radio"
+        aria-checked={isAlways}
+        aria-label={ariaAlways}
+        onClick={() => onChange("approved")}
+        className={`relative z-10 flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${
+          isAlways ? "text-white" : "text-sage-700"
+        }`}
+      >
+        <InfinityIcon className="size-3.5" />
+        <span>{labelAlways}</span>
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={!isAlways}
+        aria-label={ariaEarned}
+        onClick={() => onChange("blocked")}
+        className={`relative z-10 flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${
+          !isAlways ? "text-white" : "text-sage-700"
+        }`}
+      >
+        <Zap className="size-3.5" />
+        <span>{labelEarned}</span>
+      </button>
+    </div>
+  );
+}
+
+type ProST = {
+  rollover: boolean;
+  weekend2x: boolean;
+  splitCaps: boolean;
+  weekdayCap: number;
+  weekendCap: number;
+  catLimits: Record<string, number>;
+};
+
+const PRO_ST_KEY = "sg.st.pro.v1";
+const DEFAULT_PRO_ST: ProST = {
+  rollover: false,
+  weekend2x: false,
+  splitCaps: false,
+  weekdayCap: 3,
+  weekendCap: 5,
+  catLimits: {},
+};
+
+function loadProST(): ProST {
+  if (typeof window === "undefined") return DEFAULT_PRO_ST;
+  try {
+    const raw = window.localStorage.getItem(PRO_ST_KEY);
+    if (!raw) return DEFAULT_PRO_ST;
+    return { ...DEFAULT_PRO_ST, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_PRO_ST;
+  }
+}
+
+function ProScreenTimeSection({
+  isPro,
+  onUpgrade,
+  categoryKeys,
+}: {
+  isPro: boolean;
+  onUpgrade: () => void;
+  categoryKeys: string[];
+}) {
+  const { t } = useT();
+  const [state, setState] = useState<ProST>(DEFAULT_PRO_ST);
+
+  useEffect(() => {
+    setState(loadProST());
+  }, []);
+
+  const save = (next: ProST) => {
+    setState(next);
+    try {
+      window.localStorage.setItem(PRO_ST_KEY, JSON.stringify(next));
+    } catch {}
+  };
+
+  const disabled = !isPro;
+
+  return (
+    <section className={`rounded-3xl p-5 ring-1 ${isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"} space-y-4`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-sage-600 text-primary-foreground">
+            <Sparkles className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold truncate">{t("pro.st.title")}</h3>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">{t("pro.badge")}</p>
+          </div>
+        </div>
+        {!isPro && (
+          <button
+            onClick={onUpgrade}
+            className="shrink-0 rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-primary-foreground"
+          >
+            {t("pro.upgrade")}
+          </button>
+        )}
+      </div>
+      <p className="text-xs text-sage-600">{t("pro.st.sub")}</p>
+
+      <div className={`space-y-2 ${disabled ? "pointer-events-none opacity-60" : ""}`} aria-disabled={disabled}>
+        <ToggleRow
+          label={t("pro.st.rollover")}
+          sub={t("pro.st.rollover_sub")}
+          checked={state.rollover}
+          onCheckedChange={(v) => save({ ...state, rollover: v })}
+          locked={disabled}
+        />
+        <ToggleRow
+          label={t("pro.st.weekend2x")}
+          sub={t("pro.st.weekend2x_sub")}
+          checked={state.weekend2x}
+          onCheckedChange={(v) => save({ ...state, weekend2x: v })}
+          locked={disabled}
+        />
+        <ToggleRow
+          label={t("pro.st.split_caps")}
+          sub={t("pro.st.split_caps_sub")}
+          checked={state.splitCaps}
+          onCheckedChange={(v) => save({ ...state, splitCaps: v })}
+          locked={disabled}
+        />
+
+        {state.splitCaps && (
+          <div className="space-y-3 rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
+            <CapSlider
+              label={t("pro.st.weekday_cap")}
+              value={state.weekdayCap}
+              onChange={(v) => save({ ...state, weekdayCap: v })}
+              suffix={t("settings.hours")}
+            />
+            <CapSlider
+              label={t("pro.st.weekend_cap")}
+              value={state.weekendCap}
+              onChange={(v) => save({ ...state, weekendCap: v })}
+              suffix={t("settings.hours")}
+            />
+          </div>
+        )}
+
+        <div className="rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
+          <div className="flex items-center gap-2">
+            <Clock className="size-3.5 text-sage-700" />
+            <p className="text-xs font-semibold text-sage-900">{t("pro.st.cat_limits")}</p>
+          </div>
+          <p className="mt-1 text-[11px] text-sage-600">{t("pro.st.cat_limits_sub")}</p>
+          <div className="mt-3 space-y-3">
+            {categoryKeys.map((k) => {
+              const v = state.catLimits[k] ?? 0;
+              return (
+                <div key={k}>
+                  <div className="mb-1.5 flex items-center justify-between text-[11px] font-medium text-sage-700">
+                    <span>{t(k)}</span>
+                    <span className="tabular-nums">
+                      {v === 0 ? t("pro.st.no_limit") : `${v} min`}
+                    </span>
+                  </div>
+                  <Slider
+                    value={[v]}
+                    min={0}
+                    max={240}
+                    step={15}
+                    onValueChange={(val) =>
+                      save({ ...state, catLimits: { ...state.catLimits, [k]: val[0] } })
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {!isPro && (
+        <div className="flex items-center justify-center gap-1.5 rounded-2xl bg-white/60 px-3 py-2 text-[11px] font-medium text-sage-700 ring-1 ring-sage-200">
+          <Lock className="size-3.5" /> {t("pro.st.unlock")}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ToggleRow({
+  label,
+  sub,
+  checked,
+  onCheckedChange,
+  locked,
+}: {
+  label: string;
+  sub: string;
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+  locked: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200">
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold text-sage-900">{label}</p>
+        <p className="text-[11px] text-sage-600">{sub}</p>
+      </div>
+      {locked ? (
+        <Lock className="size-4 text-sage-500" />
+      ) : (
+        <Switch checked={checked} onCheckedChange={onCheckedChange} />
+      )}
+    </div>
+  );
+}
+
+function CapSlider({
+  label,
+  value,
+  onChange,
+  suffix,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  suffix: string;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-sage-600">
+        <span>{label}</span>
+        <span className="tabular-nums text-sage-700">
+          {value}
+          {suffix}
+        </span>
+      </label>
+      <Slider value={[value]} min={1} max={8} step={1} onValueChange={(v) => onChange(v[0])} />
+    </div>
+  );
+}
