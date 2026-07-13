@@ -623,10 +623,9 @@ function ProScreenTimeSection({
 
   const save = (next: ProST) => {
     setState(next);
-    try {
-      window.localStorage.setItem(PRO_ST_KEY, JSON.stringify(next));
-    } catch {}
+    saveProST(next);
   };
+
 
   const disabled = !isPro;
 
