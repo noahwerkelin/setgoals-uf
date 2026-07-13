@@ -142,7 +142,7 @@ function Home() {
           <StatTile icon={<Footprints className="size-4" />} label={t("home.distance")} value={distValue} unit={distUnit} />
         </section>
 
-        {settings.role !== "child" && settings.isPro && settings.bonusMinFromYesterday > 0 && (
+        {settings.role !== "child" && settings.isPro && rolloverMin > 0 && (
           <Link
             to="/settings"
             className="flex items-center gap-3 rounded-3xl bg-sage-100 p-4 ring-1 ring-sage-200 animate-rise"
@@ -153,7 +153,8 @@ function Home() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-700">{t("home.bonus_eyebrow")}</p>
-              <p className="text-sm font-medium text-sage-900">{t("home.bonus_text", { n: settings.bonusMinFromYesterday })}</p>
+              <p className="text-sm font-medium text-sage-900">{t("home.bonus_text", { n: rolloverMin })}</p>
+
             </div>
           </Link>
         )}
