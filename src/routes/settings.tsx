@@ -156,7 +156,7 @@ function Page() {
             />
             <Row
               label={t("settings.daily_cap")}
-              meta={`${settings.dailyCapHours}${t("settings.hours")}`}
+              meta={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`}
               onClick={() => setCapOpen(true)}
             />
           </Group>
@@ -312,9 +312,10 @@ function Page() {
         max={8}
         step={1}
         unit={t("settings.hours")}
+        unlimited={{ sentinel: 24, label: t("parent.no_cap") }}
         onSave={(v) => {
           update("dailyCapHours", v);
-          toast.success(`${t("settings.daily_cap")}: ${v}${t("settings.hours")}`);
+          toast.success(`${t("settings.daily_cap")}: ${v >= 24 ? t("parent.no_cap") : `${v}${t("settings.hours")}`}`);
         }}
         t={t}
       />
@@ -545,7 +546,7 @@ function IntegrationRow({
 }
 
 function SliderDialog({
-  open, onOpenChange, title, value, min, max, step, unit, onSave, t,
+  open, onOpenChange, title, value, min, max, step, unit, onSave, t, unlimited,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -557,11 +558,16 @@ function SliderDialog({
   unit: string;
   onSave: (v: number) => void;
   t: (k: string) => string;
+  unlimited?: { sentinel: number; label: string };
 }) {
+  const sliderMax = unlimited ? max + step : max;
+  const toSlider = (v: number) => (unlimited && v >= unlimited.sentinel ? sliderMax : v);
+  const fromSlider = (v: number) => (unlimited && v >= sliderMax ? unlimited.sentinel : v);
   const [local, setLocal] = useState(value);
   useEffect(() => {
     if (open) setLocal(value);
   }, [open, value]);
+  const isUnlimited = unlimited && local >= unlimited.sentinel;
   return (
     <Dialog
       open={open}
@@ -576,18 +582,25 @@ function SliderDialog({
         </DialogHeader>
         <div className="py-4 space-y-6">
           <p className="text-center text-4xl font-semibold tabular-nums text-sage-700">
-            {local.toLocaleString()}<span className="text-base font-medium text-sage-600 ml-1">{unit}</span>
+            {isUnlimited ? (
+              <span>{unlimited!.label}</span>
+            ) : (
+              <>
+                {local.toLocaleString()}
+                <span className="text-base font-medium text-sage-600 ml-1">{unit}</span>
+              </>
+            )}
           </p>
           <Slider
-            value={[local]}
+            value={[toSlider(local)]}
             min={min}
-            max={max}
+            max={sliderMax}
             step={step}
-            onValueChange={(v) => setLocal(v[0])}
+            onValueChange={(v) => setLocal(fromSlider(v[0]))}
           />
           <div className="flex justify-between text-[11px] text-sage-600 tabular-nums">
             <span>{min.toLocaleString()}{unit}</span>
-            <span>{max.toLocaleString()}{unit}</span>
+            <span>{unlimited ? unlimited.label : `${max.toLocaleString()}${unit}`}</span>
           </div>
         </div>
         <DialogFooter>
