@@ -28,11 +28,16 @@ export const Route = createFileRoute("/parent")({
 });
 
 type AppState = "approved" | "blocked";
-const INITIAL_APPS: { name: string; state: AppState }[] = [
-  { name: "YouTube", state: "approved" },
-  { name: "TikTok", state: "blocked" },
-  { name: "Instagram", state: "approved" },
-  { name: "Roblox", state: "approved" },
+const INITIAL_APPS: { key: string; state: AppState }[] = [
+  { key: "cat.social", state: "blocked" },
+  { key: "cat.games", state: "blocked" },
+  { key: "cat.entertainment", state: "blocked" },
+  { key: "cat.creativity", state: "approved" },
+  { key: "cat.productivity", state: "approved" },
+  { key: "cat.education", state: "approved" },
+  { key: "cat.health", state: "approved" },
+  { key: "cat.shopping", state: "blocked" },
+  { key: "cat.utilities", state: "approved" },
 ];
 
 const AVATAR_OPTIONS = ["🌱", "🌳", "🐻", "🦊", "🐼", "🦁", "🐸", "🦄", "⭐️", "🚀"];
