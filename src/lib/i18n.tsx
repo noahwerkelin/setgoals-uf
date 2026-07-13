@@ -147,9 +147,6 @@ const DICTS: Record<Lang, Dict> = {
     "challenges.streak_sub": "Keep going to unlock the Weekend Explorer badge.",
     "challenges.today": "Today",
     "challenges.week": "This week",
-    "challenges.custom": "Customize your earning",
-    "challenges.custom_desc": "Default: 1,000 steps = 30 min of screen time. Tap to adjust steps required, minutes earned, and daily caps.",
-    "challenges.edit_rules": "Edit earning rules",
     "challenges.detail.progress": "Progress",
     "challenges.detail.reward": "Reward",
     "challenges.detail.resets": "Resets",
@@ -530,8 +527,6 @@ const DICTS: Record<Lang, Dict> = {
     "parent.adv2": "School-hour blocking schedule",
     "parent.adv3": "Weekend earning multiplier",
 
-    "challenges.pro_lock": "Custom challenges are part of PRO.",
-
     "stats.pro_title": "Deeper insights",
     "stats.pro_sub": "Personal patterns, trends, and a forecast built from your activity.",
     "stats.pro.score": "Activity score",
@@ -701,9 +696,6 @@ const DICTS: Record<Lang, Dict> = {
     "challenges.streak_sub": "Fortsätt för att låsa upp utmärkelsen Helgutforskare.",
     "challenges.today": "Idag",
     "challenges.week": "Denna vecka",
-    "challenges.custom": "Anpassa din intjäning",
-    "challenges.custom_desc": "Standard: 1 000 steg = 30 min skärmtid. Tryck för att justera krav, minuter och dagstak.",
-    "challenges.edit_rules": "Redigera regler",
     "challenges.detail.progress": "Framsteg",
     "challenges.detail.reward": "Belöning",
     "challenges.detail.resets": "Återställs",
@@ -1083,8 +1075,6 @@ const DICTS: Record<Lang, Dict> = {
     "parent.adv1": "Dagstak per app",
     "parent.adv2": "Schema för skoltid",
     "parent.adv3": "Helgmultiplikator",
-
-    "challenges.pro_lock": "Anpassade utmaningar ingår i PRO.",
 
     "stats.pro_title": "Djupare insikter",
     "stats.pro_sub": "Personliga mönster, trender och prognos baserat på din aktivitet.",
