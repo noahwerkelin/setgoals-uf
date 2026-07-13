@@ -265,6 +265,7 @@ const DICTS: Record<Lang, Dict> = {
     "parent.rules_sub": "Currently: {steps} steps = 30 min · Max {cap}h per day · {carry}",
     "parent.rules_carry_on": "Unused time carries over to next day.",
     "parent.rules_carry_off": "Unused time does not carry over.",
+    "parent.no_cap": "No cap",
     "parent.rollover_on": "Unused screen time from yesterday carries over to today.",
 
     "parent.configure": "Configure rules",
