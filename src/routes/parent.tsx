@@ -407,7 +407,14 @@ function ScreenTimeDialog({
               onValueChange={(v) => setCap(v[0])}
             />
           </div>
+          {rolloverOn && (
+            <div className="flex items-start gap-2 rounded-2xl bg-sage-50 p-3 ring-1 ring-sage-200">
+              <Sparkles className="mt-0.5 size-4 shrink-0 text-sage-700" />
+              <p className="text-xs text-sage-700">{t("parent.rollover_on")}</p>
+            </div>
+          )}
         </div>
+
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
           <Button onClick={() => { onSave({ stepsPer30: steps, dailyCapHours: cap }); onOpenChange(false); }}>
