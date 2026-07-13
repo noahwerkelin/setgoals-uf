@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { BarChart3, Camera, ChevronRight, Flame, Gift, Settings, Shield, Trash2 } from "lucide-react";
+import { BarChart3, Camera, ChevronRight, Flame, Settings, Shield, Trash2 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
 import { FriendsCard } from "@/components/FriendsCard";
@@ -187,7 +187,6 @@ function Page() {
         {/* Nav */}
         <nav className="space-y-2 animate-rise" style={{ animationDelay: "180ms" }}>
           <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
-          <Row to="/rewards" icon={<Gift className="size-4" />} label={t("profile.row.rewards")} subtitle={t("profile.row.rewards_sub")} />
           {!isChild && (
             <Row
               to="/parent"
