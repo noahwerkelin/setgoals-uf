@@ -84,7 +84,7 @@ function Page() {
           <p className="mt-2 text-xs text-sage-600">{t("stats.trend_sub")}</p>
         </section>
 
-        <section className={`rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
+        <section className={`relative overflow-hidden rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="grid size-8 place-items-center rounded-xl bg-sage-600 text-primary-foreground">
