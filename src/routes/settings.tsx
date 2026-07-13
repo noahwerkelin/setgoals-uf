@@ -236,14 +236,13 @@ function Page() {
           <Row label={t("settings.username")} meta={`@${settings.username}`} onClick={() => setUsernameOpen(true)} />
           <Row label={t("settings.email")} meta={settings.email} onClick={() => setEmailOpen(true)} />
           <Row label={t("settings.password")} meta="••••••••" onClick={() => setPasswordOpen(true)} />
-          <Row label="Export my data" onClick={exportData} />
-          <Row label="Delete account" onClick={deleteAccount} />
           <Row label={t("settings.signout")} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }} />
         </Group>
 
         {/* Support */}
         <Group title={t("settings.support")}>
           <Row label={t("settings.report_problem")} onClick={() => setReportOpen(true)} />
+          <Row label={t("settings.delete_account")} danger onClick={() => setDeleteOpen(true)} />
         </Group>
 
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
