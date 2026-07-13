@@ -262,7 +262,9 @@ const DICTS: Record<Lang, Dict> = {
     "cat.shopping": "Shopping & Food",
     "cat.utilities": "Utilities",
     "parent.rules": "Custom earning rules",
-    "parent.rules_sub": "Currently: 1,000 steps = 30 min · Max 3h per day · Unused time does not carry over.",
+    "parent.rules_sub": "Currently: {steps} steps = 30 min · Max {cap}h per day · {carry}",
+    "parent.rules_carry_on": "Unused time carries over to next day.",
+    "parent.rules_carry_off": "Unused time does not carry over.",
     "parent.rollover_on": "Unused screen time from yesterday carries over to today.",
 
     "parent.configure": "Configure rules",
@@ -813,7 +815,9 @@ const DICTS: Record<Lang, Dict> = {
     "cat.shopping": "Shopping & mat",
     "cat.utilities": "Verktyg",
     "parent.rules": "Anpassade regler",
-    "parent.rules_sub": "Nu: 1 000 steg = 30 min · Max 3h per dag · Oanvänd tid förs inte över.",
+    "parent.rules_sub": "Nu: {steps} steg = 30 min · Max {cap}h per dag · {carry}",
+    "parent.rules_carry_on": "Oanvänd tid förs över till nästa dag.",
+    "parent.rules_carry_off": "Oanvänd tid förs inte över.",
     "parent.rollover_on": "Oanvänd skärmtid från igår förs över till idag.",
 
     "parent.configure": "Konfigurera regler",
