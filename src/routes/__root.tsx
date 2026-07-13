@@ -16,7 +16,6 @@ import { I18nProvider } from "../lib/i18n";
 import { SettingsProvider } from "../lib/settings";
 import { AuthProvider } from "../lib/auth";
 import { AuthGate } from "../lib/auth-gate";
-import { Toaster } from "../components/ui/sonner";
 import { Splash } from "../components/Splash";
 
 function NotFoundComponent() {
@@ -137,7 +136,6 @@ function RootComponent() {
               </main>
             </AuthGate>
             <Splash />
-            <Toaster />
           </SettingsProvider>
         </AuthProvider>
       </I18nProvider>
