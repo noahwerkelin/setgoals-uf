@@ -264,21 +264,21 @@ function Page() {
           <div className="rounded-3xl bg-card ring-1 ring-black/5">
             {apps.map((a, i) => (
               <div
-                key={a.name}
+                key={a.key}
                 className={`flex items-center justify-between p-4 ${i > 0 ? "border-t border-sage-100" : ""}`}
               >
-                <span className="text-sm font-medium">{a.name}</span>
+                <span className="text-sm font-medium">{t(a.key)}</span>
                 <div className="flex gap-1">
                   <button
-                    onClick={() => setState(a.name, "approved")}
-                    aria-label={t("parent.approve", { n: a.name })}
+                    onClick={() => setState(a.key, "approved")}
+                    aria-label={t("parent.approve", { n: t(a.key) })}
                     className={`grid size-8 place-items-center rounded-full ${a.state === "approved" ? "bg-sage-600 text-white" : "bg-sage-100 text-sage-600"}`}
                   >
                     <Check className="size-4" />
                   </button>
                   <button
-                    onClick={() => setState(a.name, "blocked")}
-                    aria-label={t("parent.block", { n: a.name })}
+                    onClick={() => setState(a.key, "blocked")}
+                    aria-label={t("parent.block", { n: t(a.key) })}
                     className={`grid size-8 place-items-center rounded-full ${a.state === "blocked" ? "bg-destructive text-white" : "bg-sage-100 text-sage-600"}`}
                   >
                     <X className="size-4" />
