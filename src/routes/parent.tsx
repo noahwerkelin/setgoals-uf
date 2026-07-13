@@ -56,9 +56,9 @@ function Page() {
 
   const isIndividual = settings.role === "individual";
 
-  const setState = (name: string, state: AppState) => {
-    setApps((a) => a.map((x) => (x.name === name ? { ...x, state } : x)));
-    toast.success(`${name}: ${state === "approved" ? "✓" : "✕"}`);
+  const setState = (key: string, state: AppState) => {
+    setApps((a) => a.map((x) => (x.key === key ? { ...x, state } : x)));
+    toast.success(`${t(key)}: ${state === "approved" ? "✓" : "✕"}`);
   };
 
   const openNew = () => {
