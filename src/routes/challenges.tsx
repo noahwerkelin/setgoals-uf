@@ -1,16 +1,31 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Lock, Sparkles } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badges, recordLeaderboardRank } from "@/components/Badges";
-import { useT } from "@/lib/i18n";
+import { useT, type Lang } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
+import { useTodaySteps, useWeekSteps } from "@/lib/steps";
+import {
+  todaysDailyChallenges,
+  thisWeeksWeeklyChallenges,
+  challengeProgress,
+  formatMetric,
+  type Challenge,
+} from "@/lib/challenges-catalog";
 
 type LbPeriod = "daily" | "weekly" | "monthly" | "alltime";
 const LB_PERIODS: LbPeriod[] = ["daily", "weekly", "monthly", "alltime"];
@@ -42,16 +57,6 @@ export const Route = createFileRoute("/challenges")({
   component: Page,
 });
 
-const TODAY = [
-  { key: "t1", progress: 0.88, done: false },
-  { key: "t2", progress: 0, done: false },
-  { key: "t3", progress: 1, done: true },
-];
-
-const WEEKLY = [
-  { key: "w1", progress: 0.6 },
-  { key: "w2", progress: 0.66 },
-];
 
 function Page() {
   const { t } = useT();
