@@ -602,7 +602,7 @@ function CategoryToggle({
   );
 }
 
-import { loadProST, saveProST, PRO_ST_KEY as _PRO_ST_KEY, DEFAULT_PRO_ST, type ProST } from "@/lib/screentime";
+import { loadProST, saveProST, DEFAULT_PRO_ST, type ProST } from "@/lib/screentime";
 
 
 function ProScreenTimeSection({
