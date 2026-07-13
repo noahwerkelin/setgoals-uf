@@ -1,16 +1,31 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Circle, Flame, Lock } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Lock, Sparkles } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badges, recordLeaderboardRank } from "@/components/Badges";
-import { useT } from "@/lib/i18n";
+import { useT, type Lang } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
+import { useTodaySteps, useWeekSteps } from "@/lib/steps";
+import {
+  todaysDailyChallenges,
+  thisWeeksWeeklyChallenges,
+  challengeProgress,
+  formatMetric,
+  type Challenge,
+} from "@/lib/challenges-catalog";
 
 type LbPeriod = "daily" | "weekly" | "monthly" | "alltime";
 const LB_PERIODS: LbPeriod[] = ["daily", "weekly", "monthly", "alltime"];
@@ -42,24 +57,25 @@ export const Route = createFileRoute("/challenges")({
   component: Page,
 });
 
-const TODAY = [
-  { key: "t1", progress: 0.88, done: false },
-  { key: "t2", progress: 0, done: false },
-  { key: "t3", progress: 1, done: true },
-];
-
-const WEEKLY = [
-  { key: "w1", progress: 0.6 },
-  { key: "w2", progress: 0.66 },
-];
 
 function Page() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { settings } = useSettings();
   const [proOpen, setProOpen] = useState(false);
+  const [detail, setDetail] = useState<Challenge | null>(null);
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const tab: ChallengesTab = search.tab ?? "goals";
+
+  const { data: today } = useTodaySteps();
+  const { data: week } = useWeekSteps();
+
+  const dailyList = todaysDailyChallenges();
+  const weeklyList = thisWeeksWeeklyChallenges();
+  const ctx = { today: today ?? null, week: week ?? [], settings };
+
+  const streakCount = settings.streak.count;
+
   return (
     <AppShell>
       <PageHeader eyebrow={t("challenges.eyebrow")} title={t("challenges.title")} />
@@ -79,22 +95,44 @@ function Page() {
               <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-widest text-sage-100/80">
                 <Flame className="size-3.5" /> {t("challenges.streak")}
               </div>
-              <p className="mt-1 text-3xl font-semibold tabular-nums">{t("challenges.streak_days", { n: 7 })}</p>
+              <p className="mt-1 text-3xl font-semibold tabular-nums">{t("challenges.streak_days", { n: streakCount })}</p>
               <p className="text-sm text-sage-100/80">{t("challenges.streak_sub")}</p>
             </section>
 
             <section className="space-y-3">
               <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("challenges.today")}</h2>
-              {TODAY.map((c, i) => (
-                <ChallengeRow key={c.key} title={t(`challenges.${c.key}`)} progress={c.progress} done={c.done} delay={i * 50} />
-              ))}
+              {dailyList.map((c, i) => {
+                const p = challengeProgress(c, ctx);
+                const pct = Math.min(1, p.target === 0 ? 0 : p.current / p.target);
+                return (
+                  <ChallengeRow
+                    key={c.id}
+                    title={c.title[lang]}
+                    progress={pct}
+                    done={p.done}
+                    delay={i * 50}
+                    onClick={() => setDetail(c)}
+                  />
+                );
+              })}
             </section>
 
             <section className="space-y-3">
               <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("challenges.week")}</h2>
-              {WEEKLY.map((c, i) => (
-                <ChallengeRow key={c.key} title={t(`challenges.${c.key}`)} progress={c.progress} done={false} delay={150 + i * 50} />
-              ))}
+              {weeklyList.map((c, i) => {
+                const p = challengeProgress(c, ctx);
+                const pct = Math.min(1, p.target === 0 ? 0 : p.current / p.target);
+                return (
+                  <ChallengeRow
+                    key={c.id}
+                    title={c.title[lang]}
+                    progress={pct}
+                    done={p.done}
+                    delay={150 + i * 50}
+                    onClick={() => setDetail(c)}
+                  />
+                );
+              })}
             </section>
 
             <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
@@ -134,16 +172,19 @@ function Page() {
         </Tabs>
       </div>
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
+      <ChallengeDetailDialog challenge={detail} onOpenChange={(o) => !o && setDetail(null)} ctx={ctx} lang={lang} />
     </AppShell>
   );
 }
 
 function ChallengeRow({
-  title, progress, done, delay = 0,
-}: { title: string; progress: number; done?: boolean; delay?: number }) {
+  title, progress, done, delay = 0, onClick,
+}: { title: string; progress: number; done?: boolean; delay?: number; onClick?: () => void }) {
   return (
-    <article
-      className="flex items-center gap-4 rounded-3xl bg-card p-4 ring-1 ring-black/5 animate-rise"
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-4 rounded-3xl bg-card p-4 text-left ring-1 ring-black/5 animate-rise transition hover:ring-sage-300"
       style={{ animationDelay: `${delay}ms` }}
     >
       <span className={`grid size-10 place-items-center rounded-full ${done ? "bg-sage-600 text-white" : "bg-sage-100 text-sage-700"}`}>
@@ -156,9 +197,74 @@ function ChallengeRow({
         </div>
       </div>
       <span className="text-xs font-medium tabular-nums text-sage-600">{Math.round(progress * 100)}%</span>
-    </article>
+    </button>
   );
 }
+
+function ChallengeDetailDialog({
+  challenge, onOpenChange, ctx, lang,
+}: {
+  challenge: Challenge | null;
+  onOpenChange: (o: boolean) => void;
+  ctx: { today: import("@/lib/steps").DayTotals | null; week: import("@/lib/steps").DayTotals[]; settings: ReturnType<typeof useSettings>["settings"] };
+  lang: Lang;
+}) {
+  const { t } = useT();
+  if (!challenge) {
+    return (
+      <Dialog open={false} onOpenChange={onOpenChange}>
+        <DialogContent />
+      </Dialog>
+    );
+  }
+  const p = challengeProgress(challenge, ctx);
+  const pct = Math.min(1, p.target === 0 ? 0 : p.current / p.target);
+  const resetLabel = challenge.scope === "daily" ? t("challenges.detail.resets_daily") : t("challenges.detail.resets_weekly");
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{challenge.title[lang]}</DialogTitle>
+          <DialogDescription>{challenge.desc[lang]}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-sage-50 p-4">
+            <div className="flex items-center justify-between text-xs text-sage-600">
+              <span>{t("challenges.detail.progress")}</span>
+              <span className="font-semibold tabular-nums">
+                {formatMetric(challenge.metric, p.current)} / {formatMetric(challenge.metric, p.target)}
+              </span>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-sage-100">
+              <div className="h-full rounded-full bg-sage-600" style={{ width: `${pct * 100}%` }} />
+            </div>
+            <p className="mt-2 text-right text-[11px] font-medium tabular-nums text-sage-600">
+              {Math.round(pct * 100)}%
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-card p-3 ring-1 ring-black/5">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{t("challenges.detail.reward")}</p>
+              <p className="mt-1 flex items-center gap-1 text-sm font-semibold">
+                <Sparkles className="size-3.5 text-sage-700" /> +{challenge.rewardMin}m
+              </p>
+            </div>
+            <div className="rounded-2xl bg-card p-3 ring-1 ring-black/5">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">{t("challenges.detail.resets")}</p>
+              <p className="mt-1 text-sm font-semibold">{resetLabel}</p>
+            </div>
+          </div>
+          {p.done && (
+            <p className="rounded-xl bg-sage-100 px-3 py-2 text-center text-xs font-semibold text-sage-700">
+              {t("challenges.detail.done")}
+            </p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function Leaderboard() {
   const { t } = useT();
