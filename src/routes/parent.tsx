@@ -262,73 +262,30 @@ function Page() {
               <Smartphone className="size-3.5" /> {t("parent.apps")}
             </span>
           </h2>
-          <div className="rounded-3xl bg-card ring-1 ring-black/5">
+          <p className="px-1 text-[11px] text-sage-600">{t("stmode.hint")}</p>
+          <div className="rounded-3xl bg-card ring-1 ring-black/5 overflow-hidden">
             {apps.map((a, i) => (
               <div
                 key={a.key}
-                className={`flex items-center justify-between p-4 ${i > 0 ? "border-t border-sage-100" : ""}`}
+                className={`flex items-center justify-between gap-3 p-4 ${i > 0 ? "border-t border-sage-100" : ""}`}
               >
-                <span className="text-sm font-medium">{t(a.key)}</span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setState(a.key, "approved")}
-                    aria-label={t("parent.approve", { n: t(a.key) })}
-                    className={`grid size-8 place-items-center rounded-full ${a.state === "approved" ? "bg-sage-600 text-white" : "bg-sage-100 text-sage-600"}`}
-                  >
-                    <Check className="size-4" />
-                  </button>
-                  <button
-                    onClick={() => setState(a.key, "blocked")}
-                    aria-label={t("parent.block", { n: t(a.key) })}
-                    className={`grid size-8 place-items-center rounded-full ${a.state === "blocked" ? "bg-destructive text-white" : "bg-sage-100 text-sage-600"}`}
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
+                <span className="text-sm font-medium truncate">{t(a.key)}</span>
+                <CategoryToggle
+                  value={a.state}
+                  onChange={(next) => setState(a.key, next)}
+                  labelAlways={t("stmode.always_short")}
+                  labelEarned={t("stmode.earned_short")}
+                  ariaAlways={t("stmode.always") + " — " + t(a.key)}
+                  ariaEarned={t("stmode.earned") + " — " + t(a.key)}
+                />
               </div>
             ))}
           </div>
         </section>
 
-        <section className={`rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="grid size-8 place-items-center rounded-xl bg-sage-600 text-primary-foreground">
-                <Sparkles className="size-4" />
-              </span>
-              <div>
-                <h3 className="text-sm font-semibold">{t("parent.adv_title")}</h3>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">{t("pro.badge")}</p>
-              </div>
-            </div>
-            {!settings.isPro && (
-              <button
-                onClick={() => setProOpen(true)}
-                className="rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-primary-foreground"
-              >
-                {t("pro.upgrade")}
-              </button>
-            )}
-          </div>
-          <p className="mt-2 text-xs text-sage-600">{t("parent.adv_sub")}</p>
-          <ul className="mt-3 space-y-2">
-            {["parent.adv1", "parent.adv2", "parent.adv3"].map((k) => (
-              <li key={k} className="flex items-center justify-between rounded-xl bg-sage-50 px-3 py-2 text-xs">
-                <span className="font-medium text-sage-900">{t(k)}</span>
-                {settings.isPro ? (
-                  <button
-                    onClick={() => toast.success(t(k))}
-                    className="text-[11px] font-semibold text-sage-700"
-                  >
-                    {t("settings.connect")}
-                  </button>
-                ) : (
-                  <Lock className="size-3.5 text-sage-600" />
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
+        {/* Advanced PRO screen time */}
+        <ProScreenTimeSection isPro={settings.isPro} onUpgrade={() => setProOpen(true)} categoryKeys={apps.map((a) => a.key)} />
+
       </div>
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
 
