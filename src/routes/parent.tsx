@@ -397,14 +397,14 @@ function ScreenTimeDialog({
           <div>
             <label className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-sage-600">
               <span>{t("parent.daily_cap")}</span>
-              <span className="tabular-nums text-sage-700">{cap}{t("settings.hours")}</span>
+              <span className="tabular-nums text-sage-700">{cap >= 24 ? t("parent.no_cap") : `${cap}${t("settings.hours")}`}</span>
             </label>
             <Slider
-              value={[cap]}
+              value={[cap >= 24 ? 9 : cap]}
               min={1}
-              max={8}
+              max={9}
               step={1}
-              onValueChange={(v) => setCap(v[0])}
+              onValueChange={(v) => setCap(v[0] >= 9 ? 24 : v[0])}
             />
           </div>
           {rolloverOn && (
