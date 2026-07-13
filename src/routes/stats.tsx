@@ -21,9 +21,12 @@ export const Route = createFileRoute("/stats")({
 const DAY_KEYS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 function Page() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { settings } = useSettings();
   const { data: week = [] } = useWeekSteps();
+  const { data: history = [] } = useHistorySteps(180);
+  const insights = computeInsights(history, settings.dailyGoal, settings.stepsPer30, settings.dailyCapHours);
+  const messages = buildMessages(insights, lang);
   const WEEK = week.map((d) => d.steps);
   const MAX = Math.max(1, ...WEEK);
   const [proOpen, setProOpen] = useState(false);
