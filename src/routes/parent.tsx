@@ -218,7 +218,7 @@ function Page() {
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3">
                       <Stat label={t("parent.steps_per_30")} value={k.stepsPer30.toLocaleString()} />
-                      <Stat label={t("parent.daily_cap")} value={`${k.dailyCapHours}${t("settings.hours")}`} />
+                      <Stat label={t("parent.daily_cap")} value={k.dailyCapHours >= 24 ? t("parent.no_cap") : `${k.dailyCapHours}${t("settings.hours")}`} />
                     </div>
                     <button
                       onClick={() => setEditingChildST(k)}
