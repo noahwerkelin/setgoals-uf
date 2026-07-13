@@ -59,50 +59,29 @@ function Page() {
 
   const isChild = settings.role === "child";
 
-  const exportData = async () => {
+  const deleteAccount = async (password: string): Promise<boolean> => {
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const [profile, userSettings, children, steps, streaks, restrictions] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
-      supabase.from("user_settings").select("*").eq("user_id", u.user.id).maybeSingle(),
-      supabase.from("children").select("*").eq("parent_id", u.user.id),
-      supabase.from("activity_steps").select("*").eq("user_id", u.user.id),
-      supabase.from("streaks").select("*").eq("user_id", u.user.id).maybeSingle(),
-      supabase.from("restriction_settings").select("*").eq("user_id", u.user.id),
-    ]);
-    await supabase.from("data_export_requests").insert({ user_id: u.user.id, status: "completed" });
-    const payload = {
-      exported_at: new Date().toISOString(),
-      profile: profile.data,
-      settings: userSettings.data,
-      children: children.data,
-      activity_steps: steps.data,
-      streaks: streaks.data,
-      restrictions: restrictions.data,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `setgoals-export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Your data has been exported");
-  };
-
-  const deleteAccount = async () => {
-    if (!window.confirm("Permanently delete your account and all data? This cannot be undone.")) return;
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
+    if (!u.user?.email) return false;
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: u.user.email,
+      password,
+    });
+    if (signInErr) {
+      toast.error(t("delete.wrong_password"));
+      return false;
+    }
     await supabase.from("account_deletion_requests").insert({ user_id: u.user.id });
-    // Cascade-delete by removing profile row (FK ON DELETE CASCADE handles related tables)
     await supabase.from("profiles").delete().eq("id", u.user.id);
     await supabase.auth.signOut();
-    toast.success("Account deletion submitted");
+    toast.success(t("delete.submitted"));
     navigate({ to: "/auth" });
+    return true;
   };
   const [reportOpen, setReportOpen] = useState(false);
   const [reportText, setReportText] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   return (
     <AppShell>
@@ -257,14 +236,13 @@ function Page() {
           <Row label={t("settings.username")} meta={`@${settings.username}`} onClick={() => setUsernameOpen(true)} />
           <Row label={t("settings.email")} meta={settings.email} onClick={() => setEmailOpen(true)} />
           <Row label={t("settings.password")} meta="••••••••" onClick={() => setPasswordOpen(true)} />
-          <Row label="Export my data" onClick={exportData} />
-          <Row label="Delete account" onClick={deleteAccount} />
           <Row label={t("settings.signout")} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }} />
         </Group>
 
         {/* Support */}
         <Group title={t("settings.support")}>
           <Row label={t("settings.report_problem")} onClick={() => setReportOpen(true)} />
+          <Row label={t("settings.delete_account")} danger onClick={() => setDeleteOpen(true)} />
         </Group>
 
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
@@ -420,6 +398,41 @@ function Page() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); if (!o) setDeletePassword(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">{t("delete.title")}</DialogTitle>
+            <DialogDescription>{t("delete.desc")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="delete-pw">{t("delete.password")}</Label>
+            <Input
+              id="delete-pw"
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setDeleteOpen(false); setDeletePassword(""); }}>{t("settings.cancel")}</Button>
+            <Button
+              variant="destructive"
+              disabled={!deletePassword || deleting}
+              onClick={async () => {
+                setDeleting(true);
+                const ok = await deleteAccount(deletePassword);
+                setDeleting(false);
+                if (ok) { setDeleteOpen(false); setDeletePassword(""); }
+              }}
+            >
+              {t("delete.confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       <NicknameDialog
         open={nicknameOpen}
         onOpenChange={setNicknameOpen}
@@ -470,11 +483,11 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Row({ label, meta, onClick }: { label: string; meta?: string; onClick?: () => void }) {
+function Row({ label, meta, onClick, danger }: { label: string; meta?: string; onClick?: () => void; danger?: boolean }) {
   return (
-    <button onClick={onClick} className="flex w-full items-center justify-between p-4 text-left hover:bg-sage-50/60 transition-colors">
-      <span className="text-sm font-medium">{label}</span>
-      <span className="flex items-center gap-1 text-xs font-medium text-sage-600">
+    <button onClick={onClick} className={`flex w-full items-center justify-between p-4 text-left transition-colors ${danger ? "hover:bg-destructive/10" : "hover:bg-sage-50/60"}`}>
+      <span className={`text-sm font-medium ${danger ? "text-destructive" : ""}`}>{label}</span>
+      <span className={`flex items-center gap-1 text-xs font-medium ${danger ? "text-destructive" : "text-sage-600"}`}>
         {meta} <ChevronRight className="size-4" />
       </span>
     </button>
