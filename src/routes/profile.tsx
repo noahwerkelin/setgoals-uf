@@ -188,12 +188,21 @@ function Page() {
         <nav className="space-y-2 animate-rise" style={{ animationDelay: "180ms" }}>
           <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
           {!isChild && (
-            <Row
-              to="/parent"
-              icon={<Shield className="size-4" />}
-              label={t("profile.row.screentime")}
-              subtitle={t("profile.row.screentime_sub")}
-            />
+            <>
+              <Row
+                to="/parent"
+                icon={<Shield className="size-4" />}
+                label={t("profile.row.screentime")}
+                subtitle={t("profile.row.screentime_sub")}
+              />
+              <Row
+                to="/parent"
+                hash="children"
+                icon={<Users className="size-4" />}
+                label={t("profile.row.children")}
+                subtitle={t("profile.row.children_sub")}
+              />
+            </>
           )}
           <Row to="/settings" icon={<Settings className="size-4" />} label={t("profile.row.settings")} subtitle={t("profile.row.settings_sub")} />
         </nav>
