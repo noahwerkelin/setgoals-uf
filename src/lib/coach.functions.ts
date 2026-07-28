@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
-import { findNearbyActivities } from "./activities.functions";
+import { findNearbyActivities, type Activity } from "./activities.functions";
 
 const Msg = z.object({
   role: z.enum(["user", "assistant"]),
