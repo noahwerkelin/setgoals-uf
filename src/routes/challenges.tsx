@@ -245,14 +245,12 @@ function Leaderboard() {
   const qc = useQueryClient();
   const [period, setPeriod] = useState<LbPeriod>("daily");
 
+  const fetchLb = useServerFn(getLeaderboard);
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["leaderboard", period],
     enabled: !!user,
-    queryFn: async (): Promise<LeaderboardRow[]> => {
-      const { data, error } = await supabase.rpc("leaderboard", { _period: period });
-      if (error) throw error;
-      return (data ?? []) as LeaderboardRow[];
-    },
+    queryFn: async (): Promise<LbRow[]> =>
+      fetchLb({ data: { period } }) as Promise<LbRow[]>,
   });
 
   // realtime — refresh leaderboard when any activity_steps changes
