@@ -147,33 +147,96 @@ function Page() {
         }
       />
       <div className="px-6 space-y-6">
-        {/* My screen time — both individuals & parents */}
-        <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">
-                <Clock className="size-4" />
-              </span>
-              <div>
-                <h3 className="text-sm font-semibold">{t("parent.my_screentime")}</h3>
-                <p className="text-xs text-sage-600">{t("parent.my_screentime_sub")}</p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Stat label={t("parent.steps_per_30")} value={settings.stepsPer30.toLocaleString()} />
-            <Stat label={t("parent.daily_cap")} value={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`} />
-          </div>
-          <button
-            onClick={() => setEditingMyST(true)}
-            className="mt-4 w-full rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
-          >
-            {t("parent.edit_screentime")}
-          </button>
-        </section>
-
-        {/* Children — parents only */}
         {canManageChildren && (
+          <div
+            role="tablist"
+            aria-label={t("parent.title")}
+            className="grid grid-cols-2 gap-1 rounded-2xl bg-sage-100 p-1"
+          >
+            {(["personal", "children"] as const).map((k) => {
+              const active = tab === k;
+              return (
+                <button
+                  key={k}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => {
+                    setTab(k);
+                    if (typeof window !== "undefined") {
+                      const nextHash = k === "children" ? "#children" : "";
+                      history.replaceState(null, "", window.location.pathname + nextHash);
+                    }
+                  }}
+                  className={`rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${
+                    active ? "bg-card text-sage-900 shadow-sm" : "text-sage-700 hover:text-sage-900"
+                  }`}
+                >
+                  {t(k === "personal" ? "parent.tab.personal" : "parent.tab.children")}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {(!canManageChildren || tab === "personal") && (
+          <>
+            {/* My screen time */}
+            <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">
+                    <Clock className="size-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-semibold">{t("parent.my_screentime")}</h3>
+                    <p className="text-xs text-sage-600">{t("parent.my_screentime_sub")}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <Stat label={t("parent.steps_per_30")} value={settings.stepsPer30.toLocaleString()} />
+                <Stat label={t("parent.daily_cap")} value={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`} />
+              </div>
+              <button
+                onClick={() => setEditingMyST(true)}
+                className="mt-4 w-full rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
+              >
+                {t("parent.edit_screentime")}
+              </button>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">
+                <span className="inline-flex items-center gap-1.5">
+                  <Smartphone className="size-3.5" /> {t("parent.apps")}
+                </span>
+              </h2>
+              <p className="px-1 text-[11px] text-sage-600">{t("stmode.hint")}</p>
+              <div className="rounded-3xl bg-card ring-1 ring-black/5 overflow-hidden">
+                {apps.map((a, i) => (
+                  <div
+                    key={a.key}
+                    className={`flex items-center justify-between gap-3 p-4 ${i > 0 ? "border-t border-sage-100" : ""}`}
+                  >
+                    <span className="text-sm font-medium truncate">{t(a.key)}</span>
+                    <CategoryToggle
+                      value={a.state}
+                      onChange={(next) => setState(a.key, next)}
+                      labelAlways={t("stmode.always_short")}
+                      labelEarned={t("stmode.earned_short")}
+                      ariaAlways={t("stmode.always") + " — " + t(a.key)}
+                      ariaEarned={t("stmode.earned") + " — " + t(a.key)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <ProScreenTimeSection isPro={settings.isPro} onUpgrade={() => setProOpen(true)} categoryKeys={apps.map((a) => a.key)} />
+          </>
+        )}
+
+        {canManageChildren && tab === "children" && (
           <section className="space-y-3">
             <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("parent.children")}</h2>
 
@@ -221,7 +284,6 @@ function Page() {
                     <Stat label={t("parent.goal")} value={`${Math.round((steps / k.dailyGoal) * 100)}%`} />
                   </div>
 
-                  {/* Per-child screen time */}
                   <div className="mt-4 rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
                     <div className="flex items-center gap-2">
                       <Clock className="size-4 text-sage-700" />
@@ -268,36 +330,6 @@ function Page() {
             </button>
           </section>
         )}
-
-        <section className="space-y-3">
-          <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">
-            <span className="inline-flex items-center gap-1.5">
-              <Smartphone className="size-3.5" /> {t("parent.apps")}
-            </span>
-          </h2>
-          <p className="px-1 text-[11px] text-sage-600">{t("stmode.hint")}</p>
-          <div className="rounded-3xl bg-card ring-1 ring-black/5 overflow-hidden">
-            {apps.map((a, i) => (
-              <div
-                key={a.key}
-                className={`flex items-center justify-between gap-3 p-4 ${i > 0 ? "border-t border-sage-100" : ""}`}
-              >
-                <span className="text-sm font-medium truncate">{t(a.key)}</span>
-                <CategoryToggle
-                  value={a.state}
-                  onChange={(next) => setState(a.key, next)}
-                  labelAlways={t("stmode.always_short")}
-                  labelEarned={t("stmode.earned_short")}
-                  ariaAlways={t("stmode.always") + " — " + t(a.key)}
-                  ariaEarned={t("stmode.earned") + " — " + t(a.key)}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Advanced PRO screen time */}
-        <ProScreenTimeSection isPro={settings.isPro} onUpgrade={() => setProOpen(true)} categoryKeys={apps.map((a) => a.key)} />
 
       </div>
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />
