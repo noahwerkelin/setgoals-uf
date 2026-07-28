@@ -15,6 +15,8 @@ import { useT, type Lang } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getLeaderboard, type LeaderboardRow as LbRow } from "@/lib/leaderboard.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTodaySteps, useWeekSteps } from "@/lib/steps";
 import {
@@ -243,14 +245,12 @@ function Leaderboard() {
   const qc = useQueryClient();
   const [period, setPeriod] = useState<LbPeriod>("daily");
 
+  const fetchLb = useServerFn(getLeaderboard);
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["leaderboard", period],
     enabled: !!user,
-    queryFn: async (): Promise<LeaderboardRow[]> => {
-      const { data, error } = await supabase.rpc("leaderboard", { _period: period });
-      if (error) throw error;
-      return (data ?? []) as LeaderboardRow[];
-    },
+    queryFn: async (): Promise<LbRow[]> =>
+      fetchLb({ data: { period } }) as Promise<LbRow[]>,
   });
 
   // realtime — refresh leaderboard when any activity_steps changes
