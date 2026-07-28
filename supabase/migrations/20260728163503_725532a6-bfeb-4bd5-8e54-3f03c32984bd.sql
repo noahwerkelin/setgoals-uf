@@ -1,0 +1,1 @@
+UPDATE public.profiles SET role = 'individual' WHERE role = 'parent';

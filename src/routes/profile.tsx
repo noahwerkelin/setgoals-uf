@@ -191,8 +191,8 @@ function Page() {
             <Row
               to="/parent"
               icon={<Shield className="size-4" />}
-              label={settings.role === "parent" ? t("profile.row.parent") : t("profile.row.screentime")}
-              subtitle={settings.role === "parent" ? t("profile.row.parent_sub") : t("profile.row.screentime_sub")}
+              label={t("profile.row.screentime")}
+              subtitle={t("profile.row.screentime_sub")}
             />
           )}
           <Row to="/settings" icon={<Settings className="size-4" />} label={t("profile.row.settings")} subtitle={t("profile.row.settings_sub")} />
