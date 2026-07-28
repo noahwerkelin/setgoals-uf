@@ -110,12 +110,12 @@ export const coachChat = createServerFn({ method: "POST" })
               radiusM: Math.round(radius_km * 1000),
             },
           });
-          let list = activities;
-          if (kind !== "Any") list = list.filter((a) => a.kind === kind);
+          let list: Activity[] = activities;
+          if (kind !== "Any") list = list.filter((a: Activity) => a.kind === kind);
           list = list.slice(0, limit);
           return {
             count: list.length,
-            results: list.map((a) => ({
+            results: list.map((a: Activity) => ({
               name: a.name,
               kind: a.kind,
               distance_m: Math.round(a.distanceM),
