@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { BarChart3, Camera, ChevronRight, Flame, Settings, Shield, Trash2 } from "lucide-react";
+import { BarChart3, Camera, ChevronRight, Flame, Settings, Shield, Trash2, Users } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
 import { FriendsCard } from "@/components/FriendsCard";
@@ -188,12 +188,21 @@ function Page() {
         <nav className="space-y-2 animate-rise" style={{ animationDelay: "180ms" }}>
           <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
           {!isChild && (
-            <Row
-              to="/parent"
-              icon={<Shield className="size-4" />}
-              label={t("profile.row.screentime")}
-              subtitle={t("profile.row.screentime_sub")}
-            />
+            <>
+              <Row
+                to="/parent"
+                icon={<Shield className="size-4" />}
+                label={t("profile.row.screentime")}
+                subtitle={t("profile.row.screentime_sub")}
+              />
+              <Row
+                to="/parent"
+                hash="children"
+                icon={<Users className="size-4" />}
+                label={t("profile.row.children")}
+                subtitle={t("profile.row.children_sub")}
+              />
+            </>
           )}
           <Row to="/settings" icon={<Settings className="size-4" />} label={t("profile.row.settings")} subtitle={t("profile.row.settings_sub")} />
         </nav>
@@ -211,9 +220,9 @@ function Mini({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Row({ to, icon, label, subtitle }: { to: string; icon: React.ReactNode; label: string; subtitle: string }) {
+function Row({ to, hash, icon, label, subtitle }: { to: string; hash?: string; icon: React.ReactNode; label: string; subtitle: string }) {
   return (
-    <Link to={to} className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-black/5">
+    <Link to={to} hash={hash} className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-black/5">
       <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">{icon}</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">{label}</p>
