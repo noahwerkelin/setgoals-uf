@@ -220,9 +220,9 @@ function Mini({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Row({ to, icon, label, subtitle }: { to: string; icon: React.ReactNode; label: string; subtitle: string }) {
+function Row({ to, hash, icon, label, subtitle }: { to: string; hash?: string; icon: React.ReactNode; label: string; subtitle: string }) {
   return (
-    <Link to={to} className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-black/5">
+    <Link to={to} hash={hash} className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-black/5">
       <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">{icon}</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">{label}</p>
