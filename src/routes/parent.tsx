@@ -56,6 +56,8 @@ function Page() {
   const [editingMyST, setEditingMyST] = useState(false);
 
   const isIndividual = settings.role === "individual";
+  const isChild = settings.role === "child";
+  const canManageChildren = !isChild;
 
   const setState = (key: string, state: AppState) => {
     setApps((a) => a.map((x) => (x.key === key ? { ...x, state } : x)));
@@ -160,7 +162,7 @@ function Page() {
         </section>
 
         {/* Children — parents only */}
-        {!isIndividual && (
+        {canManageChildren && (
           <section className="space-y-3">
             <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("parent.children")}</h2>
 
