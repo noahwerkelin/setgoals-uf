@@ -15,6 +15,8 @@ import { useT, type Lang } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getLeaderboard, type LeaderboardRow as LbRow } from "@/lib/leaderboard.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTodaySteps, useWeekSteps } from "@/lib/steps";
 import {
