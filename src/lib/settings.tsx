@@ -171,7 +171,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       proPaymentMethod: s?.pro_payment_method ?? "",
       themeColor: (s?.theme_color ?? "sage") as ThemeColor,
       bonusMinFromYesterday: 0,
-      role: (p?.role ?? "individual") as Role,
+      role: ((p?.role === "parent" ? "individual" : p?.role) ?? "individual") as Role,
       displayName: p?.display_name ?? "",
       username: p?.username ?? "",
       email: p?.email ?? user.email ?? "",
