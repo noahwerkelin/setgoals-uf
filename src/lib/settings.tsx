@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
 
 export type Units = "metric" | "imperial";
-export type Role = "individual" | "parent" | "child";
+export type Role = "individual" | "child";
 
 export type ChildProfile = {
   id: string;
