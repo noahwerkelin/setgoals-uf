@@ -156,7 +156,7 @@ const DICTS: Record<Lang, Dict> = {
 
     "coach.eyebrow": "Personal wellness",
     "coach.title": "AI Coach",
-    "coach.seed": "Hi Lukas — you're 88% to today's goal. Want a 15-minute loop near Slottsskogen? It would unlock another 30 minutes of screen time.",
+    "coach.seed": "Hi! I'm your AI coach. Ask me about your progress, nearby routes, or how to earn more screen time.",
     "coach.reply": "Great — based on your patterns, I'd aim for 9,500 steps today. Try a 25-min walk after lunch and a short loop before dinner.",
     "coach.s1": "Suggest a short route nearby",
     "coach.s2": "Why is my screen time low today?",
@@ -710,7 +710,7 @@ const DICTS: Record<Lang, Dict> = {
 
     "coach.eyebrow": "Personligt välmående",
     "coach.title": "AI-coach",
-    "coach.seed": "Hej Lukas — du är 88 % av dagens mål. Vill du ha en 15-minuters slinga nära Slottsskogen? Det ger 30 minuter extra skärmtid.",
+    "coach.seed": "Hej! Jag är din AI-coach. Fråga mig om dina framsteg, rutter i närheten eller hur du tjänar mer skärmtid.",
     "coach.reply": "Toppen — utifrån dina vanor föreslår jag 9 500 steg idag. Prova en 25-min promenad efter lunch och en kort runda före middag.",
     "coach.s1": "Föreslå en kort runda i närheten",
     "coach.s2": "Varför är min skärmtid låg idag?",
