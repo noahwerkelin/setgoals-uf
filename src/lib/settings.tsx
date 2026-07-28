@@ -220,13 +220,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         anonymousLeaderboard: "anonymous_leaderboard",
         shareLocation: "share_location",
         units: "units",
-        isPro: "is_pro",
-        proPlan: "pro_plan",
-        proAutoRenew: "pro_auto_renew",
-        proSince: "pro_since",
-        proPaymentMethod: "pro_payment_method",
         themeColor: "theme_color",
       };
+      // Billing/entitlement fields (isPro, proPlan, proAutoRenew, proSince, proPaymentMethod)
+      // are intentionally excluded — they are server-only and set by verified payment webhooks
+      // using the service role. Client writes are also blocked by a DB trigger.
+
 
       if (key === "children") {
         // Full sync: replace children list (delete missing, upsert provided)
