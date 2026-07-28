@@ -56,6 +56,8 @@ function Page() {
   const [editingMyST, setEditingMyST] = useState(false);
 
   const isIndividual = settings.role === "individual";
+  const isChild = settings.role === "child";
+  const canManageChildren = !isChild;
 
   const setState = (key: string, state: AppState) => {
     setApps((a) => a.map((x) => (x.key === key ? { ...x, state } : x)));
