@@ -54,10 +54,21 @@ function Page() {
   const [isNew, setIsNew] = useState(false);
   const [editingChildST, setEditingChildST] = useState<ChildProfile | null>(null);
   const [editingMyST, setEditingMyST] = useState(false);
+  const [tab, setTab] = useState<"personal" | "children">("personal");
 
   const isIndividual = settings.role === "individual";
   const isChild = settings.role === "child";
   const canManageChildren = !isChild;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const applyHash = () => {
+      if (window.location.hash === "#children" && canManageChildren) setTab("children");
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, [canManageChildren]);
 
   const setState = (key: string, state: AppState) => {
     setApps((a) => a.map((x) => (x.key === key ? { ...x, state } : x)));
