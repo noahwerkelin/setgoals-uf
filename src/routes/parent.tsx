@@ -162,7 +162,7 @@ function Page() {
         </section>
 
         {/* Children — parents only */}
-        {!isIndividual && (
+        {canManageChildren && (
           <section className="space-y-3">
             <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("parent.children")}</h2>
 
