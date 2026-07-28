@@ -209,6 +209,7 @@ async function fetchOverpass(
 }
 
 export const findNearbyActivities = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
     const [google, osm] = await Promise.all([
