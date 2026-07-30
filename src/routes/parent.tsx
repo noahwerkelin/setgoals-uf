@@ -58,6 +58,7 @@ function Page() {
   const [editingMyST, setEditingMyST] = useState(false);
   const [tab, setTab] = useState<"personal" | "children">("personal");
   const [childStats, setChildStats] = useState<Record<string, { steps: number; usedMin: number }>>({});
+  const [childWeek, setChildWeek] = useState<Record<string, Record<string, { steps: number; usedMin: number }>>>({});
 
   const isIndividual = settings.role === "individual";
   const isChild = settings.role === "child";
@@ -79,22 +80,43 @@ function Page() {
   useEffect(() => {
     if (!linkedIds.length) {
       setChildStats({});
+      setChildWeek({});
       return;
     }
     let cancelled = false;
     const today = new Date();
-    const day = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const day = fmt(today);
+    const weekStartDate = new Date(today);
+    weekStartDate.setDate(weekStartDate.getDate() - 6);
+    const weekStart = fmt(weekStartDate);
     const load = async () => {
       const [act, bal] = await Promise.all([
-        supabase.from("activity_steps").select("user_id, steps").eq("day", day).in("user_id", linkedIds),
-        supabase.from("earned_balances").select("user_id, consumed_min").eq("day", day).in("user_id", linkedIds),
+        supabase.from("activity_steps").select("user_id, day, steps").gte("day", weekStart).lte("day", day).in("user_id", linkedIds),
+        supabase.from("earned_balances").select("user_id, day, consumed_min").gte("day", weekStart).lte("day", day).in("user_id", linkedIds),
       ]);
       if (cancelled) return;
       const map: Record<string, { steps: number; usedMin: number }> = {};
-      for (const id of linkedIds) map[id] = { steps: 0, usedMin: 0 };
-      for (const r of act.data ?? []) map[r.user_id] = { ...map[r.user_id], steps: (map[r.user_id]?.steps ?? 0) + (r.steps ?? 0) };
-      for (const r of bal.data ?? []) map[r.user_id] = { ...map[r.user_id], usedMin: r.consumed_min ?? 0 };
+      const week: Record<string, Record<string, { steps: number; usedMin: number }>> = {};
+      for (const id of linkedIds) {
+        map[id] = { steps: 0, usedMin: 0 };
+        week[id] = {};
+      }
+      for (const r of act.data ?? []) {
+        const w = (week[r.user_id] ??= {});
+        const cell = (w[r.day] ??= { steps: 0, usedMin: 0 });
+        cell.steps += r.steps ?? 0;
+        if (r.day === day) map[r.user_id] = { ...map[r.user_id], steps: (map[r.user_id]?.steps ?? 0) + (r.steps ?? 0) };
+      }
+      for (const r of bal.data ?? []) {
+        const w = (week[r.user_id] ??= {});
+        const cell = (w[r.day] ??= { steps: 0, usedMin: 0 });
+        cell.usedMin = r.consumed_min ?? 0;
+        if (r.day === day) map[r.user_id] = { ...map[r.user_id], usedMin: r.consumed_min ?? 0 };
+      }
       setChildStats(map);
+      setChildWeek(week);
     };
     void load();
     const channel = supabase
@@ -359,6 +381,8 @@ function Page() {
                     />
                   </div>
 
+                  <WeeklySummary week={(k.authUserId && childWeek[k.authUserId]) || {}} />
+
                   <div className="mt-4 rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
                     <div className="flex items-center gap-2">
                       <Clock className="size-4 text-sage-700" />
@@ -491,6 +515,50 @@ function Stat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function WeeklySummary({ week }: { week: Record<string, { steps: number; usedMin: number }> }) {
+  const { t, lang } = useT();
+  const today = new Date();
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (6 - i));
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return { d, key, ...(week[key] ?? { steps: 0, usedMin: 0 }) };
+  });
+  const maxSteps = Math.max(1, ...days.map((x) => x.steps));
+  const totalSteps = days.reduce((s, x) => s + x.steps, 0);
+  const totalMin = days.reduce((s, x) => s + x.usedMin, 0);
+  const fmtMin = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}${t("settings.hours")} ${m % 60}m` : `${m}m`);
+
+  return (
+    <div className="mt-4 rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-xs font-semibold text-sage-900">{t("parent.week_summary")}</p>
+        <p className="text-[10px] font-medium text-sage-600">
+          {totalSteps.toLocaleString()} {t("parent.steps").toLowerCase()} · {fmtMin(totalMin)}
+        </p>
+      </div>
+      <div className="mt-3 grid grid-cols-7 gap-1.5">
+        {days.map((x) => (
+          <div key={x.key} className="flex flex-col items-center gap-1">
+            <div className="flex h-16 w-full items-end justify-center rounded-lg bg-white/70 ring-1 ring-sage-200">
+              <div
+                className="w-2.5 rounded-full bg-sage-500"
+                style={{ height: `${Math.max(4, Math.round((x.steps / maxSteps) * 56))}px` }}
+              />
+            </div>
+            <p className="text-[9px] font-semibold uppercase text-sage-700">
+              {x.d.toLocaleDateString(lang === "sv" ? "sv-SE" : "en-US", { weekday: "narrow" })}
+            </p>
+            <p className="text-[9px] tabular-nums text-sage-600">{x.steps ? x.steps.toLocaleString() : "—"}</p>
+            <p className="text-[9px] tabular-nums text-sage-500">{x.usedMin ? fmtMin(x.usedMin) : "—"}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 function ageFromBirthday(b: string, t: (k: string, vars?: Record<string, string | number>) => string) {
   if (!b) return "—";
