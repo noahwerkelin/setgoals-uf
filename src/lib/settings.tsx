@@ -359,7 +359,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return;
       }
     },
-    [user],
+    [user, settings.linkedChild],
+
   );
 
   const recordSteps = useCallback(
