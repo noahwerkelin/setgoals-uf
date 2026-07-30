@@ -5,6 +5,8 @@ import { useAuth } from "./auth";
 export type Units = "metric" | "imperial";
 export type Role = "individual" | "child";
 
+export type InvitationStatus = "pending" | "connected" | "expired";
+
 export type ChildProfile = {
   id: string;
   name: string;
@@ -14,7 +16,20 @@ export type ChildProfile = {
   code: string;
   stepsPer30: number;
   dailyCapHours: number;
+  bedtime: string;
+  authUserId: string | null;
+  invitationStatus: InvitationStatus;
+  invitationExpiresAt: string | null;
 };
+
+/** Keys a child account is never allowed to change (enforced in DB too). */
+export const CHILD_LOCKED_KEYS = [
+  "stepsPer30",
+  "dailyCapHours",
+  "dailyGoal",
+  "role",
+] as const;
+
 
 export type StreakState = {
   count: number;
