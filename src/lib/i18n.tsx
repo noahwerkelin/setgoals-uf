@@ -183,6 +183,9 @@ const DICTS: Record<Lang, Dict> = {
     "lb.you": "You",
 
     "profile.title": "Profile",
+    "profile.section.today": "Today",
+    "profile.section.progress": "Progress",
+    "profile.section.manage": "Manage",
     "profile.meta": "Age group · Teen · Joined Oct 2024",
     "profile.mini.steps": "Steps",
     "profile.mini.earned": "Earned",
