@@ -478,6 +478,7 @@ const DICTS: Record<Lang, Dict> = {
     "hk.allow": "Allow access",
 
     "common.back": "Back",
+    "common.close": "Close",
 
     "units.label": "Units",
     "units.metric": "Metric (km)",
@@ -1086,6 +1087,7 @@ const DICTS: Record<Lang, Dict> = {
     "hk.allow": "Tillåt åtkomst",
 
     "common.back": "Tillbaka",
+    "common.close": "Stäng",
 
     "units.label": "Enheter",
     "units.metric": "Metriskt (km)",
