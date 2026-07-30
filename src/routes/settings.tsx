@@ -431,8 +431,16 @@ function Page() {
         t={t}
       />
 
-      {/* Connect dialog */}
-      <Dialog open={connectKind !== null} onOpenChange={(o) => !o && setConnectKind(null)}>
+      {/* Connect dialog — the button only asks the OS; the system sheet decides */}
+      <Dialog
+        open={connectKind !== null}
+        onOpenChange={(o) => {
+          if (!o && !connecting) {
+            setConnectKind(null);
+            setConnectNote(null);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{connectKind === "hk" ? t("hk.title") : t("gf.title")}</DialogTitle>
@@ -445,21 +453,20 @@ function Page() {
             <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> {t("settings.scope.distance")}</li>
             <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> {t("settings.scope.energy")}</li>
           </ul>
+          {connectNote && (
+            <p className="rounded-2xl bg-muted p-3 text-xs text-muted-foreground">{connectNote}</p>
+          )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setConnectKind(null)}>{t("settings.cancel")}</Button>
-            <Button
-              onClick={() => {
-                if (connectKind === "hk") update("healthkitConnected", true);
-                if (connectKind === "gf") update("googlefitConnected", true);
-                toast.success(t("settings.connected"));
-                setConnectKind(null);
-              }}
-            >
-              {t("hk.allow")}
+            <Button variant="ghost" disabled={connecting} onClick={() => { setConnectKind(null); setConnectNote(null); }}>
+              {t("settings.cancel")}
+            </Button>
+            <Button disabled={connecting} onClick={() => connectKind && connectHealth(connectKind)}>
+              {connecting ? t("health.waiting") : t("hk.allow")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* Report problem dialog */}
       <Dialog open={reportOpen} onOpenChange={(o) => { if (!o) setReportText(""); setReportOpen(o); }}>
