@@ -891,20 +891,7 @@ function ChildEditDialog({
             <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
               {t("parent.child.avatar")}
             </label>
-            <div className="flex flex-wrap gap-2">
-              {AVATAR_OPTIONS.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => setDraft({ ...draft, avatar: a })}
-                  className={`grid h-10 w-10 place-items-center rounded-xl text-xl ring-1 transition-colors ${
-                    draft.avatar === a ? "bg-sage-600 ring-sage-700" : "bg-sage-50 ring-black/5"
-                  }`}
-                >
-                  {a}
-                </button>
-              ))}
-            </div>
+            <ChildAvatarPicker value={draft.avatar} onChange={(v) => setDraft({ ...draft, avatar: v })} />
           </div>
 
           <div>
