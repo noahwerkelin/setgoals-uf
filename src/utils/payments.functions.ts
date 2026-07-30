@@ -1,10 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
+import { clearEntitlement, fetchCardLabel, syncSubscription } from "@/lib/entitlements.server";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
 type MutationResult = { ok: true } | { error: string };
+type SyncResult =
+  | { isPro: boolean; status: string; plan: string | null; paymentMethod: string }
+  | { error: string };
+
 
 async function resolveOrCreateCustomer(
   stripe: ReturnType<typeof createStripeClient>,
