@@ -54,17 +54,23 @@ const RedeemInput = z.object({
     .toUpperCase()
     .transform((s) => s.replace(/[^A-Z0-9]/g, ""))
     .refine((s) => s.length === 8, "Invalid code"),
-  email: z.string().trim().email().max(255),
-  password: z.string().min(8).max(72),
 });
 
+function randomPassword(): string {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => b.toString(36).padStart(2, "0")).join("");
+}
+
 /**
- * Public: a child redeems a parent invitation code and gets an auth account
- * permanently linked to that one child profile. Codes are single-use.
+ * Public: a child redeems a parent invitation code. No email/password needed —
+ * an account is provisioned automatically and linked to that one child profile.
+ * Codes are single-use. Returns credentials so the client can sign in.
  */
 export const redeemChildCode = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => RedeemInput.parse(d))
-  .handler(async ({ data }): Promise<{ ok: true }> => {
+  .handler(async ({ data }): Promise<{ email: string; password: string }> => {
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const formatted = `${data.code.slice(0, 4)}-${data.code.slice(4)}`;
 
@@ -83,12 +89,15 @@ export const redeemChildCode = createServerFn({ method: "POST" })
       throw new Error("This invitation code has expired. Ask your parent for a new one.");
     }
 
+    const email = `child.${child.id}@child.setgoals.app`;
+    const password = randomPassword();
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
-      password: data.password,
+      email,
+      password,
       email_confirm: true,
       user_metadata: { display_name: child.name, avatar_url: child.avatar },
     });
+
     if (createErr || !created.user) throw new Error(createErr?.message ?? "Could not create the account.");
     const childUserId = created.user.id;
 
@@ -115,5 +124,5 @@ export const redeemChildCode = createServerFn({ method: "POST" })
       child_user_id: childUserId,
     });
 
-    return { ok: true };
+    return { email, password };
   });

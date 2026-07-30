@@ -240,19 +240,16 @@ function Forgot({ onDone }: { onDone: () => void }) {
 
 function JoinWithCode() {
   const [code, setCode] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (clean.length !== 8) return toast.error("Enter the 8-character code, e.g. A7K9-PQ42");
-    if (password.length < 8) return toast.error("Password must be at least 8 characters");
     setBusy(true);
     try {
-      await redeemChildCode({ data: { code: clean, email, password } });
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const creds = await redeemChildCode({ data: { code: clean } });
+      const { error } = await supabase.auth.signInWithPassword(creds);
       if (error) throw error;
       toast.success("You're connected to your parent!");
     } catch (err) {
@@ -275,19 +272,10 @@ function JoinWithCode() {
         autoCapitalize="characters"
         className="text-center text-lg font-semibold tracking-[0.3em]"
       />
-      <Field type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
-      <Field
-        type="password"
-        placeholder="Password (min 8 chars)"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        minLength={8}
-        autoComplete="new-password"
-      />
       <button disabled={busy} type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
         {busy ? "Joining…" : "Join"}
       </button>
     </form>
   );
 }
+
