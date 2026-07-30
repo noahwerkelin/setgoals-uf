@@ -111,7 +111,7 @@ const ActivityMap = lazy(() =>
 export const Route = createFileRoute("/map")({
   head: () => ({
     meta: [
-      { title: "Map — SetGoals UF" },
+      { title: "Map — SetGoals" },
       { name: "description", content: "Discover verified nearby trails, parks, and outdoor activities." },
     ],
   }),

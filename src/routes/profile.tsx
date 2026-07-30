@@ -12,7 +12,7 @@ import { useTodaySteps } from "@/lib/steps";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — SetGoals UF" },
+      { title: "Profile — SetGoals" },
       { name: "description", content: "Your profile, streak, stats, and account." },
     ],
   }),

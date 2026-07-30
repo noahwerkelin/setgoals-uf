@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/parent")({
   head: () => ({
     meta: [
-      { title: "Parent dashboard — SetGoals UF" },
+      { title: "Parent dashboard — SetGoals" },
       { name: "description", content: "Approve apps, set goals, and view your child's activity." },
     ],
   }),
