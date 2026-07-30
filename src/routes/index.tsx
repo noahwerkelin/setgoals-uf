@@ -453,9 +453,10 @@ function FamilyCard() {
             (c) => c.id === r.member_id || c.authUserId === r.member_id,
           );
           const name = (r.is_self ? settings.displayName : null) || local?.name || r.name || "—";
-          const avatar = r.is_self
-            ? (settings.avatar ?? r.avatar)
-            : (local?.avatar ?? r.avatar);
+          // Always prefer the picture chosen in this app: own profile for self,
+          // the parent-chosen picture for a linked child.
+          const avatar = r.is_self ? settings.avatar : (local?.avatar ?? r.avatar);
+
           return (
             <div key={r.member_id} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
