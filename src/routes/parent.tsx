@@ -76,16 +76,7 @@ function Page() {
   };
 
   const openNew = () => {
-    setEditing({
-      id: crypto.randomUUID(),
-      name: "",
-      birthday: "",
-      avatar: AVATAR_OPTIONS[0],
-      dailyGoal: 8000,
-      code: genChildCode(),
-      stepsPer30: 1000,
-      dailyCapHours: 3,
-    });
+    setEditing({ ...emptyChild(), avatar: AVATAR_OPTIONS[0] });
     setIsNew(true);
   };
 
@@ -94,25 +85,55 @@ function Page() {
     setIsNew(false);
   };
 
-  const save = (c: ChildProfile) => {
+  const save = async (c: ChildProfile) => {
     if (!c.name.trim()) {
       toast.error(t("auth.required"));
       return;
     }
     if (isNew) {
-      update("children", [...settings.children, c]);
+      await update("children", [...settings.children, c]);
+      try {
+        await issueChildCode({ data: { childId: c.id } });
+      } catch {
+        /* code stays as generated locally */
+      }
+      await refresh();
       toast.success(t("parent.child.created"));
     } else {
-      update("children", settings.children.map((x) => (x.id === c.id ? c : x)));
+      await update("children", settings.children.map((x) => (x.id === c.id ? c : x)));
       toast.success(t("parent.child.updated"));
     }
     setEditing(null);
+  };
+
+  const regenerate = async (c: ChildProfile) => {
+    try {
+      const r = await issueChildCode({ data: { childId: c.id } });
+      await refresh();
+      toast.success(t("parent.child.code_new", { c: r.code }));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const shareCode = async (c: ChildProfile) => {
+    const text = t("parent.child.share_text", { n: c.name || "", c: c.code });
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {
+        /* cancelled */
+      }
+    }
+    copyCode(c.code);
   };
 
   const remove = (id: string) => {
     update("children", settings.children.filter((c) => c.id !== id));
     toast.success(t("parent.child.removed"));
   };
+
 
   const saveChildST = (id: string, v: ScreenTimeEdit) => {
     update(
