@@ -136,6 +136,12 @@ function Home() {
               <p className="text-lg font-medium tabular-nums text-sage-600">{formatScreenMin(remainingMin)}</p>
             </div>
           </div>
+
+          {bonusMin > 0 && (
+            <p className="-mt-2 rounded-full bg-sage-100 px-3 py-1.5 text-[11px] font-semibold text-sage-700 ring-1 ring-sage-200">
+              {t("home.bonus_gift", { m: formatScreenMin(bonusMin) })}
+            </p>
+          )}
         </section>
 
         <section className={`grid gap-4 animate-rise ${settings.role === "child" ? "grid-cols-1" : "grid-cols-2"}`} style={{ animationDelay: "120ms" }}>
