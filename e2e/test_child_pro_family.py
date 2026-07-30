@@ -74,22 +74,31 @@ async def wait_for_any(page, needles, selector=None, timeout_ms=15000):
 async def settings_theme_state(page) -> str:
     """Returns 'unlocked' | 'locked-child' | 'locked-individual' | 'unknown'."""
     await page.goto(f"{BASE_URL}/settings", wait_until="domcontentloaded")
-    body = await wait_for_any(page, [THEME_UNLOCKED_COPY, CHILD_LOCK_COPY, INDIVIDUAL_LOCK_COPY])
-    if THEME_UNLOCKED_COPY in body:
-        return "unlocked"
-    if CHILD_LOCK_COPY in body:
+    row = page.locator("[data-testid=theme-row]")
+    await row.wait_for(state="visible", timeout=20000)
+    # The row re-renders once the inherited PRO Family entitlement resolves.
+    await page.wait_for_timeout(1200)
+    text = await row.inner_text()
+    if await row.get_attribute("data-locked") == "false":
+        return "unlocked" if THEME_UNLOCKED_COPY in text else "unknown"
+    if CHILD_LOCK_COPY in text:
         return "locked-child"
-    if INDIVIDUAL_LOCK_COPY in body:
+    if INDIVIDUAL_LOCK_COPY in text:
         return "locked-individual"
     return "unknown"
 
 
 async def coach_state(page) -> str:
     await page.goto(f"{BASE_URL}/coach", wait_until="domcontentloaded")
-    body = await wait_for_any(page, [COACH_LOCKED_TITLE], selector="#coach-input")
-    if COACH_LOCKED_TITLE in body:
-        return "locked-child" if CHILD_LOCK_COPY in body else "locked-individual"
-    return "unlocked" if await page.locator("#coach-input").count() else "unknown"
+    await wait_for_any(page, [COACH_LOCKED_TITLE], selector="#coach-input")
+    await page.wait_for_timeout(1200)
+    if await page.locator("#coach-input").count():
+        return "unlocked"
+    if await page.locator("[data-testid=coach-lock-child]").count():
+        return "locked-child"
+    if COACH_LOCKED_TITLE in await page.inner_text("body"):
+        return "locked-individual"
+    return "unknown"
 
 
 async def scenario(pw, name, *, role, family_pro, own_pro, expect_settings, expect_coach, shot=None):
