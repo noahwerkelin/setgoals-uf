@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
+import { getStripeEnvironmentSafe } from "./stripe";
 
 export type Units = "metric" | "imperial";
 export type Role = "individual" | "child";
@@ -83,6 +84,10 @@ export type SettingsState = {
   /** Set when the plan is cancelled: PRO stays active until this moment, then lapses. */
   proExpiresAt: string | null;
   proPaymentMethod: string;
+  /** Stripe subscription status: active | trialing | past_due | canceled | inactive. */
+  proStatus: string;
+  /** Which payment environment the entitlement was bought in (test vs live). */
+  proEnvironment: string;
   /** For child accounts: status of the parent's PRO Family plan. */
   parentFamily: { active: boolean; cancelling: boolean; endsAt: string | null } | null;
   themeColor: ThemeColor;
@@ -116,6 +121,8 @@ const DEFAULTS: SettingsState = {
   proAutoRenew: true,
   proExpiresAt: null,
   proPaymentMethod: "",
+  proStatus: "inactive",
+  proEnvironment: "sandbox",
   parentFamily: null,
   themeColor: "sage",
   bonusMinFromYesterday: 0,
@@ -152,7 +159,22 @@ export function currentStreak(s: StreakState): number {
   return diff <= 1 ? s.count : 0;
 }
 
-type FamilyProRow = { active: boolean; cancelling: boolean; ends_at: string | null };
+type FamilyProRow = {
+  active: boolean;
+  cancelling: boolean;
+  ends_at: string | null;
+  environment?: string | null;
+  status?: string | null;
+};
+
+/**
+ * A subscription only counts in the environment it was bought in, so a test-mode
+ * purchase in the preview can never unlock PRO on the published live app.
+ */
+function envMatches(rowEnv: string | null | undefined): boolean {
+  const current = getStripeEnvironmentSafe();
+  return (rowEnv ?? "sandbox") === (current ?? "live");
+}
 
 type ChildRow = {
   id: string;
@@ -238,13 +260,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const kids = (childrenRes.data ?? []) as ChildRow[];
     const linked = linkedRes.data ? mapChild(linkedRes.data as ChildRow) : null;
     const fam = (familyProRes.data as FamilyProRow[] | null)?.[0];
+    const familyEnvOk = envMatches(fam?.environment);
     const family = {
-      active: fam?.active ?? false,
+      active: (fam?.active ?? false) && familyEnvOk,
       cancelling: fam?.cancelling ?? false,
       endsAt: fam?.ends_at ?? null,
     };
     const proExpired = !!s?.pro_expires_at && new Date(s.pro_expires_at).getTime() <= Date.now();
-    const ownProActive = (s?.is_pro ?? false) && !proExpired;
+    const ownProActive = (s?.is_pro ?? false) && !proExpired && envMatches(s?.pro_environment);
 
     setSettings({
       // Parent-assigned rules win for a linked child account.
@@ -264,6 +287,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       proAutoRenew: s?.pro_auto_renew ?? true,
       proExpiresAt: s?.pro_expires_at ?? null,
       proPaymentMethod: s?.pro_payment_method ?? "",
+      proStatus: linked ? (familyEnvOk ? (fam?.status ?? "inactive") : "inactive") : (s?.pro_status ?? "inactive"),
+      proEnvironment: s?.pro_environment ?? "sandbox",
       parentFamily: linked ? family : null,
       themeColor: (s?.theme_color ?? "sage") as ThemeColor,
       bonusMinFromYesterday: 0,
