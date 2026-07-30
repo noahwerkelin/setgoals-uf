@@ -1,72 +1,44 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
-import { clearEntitlement, fetchCardLabel, syncSubscription } from "@/lib/entitlements.server";
+import { verifyAppleTransaction } from "@/lib/apple-jws.server";
+import {
+  PLAN_BY_PRODUCT_ID,
+  clearEntitlement,
+  reconcileStoredEntitlement,
+  syncAppleTransaction,
+} from "@/lib/entitlements.server";
 
-type CheckoutSessionResult = { clientSecret: string } | { error: string };
-type PortalSessionResult = { url: string } | { error: string };
-type MutationResult = { ok: true } | { error: string };
 type SyncResult =
-  | { isPro: boolean; status: string; plan: string | null; paymentMethod: string }
+  | { isPro: boolean; status: string; plan: string | null; expiresAt: string | null; paymentMethod: string }
   | { error: string };
 
-
-async function resolveOrCreateCustomer(
-  stripe: ReturnType<typeof createStripeClient>,
-  options: { email?: string; userId?: string },
-): Promise<string> {
-  if (options.userId && !/^[a-zA-Z0-9_-]+$/.test(options.userId)) {
-    throw new Error("Invalid userId");
-  }
-  if (options.userId) {
-    const found = await stripe.customers.search({
-      query: `metadata['userId']:'${options.userId}'`,
-      limit: 1,
-    });
-    if (found.data.length) return found.data[0].id;
-  }
-  if (options.email) {
-    const existing = await stripe.customers.list({ email: options.email, limit: 1 });
-    if (existing.data.length) {
-      const customer = existing.data[0];
-      if (options.userId && customer.metadata?.userId !== options.userId) {
-        await stripe.customers.update(customer.id, {
-          metadata: { ...customer.metadata, userId: options.userId },
-        });
-      }
-      return customer.id;
-    }
-  }
-  const created = await stripe.customers.create({
-    ...(options.email && { email: options.email }),
-    ...(options.userId && { metadata: { userId: options.userId } }),
-  });
-  return created.id;
+function message(error: unknown): string {
+  return error instanceof Error ? error.message : "Something went wrong with the App Store purchase.";
 }
 
-/** Find the caller's active-ish subscription in the given environment. */
-async function findSubscription(
-  stripe: ReturnType<typeof createStripeClient>,
-  userId: string,
-) {
-  if (!/^[a-zA-Z0-9_-]+$/.test(userId)) throw new Error("Invalid userId");
-  const subs = await stripe.subscriptions.search({
-    query: `metadata['userId']:'${userId}'`,
-    limit: 20,
-  });
-  const usable = subs.data.filter((s) =>
-    ["active", "trialing", "past_due", "paused", "incomplete"].includes(s.status),
-  );
-  return usable[0] ?? null;
-}
+const INHERITED: SyncResult = {
+  isPro: false,
+  status: "inherited",
+  plan: null,
+  expiresAt: null,
+  paymentMethod: "",
+};
 
-export const createCheckoutSession = createServerFn({ method: "POST" })
+/**
+ * Verify signed StoreKit 2 transactions handed over by the native app and grant
+ * (or lapse) the PRO entitlement. This is the only way PRO can be unlocked —
+ * the client never decides its own entitlement.
+ */
+export const syncStoreKitPurchase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { priceId: string; returnUrl: string; environment: StripeEnv }) => {
-    if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error("Invalid priceId");
+  .inputValidator((data: { transactions: string[] }) => {
+    if (!Array.isArray(data.transactions) || data.transactions.length === 0) {
+      throw new Error("No App Store transactions to verify");
+    }
+    if (data.transactions.length > 25) throw new Error("Too many transactions");
     return data;
   })
-  .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
+  .handler(async ({ data, context }): Promise<SyncResult> => {
     try {
       const { userId, supabase } = context;
 
@@ -76,169 +48,80 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         .select("id")
         .eq("auth_user_id", userId)
         .maybeSingle();
-      if (childRow) return { error: "Child accounts cannot purchase a subscription." };
+      if (childRow) return INHERITED;
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const stripe = createStripeClient(data.environment);
-
-      // Never let someone buy a second plan on top of an active one.
-      const existingSub = await findSubscription(stripe, userId);
-      if (existingSub && ["active", "trialing", "past_due"].includes(existingSub.status)) {
-        return { error: "You already have an active subscription. Use Change plan instead." };
+      const verified = [];
+      for (const jws of data.transactions) {
+        try {
+          const txn = await verifyAppleTransaction(jws);
+          if (PLAN_BY_PRODUCT_ID[txn.productId]) verified.push(txn);
+        } catch {
+          /* ignore transactions for other apps / products */
+        }
       }
+      if (!verified.length) return { error: "No valid SetGoals subscription was found on this Apple ID." };
 
-      const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-      if (!prices.data.length) return { error: "Price not found" };
-      const stripePrice = prices.data[0];
-      const isRecurring = stripePrice.type === "recurring";
+      // Newest expiry wins — that is the subscription actually in force.
+      verified.sort((a, b) => (b.expiresDate ?? 0) - (a.expiresDate ?? 0));
+      const state = await syncAppleTransaction(verified[0], { userId });
 
-
-      const customerId = await resolveOrCreateCustomer(stripe, {
-        email: user?.email ?? undefined,
-        userId,
-      });
-
-      const session = await stripe.checkout.sessions.create({
-        line_items: [{ price: stripePrice.id, quantity: 1 }],
-        mode: isRecurring ? "subscription" : "payment",
-        ui_mode: "embedded_page",
-        return_url: data.returnUrl,
-        customer: customerId,
-        // No tax is calculated or collected — customers pay the listed price.
-        metadata: { userId, managed_payments: "false" },
-        ...(isRecurring && { subscription_data: { metadata: { userId } } }),
-      } as any);
-
-      return { clientSecret: session.client_secret ?? "" };
+      return {
+        isPro: state.isPro,
+        status: state.status,
+        plan: state.plan,
+        expiresAt: state.expiresAt,
+        paymentMethod: state.isPro ? "Apple App Store" : "",
+      };
     } catch (error) {
-      return { error: getStripeErrorMessage(error) };
-    }
-  });
-
-export const createPortalSession = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => data)
-  .handler(async ({ data, context }): Promise<PortalSessionResult> => {
-    try {
-      const stripe = createStripeClient(data.environment);
-      const sub = await findSubscription(stripe, context.userId);
-      let customerId = sub
-        ? typeof sub.customer === "string"
-          ? sub.customer
-          : sub.customer?.id
-        : undefined;
-      if (!customerId) {
-        const customers = await stripe.customers.search({
-          query: `metadata['userId']:'${context.userId}'`,
-          limit: 1,
-        });
-        customerId = customers.data[0]?.id;
-      }
-      if (!customerId) return { error: "No billing account found" };
-
-      const portal = await stripe.billingPortal.sessions.create({
-        customer: customerId,
-        ...(data.returnUrl && { return_url: data.returnUrl }),
-      });
-      return { url: portal.url };
-    } catch (error) {
-      return { error: getStripeErrorMessage(error) };
-    }
-  });
-
-/** Cancel at the end of the paid period (access stays until then). */
-export const cancelStripeSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: StripeEnv }) => data)
-  .handler(async ({ data, context }): Promise<MutationResult> => {
-    try {
-      const stripe = createStripeClient(data.environment);
-      const sub = await findSubscription(stripe, context.userId);
-      if (!sub) return { error: "No active subscription found" };
-      await stripe.subscriptions.update(sub.id, { cancel_at_period_end: true });
-      return { ok: true };
-    } catch (error) {
-      return { error: getStripeErrorMessage(error) };
-    }
-  });
-
-/** Undo a pending cancellation while still inside the paid period. */
-export const resumeStripeSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: StripeEnv }) => data)
-  .handler(async ({ data, context }): Promise<MutationResult> => {
-    try {
-      const stripe = createStripeClient(data.environment);
-      const sub = await findSubscription(stripe, context.userId);
-      if (!sub) return { error: "No active subscription found" };
-      await stripe.subscriptions.update(sub.id, { cancel_at_period_end: false });
-      return { ok: true };
-    } catch (error) {
-      return { error: getStripeErrorMessage(error) };
-    }
-  });
-
-/** Switch plans on the existing subscription, prorated. */
-export const changeStripePlan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { priceId: string; environment: StripeEnv }) => {
-    if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error("Invalid priceId");
-    return data;
-  })
-  .handler(async ({ data, context }): Promise<MutationResult> => {
-    try {
-      const stripe = createStripeClient(data.environment);
-      const sub = await findSubscription(stripe, context.userId);
-      if (!sub) return { error: "No active subscription found" };
-      const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-      if (!prices.data.length) return { error: "Price not found" };
-      const item = sub.items.data[0];
-      await stripe.subscriptions.update(sub.id, {
-        items: [{ id: item.id, price: prices.data[0].id }],
-        proration_behavior: "create_prorations",
-        cancel_at_period_end: false,
-      });
-      return { ok: true };
-    } catch (error) {
-      return { error: getStripeErrorMessage(error) };
+      return { error: message(error) };
     }
   });
 
 /**
- * Reconcile entitlement straight from Stripe.
- *
- * Webhooks are the primary path, but they can be delayed or dropped — this is
- * called right after checkout and whenever the PRO dashboard opens, so a paid
- * user is never left without access (and a lapsed one never keeps it).
+ * Re-evaluate the stored App Store entitlement (expiry, cancellation, refund).
+ * Called whenever the PRO dashboard opens so a lapsed plan can never linger.
  */
 export const syncSubscriptionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: StripeEnv }) => data)
-  .handler(async ({ data, context }): Promise<SyncResult> => {
+  .inputValidator((data: Record<string, never> | undefined) => data ?? {})
+  .handler(async ({ context }): Promise<SyncResult> => {
     try {
       const { userId, supabase } = context;
 
-      // Children inherit PRO Family from a parent; they have no billing of their own.
       const { data: childRow } = await supabase
         .from("children")
         .select("id")
         .eq("auth_user_id", userId)
         .maybeSingle();
-      if (childRow) return { isPro: false, status: "inherited", plan: null, paymentMethod: "" };
+      if (childRow) return INHERITED;
 
-      const stripe = createStripeClient(data.environment);
-      const sub = await findSubscription(stripe, userId);
-      if (!sub) {
-        await clearEntitlement(userId, data.environment);
-        return { isPro: false, status: "inactive", plan: null, paymentMethod: "" };
+      const state = await reconcileStoredEntitlement(userId);
+      if (!state) {
+        return { isPro: false, status: "inactive", plan: null, expiresAt: null, paymentMethod: "" };
       }
-      const paymentMethod = await fetchCardLabel(stripe, sub);
-      const res = await syncSubscription(sub, data.environment, { userId, paymentMethod });
-      return { isPro: res.isPro, status: res.status, plan: res.plan, paymentMethod };
+      return {
+        isPro: state.isPro,
+        status: state.status,
+        plan: state.plan,
+        expiresAt: state.expiresAt,
+        paymentMethod: state.isPro ? "Apple App Store" : "",
+      };
     } catch (error) {
-      return { error: getStripeErrorMessage(error) };
+      return { error: message(error) };
+    }
+  });
+
+/**
+ * Used by account deletion: Apple subscriptions can only be cancelled by the
+ * user in the App Store, so we just release the local entitlement.
+ */
+export const releaseEntitlement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ ok: true } | { error: string }> => {
+    try {
+      await clearEntitlement(context.userId);
+      return { ok: true };
+    } catch (error) {
+      return { error: message(error) };
     }
   });
