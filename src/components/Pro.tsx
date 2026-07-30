@@ -60,7 +60,7 @@ function PlanGrid({ plan, onSelect }: { plan: SubPlan; onSelect: (p: SubPlan) =>
   );
 }
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function addMonths(iso: string, months: number): Date {
   const d = new Date(iso);
@@ -76,8 +76,28 @@ function formatDate(d: Date, lang: string): string {
   });
 }
 
+/** After returning from the hosted checkout, poll until the webhook lands. */
+function useCheckoutReturn() {
+  const { refresh } = useSettings();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("checkout") !== "success") return;
+    url.searchParams.delete("checkout");
+    url.searchParams.delete("session_id");
+    window.history.replaceState({}, "", url.toString());
+    let tries = 0;
+    const tick = async () => {
+      await refresh();
+      if (++tries < 6) setTimeout(tick, 2000);
+    };
+    tick();
+  }, [refresh]);
+}
+
 export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { settings } = useSettings();
+  useCheckoutReturn();
   // Children can never purchase a plan — they inherit PRO from a parent's Family plan.
   if (settings.role === "child") {
     return <ChildProDialog open={open} onOpenChange={onOpenChange} />;
@@ -87,6 +107,7 @@ export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpen
   }
   return <UpgradeDialog open={open} onOpenChange={onOpenChange} />;
 }
+
 
 function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, lang } = useT();
