@@ -598,6 +598,28 @@ function ChildEditDialog({
 
           <div>
             <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
+              {t("settings.username")}
+            </label>
+            <div className="flex items-center gap-2 rounded-2xl bg-sage-50 px-4 ring-1 ring-black/5 focus-within:ring-sage-600">
+              <span className="text-sm text-sage-600">@</span>
+              <input
+                value={draft.username}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20),
+                  })
+                }
+                placeholder="lukas_08"
+                autoCapitalize="none"
+                autoCorrect="off"
+                className="w-full bg-transparent py-3 text-sm outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
               {t("auth.birthday")}
             </label>
             <input
