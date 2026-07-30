@@ -84,7 +84,10 @@ const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; chip
 
 export function tierStyle(tier: BadgeTier) { return TIER_STYLE[tier]; }
 
-const STORE_KEY = "sg.badges";
+// v2: earlier builds could unlock leaderboard badges from placeholder standings.
+// Bumping the key clears those so every badge must be earned for real.
+const STORE_KEY = "sg.badges.v2";
+const LEGACY_STORE_KEYS = ["sg.badges"];
 const TOTALS_KEY = "sg.totals";
 const HOURLY_KEY = "sg.hourly";
 
@@ -98,7 +101,11 @@ type HourlyState = {
 };
 
 function loadEarned(): EarnedMap {
-  try { const raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : {}; } catch { return {}; }
+  try {
+    for (const k of LEGACY_STORE_KEYS) localStorage.removeItem(k);
+    const raw = localStorage.getItem(STORE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
 }
 function saveEarned(m: EarnedMap) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(m)); } catch {}
@@ -170,6 +177,7 @@ function updateHourlyBuckets(steps: number, hour: number): HourlyState {
 
 /** Record today's activity. Accumulates totals once per day and awards step/distance badges. */
 export function recordDailyActivity(steps: number, km: number, hour: number) {
+  if (!Number.isFinite(steps) || steps <= 0) return;
   const today = new Date();
   const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const t = loadTotals();
@@ -193,16 +201,27 @@ export function recordDailyActivity(steps: number, km: number, hour: number) {
 }
 
 
-/** Record a leaderboard rank (1-based). scope: "local" | "national". */
-export function recordLeaderboardRank(scope: "local" | "national", rank: number) {
+/**
+ * Record a leaderboard rank (1-based). Only real standings count: the user must
+ * have actually walked today, and the cohort must be large enough for the rank
+ * to mean anything (no badges for being "#1" in a board of two people).
+ */
+export function recordLeaderboardRank(
+  scope: "local" | "national",
+  rank: number,
+  opts: { steps: number; participants: number },
+) {
+  const { steps, participants } = opts;
+  if (!Number.isFinite(rank) || rank < 1) return;
+  if (steps <= 0) return;
   const ids: string[] = [];
   if (scope === "local") {
-    if (rank <= 10) ids.push("local_elite");
-    if (rank === 1) ids.push("local_legend");
+    if (rank <= 10 && participants >= 10) ids.push("local_elite");
+    if (rank === 1 && participants >= 10) ids.push("local_legend");
   } else {
-    if (rank <= 100) ids.push("national_contender");
-    if (rank <= 10) ids.push("national_elite");
-    if (rank === 1) ids.push("national_champion");
+    if (rank <= 100 && participants >= 100) ids.push("national_contender");
+    if (rank <= 10 && participants >= 100) ids.push("national_elite");
+    if (rank === 1 && participants >= 100) ids.push("national_champion");
   }
   awardMany(ids);
 }

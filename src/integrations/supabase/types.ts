@@ -470,6 +470,7 @@ export type Database = {
         }[]
       }
       pro_is_active: { Args: { _user_id: string }; Returns: boolean }
+      username_available: { Args: { _username: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
