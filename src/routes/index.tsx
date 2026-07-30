@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
+import { initialsFromName } from "@/lib/avatar";
 import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
 import { useTodaySteps, useHistorySteps } from "@/lib/steps";
 import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
@@ -112,7 +113,7 @@ function Home() {
           ) : settings.avatar ? (
             <span className="text-lg leading-none">{settings.avatar}</span>
           ) : (
-            (settings.displayName || "LU").slice(0, 2).toUpperCase()
+            initialsFromName(settings.displayName || settings.username)
           )}
         </Link>
 
