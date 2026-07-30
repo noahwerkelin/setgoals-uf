@@ -10,6 +10,8 @@ import { useTodaySteps, useHistorySteps } from "@/lib/steps";
 import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
 import { loadProST, computeRolloverMin } from "@/lib/screentime";
 import { useBonusMin } from "@/lib/bonus";
+import { useDayKey } from "@/lib/day";
+import { useFriends, friendsRankToday } from "@/lib/friends";
 import { ChildAvatar } from "@/components/ChildAvatarPicker";
 
 
@@ -477,3 +479,31 @@ function FamilyCard() {
   );
 }
 
+
+function LeaderboardTile({ stepsToday }: { stepsToday: number }) {
+  const { t } = useT();
+  const dayKey = useDayKey();
+  const { friends } = useFriends();
+  const { rank, total } = friendsRankToday(friends, stepsToday, dayKey);
+
+  return (
+    <Link
+      to="/leaderboards"
+      className="flex items-center justify-between rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise"
+      style={{ animationDelay: "300ms" }}
+    >
+      <div className="flex items-center gap-3">
+        <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">
+          <Zap className="size-4" />
+        </span>
+        <div>
+          <p className="text-sm font-semibold">{t("home.leaderboards")}</p>
+          <p className="text-xs text-sage-600">
+            {friends.length === 0 ? t("home.lb_sub.empty") : t("home.lb_sub", { rank, total })}
+          </p>
+        </div>
+      </div>
+      <ChevronRight className="size-4 text-sage-600" />
+    </Link>
+  );
+}
