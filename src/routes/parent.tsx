@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
+import { useSettings, emptyChild, type ChildProfile } from "@/lib/settings";
+import { issueChildCode } from "@/lib/children.functions";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 import {
@@ -47,7 +48,7 @@ type ScreenTimeEdit = { stepsPer30: number; dailyCapHours: number };
 
 function Page() {
   const { t } = useT();
-  const { settings, update } = useSettings();
+  const { settings, update, refresh } = useSettings();
   const [apps, setApps] = useState(INITIAL_APPS);
   const [proOpen, setProOpen] = useState(false);
   const [editing, setEditing] = useState<ChildProfile | null>(null);
