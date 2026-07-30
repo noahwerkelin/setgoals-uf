@@ -58,6 +58,7 @@ function Page() {
   const [editingMyST, setEditingMyST] = useState(false);
   const [tab, setTab] = useState<"personal" | "children">("personal");
   const [childStats, setChildStats] = useState<Record<string, { steps: number; usedMin: number }>>({});
+  const [childWeek, setChildWeek] = useState<Record<string, Record<string, { steps: number; usedMin: number }>>>({});
 
   const isIndividual = settings.role === "individual";
   const isChild = settings.role === "child";
