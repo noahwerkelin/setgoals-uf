@@ -458,13 +458,21 @@ function FamilyCard() {
         {rows === null && <p className="text-xs text-sage-600">…</p>}
         {rows !== null && members.length === 0 && <p className="text-xs text-sage-600">{t("home.family.empty")}</p>}
         {members.map((r) => {
-          const name = r.name || "—";
+          const local = settings.children.find(
+            (c) => c.id === r.member_id || c.authUserId === r.member_id,
+          );
+          const name = (r.is_self ? settings.name : null) || local?.name || r.name || "—";
+          const avatar = r.is_self
+            ? (settings.avatar ?? r.avatar)
+            : (local?.avatar ?? r.avatar);
           return (
             <div key={r.member_id} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="size-8 rounded-full bg-sage-100 ring-1 ring-black/5 grid place-items-center text-[10px] font-semibold uppercase text-sage-700">
-                  {r.avatar || name.slice(0, 2)}
-                </span>
+                <ChildAvatar
+                  avatar={avatar}
+                  name={name}
+                  className="size-9 shrink-0 text-base ring-1 ring-black/5"
+                />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{r.is_self ? t("home.family.you") : name}</p>
                   <p className="text-[10px] uppercase tracking-wider text-sage-600">
@@ -476,6 +484,7 @@ function FamilyCard() {
             </div>
           );
         })}
+
       </div>
     </section>
   );
