@@ -143,10 +143,8 @@ function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
 function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
-  const { refresh } = useSettings();
-  const startFn = useServerFn(startSubscription);
   const [plan, setPlan] = useState<SubPlan>("monthly");
-  const [busy, setBusy] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const features = [
     "pro.feature.bonus",
@@ -158,54 +156,63 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     ...(isFamilyPlan(plan) ? ["pro.feature.family"] : []),
   ];
 
+  const returnUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${window.location.pathname}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+      : undefined;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) setCheckingOut(false);
+        onOpenChange(o);
+      }}
+    >
+      <DialogContent className={checkingOut ? "max-h-[85vh] overflow-y-auto" : undefined}>
         <DialogHeader>
           <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-600 text-primary-foreground">
             <Sparkles className="size-6" />
           </div>
           <DialogTitle className="text-center">{t("pro.title")}</DialogTitle>
-          <DialogDescription className="text-center">{t("pro.subtitle")}</DialogDescription>
+          <DialogDescription className="text-center">
+            {checkingOut ? t(`pro.plan.${plan}`) : t("pro.subtitle")}
+          </DialogDescription>
         </DialogHeader>
 
-        <ul className="space-y-2.5 py-1">
-          {features.map((k) => (
-            <li key={k} className="flex items-start gap-2 text-sm">
-              <Check className="mt-0.5 size-4 shrink-0 text-sage-600" />
-              <span>{t(k)}</span>
-            </li>
-          ))}
-        </ul>
+        {checkingOut ? (
+          <div className="space-y-2">
+            <PaymentTestModeBanner />
+            <StripeEmbeddedCheckout priceId={PLAN_PRICE_IDS[plan]} returnUrl={returnUrl} />
+            <Button variant="ghost" className="w-full" onClick={() => setCheckingOut(false)}>
+              {t("common.back") ?? "Back"}
+            </Button>
+          </div>
+        ) : (
+          <>
+            <ul className="space-y-2.5 py-1">
+              {features.map((k) => (
+                <li key={k} className="flex items-start gap-2 text-sm">
+                  <Check className="mt-0.5 size-4 shrink-0 text-sage-600" />
+                  <span>{t(k)}</span>
+                </li>
+              ))}
+            </ul>
 
-        <PlanGrid plan={plan} onSelect={setPlan} />
+            <PlanGrid plan={plan} onSelect={setPlan} />
 
-
-        <DialogFooter className="sm:justify-stretch">
-          <Button
-            className="w-full"
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await startFn({ data: { plan } });
-                await refresh();
-                toast.success(t("pro.welcome"));
-                onOpenChange(false);
-              } catch {
-                toast.error(t("pro.error"));
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            <Sparkles className="size-4" /> {t("pro.upgrade")}
-          </Button>
-        </DialogFooter>
+            <DialogFooter className="sm:justify-stretch">
+              <Button className="w-full" onClick={() => setCheckingOut(true)}>
+                <Sparkles className="size-4" /> {t("pro.upgrade")}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
+
 
 function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, lang } = useT();
