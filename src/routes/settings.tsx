@@ -35,7 +35,7 @@ import { awardBadge } from "@/components/Badges";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — SetGoals UF" },
+      { title: "Settings — SetGoals" },
       { name: "description", content: "Notifications, integrations, privacy, and account." },
     ],
   }),
@@ -282,7 +282,7 @@ function Page() {
           {!isChild && <Row label={t("settings.delete_account")} danger onClick={() => setDeleteOpen(true)} />}
         </Group>
 
-        <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>
+        <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals · v1.0.0</p>
       </div>
 
       <ProUpgradeDialog open={proOpen} onOpenChange={setProOpen} />

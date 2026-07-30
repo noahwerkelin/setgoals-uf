@@ -50,7 +50,7 @@ export const Route = createFileRoute("/challenges")({
   },
   head: () => ({
     meta: [
-      { title: "Goals & Challenges — SetGoals UF" },
+      { title: "Goals & Challenges — SetGoals" },
       { name: "description", content: "Daily challenges and step goals to earn more screen time." },
     ],
   }),

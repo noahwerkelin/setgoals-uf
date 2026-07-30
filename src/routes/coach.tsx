@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/coach")({
   head: () => ({
     meta: [
-      { title: "AI Coach — SetGoals UF" },
+      { title: "AI Coach — SetGoals" },
       { name: "description", content: "Your wellness coach for goals, routes, and motivation." },
     ],
   }),
