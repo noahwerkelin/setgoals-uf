@@ -448,6 +448,7 @@ export type Database = {
         Returns: boolean
       }
       is_parent_of: { Args: { _child_user_id: string }; Returns: boolean }
+      is_privileged_caller: { Args: never; Returns: boolean }
       leaderboard: {
         Args: { _period: string }
         Returns: {
