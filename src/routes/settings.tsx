@@ -31,6 +31,7 @@ import { THEME_COLORS, type ThemeColor } from "@/lib/settings";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock, Palette } from "lucide-react";
 import { awardBadge } from "@/components/Badges";
+import { isUsernameAvailable } from "@/lib/username.functions";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -808,10 +809,20 @@ function UsernameDialog({
 }) {
   const [val, setVal] = useState(current);
   const [err, setErr] = useState<string | null>(null);
-  useEffect(() => { if (open) { setVal(current); setErr(null); } }, [open, current]);
-  const submit = () => {
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (open) { setVal(current); setErr(null); setBusy(false); } }, [open, current]);
+  const submit = async () => {
     const v = val.trim().toLowerCase();
     if (!/^[a-z0-9_]{3,20}$/.test(v)) { setErr(t("account.username.invalid")); return; }
+    if (v === current.toLowerCase()) { onOpenChange(false); return; }
+    setBusy(true);
+    try {
+      const free = await isUsernameAvailable({ data: { username: v } });
+      if (!free) { setErr(t("account.username.taken")); setBusy(false); return; }
+    } catch {
+      setErr(t("account.username.taken")); setBusy(false); return;
+    }
+    setBusy(false);
     onSave(v);
     onOpenChange(false);
   };
@@ -836,7 +847,7 @@ function UsernameDialog({
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
-          <Button onClick={submit}>{t("settings.save")}</Button>
+          <Button onClick={submit} disabled={busy}>{t("settings.save")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

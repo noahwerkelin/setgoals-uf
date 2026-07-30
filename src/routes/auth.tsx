@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/lib/auth";
 import { redeemChildCode } from "@/lib/children.functions";
+import { isUsernameAvailable } from "@/lib/username.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -174,6 +175,16 @@ function SignUp({ onSignin }: { onSignin: () => void }) {
       return toast.error("Username must be 3–20 chars: letters, numbers, or underscores");
     }
     setBusy(true);
+    try {
+      const free = await isUsernameAvailable({ data: { username: uname } });
+      if (!free) {
+        setBusy(false);
+        return toast.error("That username is already taken.");
+      }
+    } catch {
+      setBusy(false);
+      return toast.error("Could not verify username. Try again.");
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
