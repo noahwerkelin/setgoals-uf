@@ -77,7 +77,6 @@ export function Splash() {
           style={{ animation: "splash-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both" }}
         >
           SetGoals
-          <span className="ml-1.5 text-sage-600">UF</span>
         </h1>
         <p
           className="mt-2 text-sm text-sage-700"
