@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { isImageAvatar } from "@/lib/settings";
+import { fileToSquareDataUrl } from "@/lib/avatar";
 import { useT } from "@/lib/i18n";
+
 
 export const CHILD_EMOJIS = ["🌱", "🐻", "🦊", "🐼", "🦁", "🐸", "🦄", "⭐️", "🚀"];
 
