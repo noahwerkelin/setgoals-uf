@@ -405,7 +405,10 @@ function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
             disabled={plan === settings.proPlan}
             onClick={async () => {
               try {
-                await changeFn({ data: { plan } });
+                const res = await changeFn({
+                  data: { priceId: PLAN_PRICE_IDS[plan], environment: getStripeEnvironment() },
+                });
+                if ("error" in res) throw new Error(res.error);
                 await refresh();
                 toast.success(t("pro.plan_changed"));
               } catch {
