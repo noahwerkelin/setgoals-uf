@@ -13,6 +13,8 @@ import { loadProST, computeRolloverMin } from "@/lib/screentime";
 import { useBonusMin } from "@/lib/bonus";
 import { useDayKey } from "@/lib/day";
 import { useFriends, friendsRankToday } from "@/lib/friends";
+import { getFriendsSteps } from "@/lib/friends.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { ChildAvatar } from "@/components/ChildAvatarPicker";
 
 
@@ -488,7 +490,14 @@ function LeaderboardTile({ stepsToday }: { stepsToday: number }) {
   const { t } = useT();
   const dayKey = useDayKey();
   const { friends } = useFriends();
-  const { rank, total } = friendsRankToday(friends, stepsToday, dayKey);
+  const fetchFriendSteps = useServerFn(getFriendsSteps);
+  const ids = friends.map((f) => f.id);
+  const { data: stepsByFriend = {} } = useQuery({
+    queryKey: ["friends-steps", dayKey, ids.join(",")],
+    enabled: ids.length > 0,
+    queryFn: () => fetchFriendSteps({ data: { ids, day: dayKey } }),
+  });
+  const { rank, total } = friendsRankToday(stepsByFriend, stepsToday);
 
   return (
     <Link
