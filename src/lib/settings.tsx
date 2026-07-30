@@ -197,21 +197,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettings(DEFAULTS);
       return;
     }
-    const [profileRes, settingsRes, streakRes, childrenRes] = await Promise.all([
+    const [profileRes, settingsRes, streakRes, childrenRes, linkedRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("streaks").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("children").select("*").eq("parent_id", user.id),
+      supabase.from("children").select("*").eq("auth_user_id", user.id).maybeSingle(),
     ]);
     const p = profileRes.data;
     const s = settingsRes.data;
     const st = streakRes.data;
     const kids = (childrenRes.data ?? []) as ChildRow[];
+    const linked = linkedRes.data ? mapChild(linkedRes.data as ChildRow) : null;
 
     setSettings({
-      stepsPer30: s?.steps_per_30 ?? DEFAULTS.stepsPer30,
-      dailyCapHours: s?.daily_cap_hours ?? DEFAULTS.dailyCapHours,
-      dailyGoal: s?.daily_goal ?? DEFAULTS.dailyGoal,
+      // Parent-assigned rules win for a linked child account.
+      stepsPer30: linked?.stepsPer30 ?? s?.steps_per_30 ?? DEFAULTS.stepsPer30,
+      dailyCapHours: linked?.dailyCapHours ?? s?.daily_cap_hours ?? DEFAULTS.dailyCapHours,
+      dailyGoal: linked?.dailyGoal ?? s?.daily_goal ?? DEFAULTS.dailyGoal,
       healthkitConnected: s?.healthkit_connected ?? false,
       googlefitConnected: s?.googlefit_connected ?? false,
       pushOn: s?.push_on ?? true,
@@ -225,13 +228,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       proPaymentMethod: s?.pro_payment_method ?? "",
       themeColor: (s?.theme_color ?? "sage") as ThemeColor,
       bonusMinFromYesterday: 0,
-      role: ((p?.role === "parent" ? "individual" : p?.role) ?? "individual") as Role,
+      role: (linked ? "child" : ((p?.role === "parent" ? "individual" : p?.role) ?? "individual")) as Role,
       displayName: p?.display_name ?? "",
       username: p?.username ?? "",
       email: p?.email ?? user.email ?? "",
       password: "",
       avatar: p?.avatar_url ?? null,
       children: kids.map(mapChild),
+      linkedChild: linked,
       streak: {
         count: st?.count ?? 0,
         best: st?.best ?? 0,
@@ -239,6 +243,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       },
     });
   }, [user]);
+
+  // Realtime: keep parent and child in sync on child-profile changes.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`children-sync-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "children" }, () => {
+        load();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, load]);
+
 
   useEffect(() => {
     load();
