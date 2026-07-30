@@ -289,10 +289,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
   }, [user, load]);
 
+  // Child accounts can't read the parent's billing row directly, so re-check the
+  // inherited PRO Family entitlement on focus and on a slow interval. This is also
+  // what makes access lapse on its own once a cancelled plan reaches its end date.
+  useEffect(() => {
+    if (!user) return;
+    const tick = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      load();
+    };
+    const id = window.setInterval(tick, 5 * 60_000);
+    window.addEventListener("focus", tick);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", tick);
+    };
+  }, [user, load]);
 
   useEffect(() => {
     load();
   }, [load]);
+
 
   // Apply theme
   useEffect(() => {
