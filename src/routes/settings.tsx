@@ -217,30 +217,23 @@ function Page() {
           </Group>
         )}
 
-        {/* Integrations */}
+        {/* Integrations — permission is granted by the OS, never by us */}
         <Group title={t("settings.integrations")}>
           <IntegrationRow
             icon={<Smartphone className="size-4" />}
             label={t("settings.healthkit")}
             connected={settings.healthkitConnected}
-            onAction={() =>
-              settings.healthkitConnected
-                ? (update("healthkitConnected", false), toast(t("settings.disconnect") + " ✓"))
-                : setConnectKind("hk")
-            }
+            onAction={() => (settings.healthkitConnected ? disconnectHealth("healthkit") : openConnect("hk"))}
             t={t}
           />
           <IntegrationRow
             icon={<Activity className="size-4" />}
             label={t("settings.googlefit")}
             connected={settings.googlefitConnected}
-            onAction={() =>
-              settings.googlefitConnected
-                ? (update("googlefitConnected", false), toast(t("settings.disconnect") + " ✓"))
-                : setConnectKind("gf")
-            }
+            onAction={() => (settings.googlefitConnected ? disconnectHealth("googlefit") : openConnect("gf"))}
             t={t}
           />
+
           <ToggleRow
             label={t("settings.push")}
             checked={settings.pushOn}
