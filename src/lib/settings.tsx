@@ -208,12 +208,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettings(DEFAULTS);
       return;
     }
-    const [profileRes, settingsRes, streakRes, childrenRes, linkedRes] = await Promise.all([
+    const [profileRes, settingsRes, streakRes, childrenRes, linkedRes, familyProRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("streaks").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("children").select("*").eq("parent_id", user.id),
       supabase.from("children").select("*").eq("auth_user_id", user.id).maybeSingle(),
+      supabase.rpc("parent_family_pro"),
     ]);
     const p = profileRes.data;
     const s = settingsRes.data;
