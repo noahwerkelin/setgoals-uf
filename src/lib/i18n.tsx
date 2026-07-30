@@ -1163,6 +1163,12 @@ const DICTS: Record<Lang, Dict> = {
     "parent.child.created": "Barnprofil skapad",
     "parent.child.updated": "Profil uppdaterad",
     "parent.child.removed": "Barn borttaget",
+    "parent.child.delete_title": "Ta bort {n}?",
+    "parent.child.delete_desc":
+      "Detta raderar {n}:s profil och konto permanent, inklusive all aktivitetsdata. Barnet loggas ut direkt. Detta går inte att ångra.",
+    "parent.child.delete_confirm": "Ta bort barn",
+    "parent.child.delete_pw": "Bekräfta med ditt lösenord",
+    "parent.child.deleting": "Tar bort…",
     "parent.child.copy_code": "Kopiera kod",
     "parent.child.empty": "Inga barn ännu. Lägg till ett för att börja.",
     "parent.child.code_help": "Ditt barn anger koden en g\u00e5ng f\u00f6r att ansluta. Den g\u00e5r ut om 7 dagar.",
