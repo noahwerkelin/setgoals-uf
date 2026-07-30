@@ -444,7 +444,7 @@ function FamilyCard() {
         <span className="text-[10px] font-medium uppercase tracking-widest text-sage-600">{t("home.today")}</span>
       </div>
       <div className="space-y-4">
-        {rows === null && <p className="text-xs text-sage-600">{t("common.loading")}</p>}
+        {rows === null && <p className="text-xs text-sage-600">…</p>}
         {rows !== null && members.length === 0 && <p className="text-xs text-sage-600">{t("home.family.empty")}</p>}
         {members.map((r) => {
           const name = r.name || "—";
