@@ -94,6 +94,7 @@ export type Database = {
           parent_id: string
           steps_per_30: number
           updated_at: string
+          username: string | null
         }
         Insert: {
           auth_user_id?: string | null
@@ -111,6 +112,7 @@ export type Database = {
           parent_id: string
           steps_per_30?: number
           updated_at?: string
+          username?: string | null
         }
         Update: {
           auth_user_id?: string | null
@@ -128,6 +130,7 @@ export type Database = {
           parent_id?: string
           steps_per_30?: number
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }

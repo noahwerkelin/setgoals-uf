@@ -234,8 +234,12 @@ function Page() {
           />
           <Row label={t("settings.nickname")} meta={settings.displayName} onClick={() => setNicknameOpen(true)} />
           <Row label={t("settings.username")} meta={`@${settings.username}`} onClick={() => setUsernameOpen(true)} />
-          <Row label={t("settings.email")} meta={settings.email} onClick={() => setEmailOpen(true)} />
-          <Row label={t("settings.password")} meta="••••••••" onClick={() => setPasswordOpen(true)} />
+          {!isChild && (
+            <>
+              <Row label={t("settings.email")} meta={settings.email} onClick={() => setEmailOpen(true)} />
+              <Row label={t("settings.password")} meta="••••••••" onClick={() => setPasswordOpen(true)} />
+            </>
+          )}
           <Row label={t("settings.signout")} onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }} />
         </Group>
 

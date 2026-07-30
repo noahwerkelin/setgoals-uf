@@ -76,7 +76,7 @@ export const redeemChildCode = createServerFn({ method: "POST" })
 
     const { data: child, error } = await supabaseAdmin
       .from("children")
-      .select("id, parent_id, name, avatar, birthday, auth_user_id, invitation_status, invitation_expires_at")
+      .select("id, parent_id, name, username, avatar, birthday, auth_user_id, invitation_status, invitation_expires_at")
       .eq("code", formatted)
       .maybeSingle();
     if (error) throw error;
@@ -95,7 +95,11 @@ export const redeemChildCode = createServerFn({ method: "POST" })
       email,
       password,
       email_confirm: true,
-      user_metadata: { display_name: child.name, avatar_url: child.avatar },
+      user_metadata: {
+        display_name: child.name,
+        avatar_url: child.avatar,
+        ...(child.username ? { username: child.username } : {}),
+      },
     });
 
     if (createErr || !created.user) throw new Error(createErr?.message ?? "Could not create the account.");
