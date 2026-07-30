@@ -456,13 +456,14 @@ export type Database = {
           username: string
         }[]
       }
+      parent_family_pro: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
       restriction_kind: "app" | "category" | "website"
       share_location_mode: "off" | "while_using" | "always"
       step_source: "api" | "manual" | "healthkit" | "healthconnect"
-      sub_plan: "monthly" | "yearly"
+      sub_plan: "monthly" | "yearly" | "family_monthly" | "family_yearly"
       theme_color:
         | "sage"
         | "rose"
@@ -604,7 +605,7 @@ export const Constants = {
       restriction_kind: ["app", "category", "website"],
       share_location_mode: ["off", "while_using", "always"],
       step_source: ["api", "manual", "healthkit", "healthconnect"],
-      sub_plan: ["monthly", "yearly"],
+      sub_plan: ["monthly", "yearly", "family_monthly", "family_yearly"],
       theme_color: [
         "sage",
         "rose",
