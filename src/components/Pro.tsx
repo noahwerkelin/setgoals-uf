@@ -1,4 +1,4 @@
-import { Sparkles, Check, X, Calendar, CreditCard, RefreshCw, Crown } from "lucide-react";
+import { Sparkles, Check, Calendar, RefreshCw, Crown, Apple } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -7,31 +7,18 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
 import { useT } from "@/lib/i18n";
 import { useSettings, isFamilyPlan, type SubPlan } from "@/lib/settings";
 import { useServerFn } from "@tanstack/react-start";
+import { syncStoreKitPurchase, syncSubscriptionStatus } from "@/utils/payments.functions";
 import {
-  cancelStripeSubscription,
-  resumeStripeSubscription,
-  changeStripePlan,
-  createPortalSession,
-  syncSubscriptionStatus,
-} from "@/utils/payments.functions";
-import { getStripeEnvironment, PLAN_PRICE_IDS } from "@/lib/stripe";
-import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+  purchasePlan,
+  restorePurchases,
+  openManageSubscriptions,
+  isStoreKitSupportedOnPlatform,
+} from "@/lib/storekit";
 
 const ALL_PLANS: SubPlan[] = ["monthly", "yearly", "family_monthly", "family_yearly"];
 
@@ -77,40 +64,8 @@ function formatDate(d: Date, lang: string): string {
   });
 }
 
-/** After returning from the hosted checkout, poll until the webhook lands. */
-function useCheckoutReturn() {
-  const { refresh } = useSettings();
-  const syncFn = useServerFn(syncSubscriptionStatus);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("checkout") !== "success") return;
-    url.searchParams.delete("checkout");
-    url.searchParams.delete("session_id");
-    window.history.replaceState({}, "", url.toString());
-    let tries = 0;
-    let stopped = false;
-    const tick = async () => {
-      if (stopped) return;
-      // Pull the truth from Stripe rather than waiting on the webhook.
-      try {
-        await syncFn({ data: { environment: getStripeEnvironment() } });
-      } catch {
-        /* fall back to the plain refresh below */
-      }
-      await refresh();
-      if (++tries < 5) setTimeout(tick, 2500);
-    };
-    tick();
-    return () => {
-      stopped = true;
-    };
-  }, [refresh, syncFn]);
-}
-
 export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { settings } = useSettings();
-  useCheckoutReturn();
   // Children can never purchase a plan — they inherit PRO from a parent's Family plan.
   if (settings.role === "child") {
     return <ChildProDialog open={open} onOpenChange={onOpenChange} />;
@@ -156,8 +111,11 @@ function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
 function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
+  const { refresh } = useSettings();
+  const syncPurchaseFn = useServerFn(syncStoreKitPurchase);
   const [plan, setPlan] = useState<SubPlan>("monthly");
-  const [checkingOut, setCheckingOut] = useState(false);
+  const [busy, setBusy] = useState<"buy" | "restore" | null>(null);
+  const [note, setNote] = useState<string | null>(null);
 
   const features = [
     "pro.feature.bonus",
@@ -169,58 +127,110 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     ...(isFamilyPlan(plan) ? ["pro.feature.family"] : []),
   ];
 
-  const returnUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}${window.location.pathname}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-      : undefined;
+  /** Hand a StoreKit result to the server, which is the only entitlement judge. */
+  const grant = async (transactions: string[]) => {
+    const res = await syncPurchaseFn({ data: { transactions } });
+    if ("error" in res) throw new Error(res.error);
+    await refresh();
+    if (res.isPro) {
+      toast.success(t("pro.welcome"));
+      onOpenChange(false);
+    } else {
+      setNote(t("pro.store.nothing_to_restore"));
+    }
+  };
+
+  const handleStoreResult = async (
+    res: Awaited<ReturnType<typeof purchasePlan>>,
+    kind: "buy" | "restore",
+  ) => {
+    switch (res.status) {
+      case "purchased":
+      case "restored":
+        await grant(res.transactions);
+        break;
+      case "cancelled":
+        break;
+      case "pending":
+        setNote(t("pro.store.pending"));
+        break;
+      case "nothing-to-restore":
+        setNote(t("pro.store.nothing_to_restore"));
+        break;
+      case "unavailable":
+        setNote(
+          res.reason === "wrong-platform"
+            ? t("pro.store.ios_only")
+            : t("pro.store.need_app"),
+        );
+        break;
+      default:
+        setNote(kind === "buy" ? t("pro.store.failed") : t("pro.store.restore_failed"));
+    }
+  };
+
+  const run = async (kind: "buy" | "restore") => {
+    setBusy(kind);
+    setNote(null);
+    try {
+      const res = kind === "buy" ? await purchasePlan(plan) : await restorePurchases();
+      await handleStoreResult(res, kind);
+    } catch {
+      setNote(t("pro.store.failed"));
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        if (!o) setCheckingOut(false);
-        onOpenChange(o);
-      }}
-    >
-      <DialogContent className={checkingOut ? "max-h-[85vh] overflow-y-auto" : undefined}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
         <DialogHeader>
           <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-600 text-primary-foreground">
             <Sparkles className="size-6" />
           </div>
           <DialogTitle className="text-center">{t("pro.title")}</DialogTitle>
-          <DialogDescription className="text-center">
-            {checkingOut ? t(`pro.plan.${plan}`) : t("pro.subtitle")}
-          </DialogDescription>
+          <DialogDescription className="text-center">{t("pro.subtitle")}</DialogDescription>
         </DialogHeader>
 
-        {checkingOut ? (
-          <div className="space-y-2">
-            <PaymentTestModeBanner />
-            <StripeEmbeddedCheckout priceId={PLAN_PRICE_IDS[plan]} returnUrl={returnUrl} />
-            <Button variant="ghost" className="w-full" onClick={() => setCheckingOut(false)}>
-              {t("common.back") ?? "Back"}
-            </Button>
-          </div>
-        ) : (
-          <>
-            <ul className="space-y-2.5 py-1">
-              {features.map((k) => (
-                <li key={k} className="flex items-start gap-2 text-sm">
-                  <Check className="mt-0.5 size-4 shrink-0 text-sage-600" />
-                  <span>{t(k)}</span>
-                </li>
-              ))}
-            </ul>
+        <ul className="space-y-2.5 py-1">
+          {features.map((k) => (
+            <li key={k} className="flex items-start gap-2 text-sm">
+              <Check className="mt-0.5 size-4 shrink-0 text-sage-600" />
+              <span>{t(k)}</span>
+            </li>
+          ))}
+        </ul>
 
-            <PlanGrid plan={plan} onSelect={setPlan} />
+        <PlanGrid plan={plan} onSelect={setPlan} />
 
-            <DialogFooter className="sm:justify-stretch">
-              <Button className="w-full" onClick={() => setCheckingOut(true)}>
-                <Sparkles className="size-4" /> {t("pro.upgrade")}
-              </Button>
-            </DialogFooter>
-          </>
+        <p className="text-center text-[11px] leading-snug text-sage-600">
+          {t("pro.store.billed_by_apple")}
+        </p>
+
+        {note && (
+          <p className="rounded-2xl bg-sage-50 p-3 text-center text-xs text-sage-700 ring-1 ring-sage-200">
+            {note}
+          </p>
         )}
+
+        <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+          <Button className="w-full" disabled={busy !== null} onClick={() => run("buy")}>
+            <Apple className="size-4" />{" "}
+            {busy === "buy" ? t("pro.store.opening") : t("pro.store.buy_with_apple")}
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full"
+            disabled={busy !== null}
+            onClick={() => run("restore")}
+          >
+            {busy === "restore" ? t("pro.store.restoring") : t("pro.store.restore")}
+          </Button>
+          {!isStoreKitSupportedOnPlatform() && (
+            <p className="text-center text-[11px] text-sage-600">{t("pro.store.ios_only")}</p>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -230,12 +240,8 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
 function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, lang } = useT();
   const { settings, refresh } = useSettings();
-  const cancelFn = useServerFn(cancelStripeSubscription);
-  const resumeFn = useServerFn(resumeStripeSubscription);
-  const portalFn = useServerFn(createPortalSession);
   const syncFn = useServerFn(syncSubscriptionStatus);
-  const [confirmCancel, setConfirmCancel] = useState(false);
-  const [changePlanOpen, setChangePlanOpen] = useState(false);
+  const syncPurchaseFn = useServerFn(syncStoreKitPurchase);
   const [busy, setBusy] = useState(false);
 
   const since = settings.proSince ?? new Date().toISOString();
@@ -247,16 +253,15 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
   const isFamily = isFamilyPlan(settings.proPlan);
   const childCount = settings.children.length;
   const price = t(`pro.price.${settings.proPlan}`);
-  const pastDue = settings.proStatus === "past_due";
 
-  // Reconcile with Stripe every time the dashboard opens so the shown plan,
-  // card and renewal date can never drift from the real subscription.
+  // Re-check the App Store entitlement every time the dashboard opens so the
+  // shown plan and renewal date can never drift from the real subscription.
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     (async () => {
       try {
-        await syncFn({ data: { environment: getStripeEnvironment() } });
+        await syncFn({ data: {} });
       } catch {
         /* keep showing the cached state */
       }
@@ -267,206 +272,90 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
     };
   }, [open, syncFn, refresh]);
 
-  const openPortal = async () => {
-    const res = await portalFn({
-      data: {
-        environment: getStripeEnvironment(),
-        returnUrl: typeof window !== "undefined" ? window.location.href : undefined,
-      },
-    });
-    // The Stripe portal refuses to render in an iframe — always a new tab.
-    if ("url" in res && res.url) window.open(res.url, "_blank", "noopener,noreferrer");
-    else toast.error("error" in res ? res.error : t("pro.error"));
+  const restore = async () => {
+    setBusy(true);
+    try {
+      const res = await restorePurchases();
+      if (res.status === "restored" || res.status === "purchased") {
+        const sync = await syncPurchaseFn({ data: { transactions: res.transactions } });
+        if ("error" in sync) throw new Error(sync.error);
+        await refresh();
+        toast.success(t("pro.store.restored"));
+      } else if (res.status === "unavailable") {
+        toast(res.reason === "wrong-platform" ? t("pro.store.ios_only") : t("pro.store.need_app"));
+      } else if (res.status === "nothing-to-restore") {
+        toast(t("pro.store.nothing_to_restore"));
+      }
+    } catch {
+      toast.error(t("pro.store.restore_failed"));
+    } finally {
+      setBusy(false);
+    }
   };
-
-  return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-600 text-primary-foreground">
-              <Crown className="size-6" />
-            </div>
-            <DialogTitle className="text-center">{t("pro.manage_title")}</DialogTitle>
-            <DialogDescription className="text-center">
-              {pastDue
-                ? t("pro.status.past_due")
-                : cancelling
-                  ? t("pro.status.cancelling")
-                  : t("pro.status.active")}
-            </DialogDescription>
-          </DialogHeader>
-
-          {pastDue && (
-            <div className="rounded-2xl bg-destructive/10 p-3 text-xs text-destructive ring-1 ring-destructive/20">
-              <p>{t("pro.past_due_desc")}</p>
-              <button onClick={openPortal} className="mt-1 font-semibold underline">
-                {t("pro.fix_payment")}
-              </button>
-            </div>
-          )}
-
-          {isFamily && (
-            <p
-              className={`rounded-2xl p-3 text-xs ring-1 ${
-                cancelling
-                  ? "bg-destructive/10 text-destructive ring-destructive/20"
-                  : "bg-sage-50 text-sage-700 ring-sage-200"
-              }`}
-            >
-              {cancelling
-                ? t("pro.family.children_lose", {
-                    count: String(childCount),
-                    date: formatDate(nextDate, lang),
-                  })
-                : t("pro.family.children_active", { count: String(childCount) })}
-            </p>
-          )}
-
-          <div className="space-y-2">
-            <InfoRow
-              icon={<Sparkles className="size-4" />}
-              label={t("pro.plan")}
-              value={`${t(`pro.plan.${settings.proPlan}`)} · ${price}`}
-            />
-            <InfoRow
-              icon={<Calendar className="size-4" />}
-              label={cancelling ? t("pro.ends_on") : t("pro.next_billing")}
-              value={formatDate(nextDate, lang)}
-            />
-            <InfoRow
-              icon={<RefreshCw className="size-4" />}
-              label={t("pro.member_since")}
-              value={formatDate(sinceDate, lang)}
-            />
-            <InfoRow
-              icon={<CreditCard className="size-4" />}
-              label={t("pro.payment_method")}
-              value={settings.proPaymentMethod || t("pro.no_card")}
-              action={
-                <button
-                  onClick={openPortal}
-                  className="text-xs font-medium text-sage-700 hover:underline"
-                >
-                  {t("pro.update")}
-                </button>
-              }
-            />
-          </div>
-
-          <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-            <Button variant="outline" className="w-full" onClick={() => setChangePlanOpen(true)}>
-              {t("pro.change_plan")}
-            </Button>
-            {cancelling ? (
-              <Button
-                className="w-full"
-                disabled={busy}
-                onClick={async () => {
-                  setBusy(true);
-                  try {
-                    const res = await resumeFn({ data: { environment: getStripeEnvironment() } });
-                    if ("error" in res) throw new Error(res.error);
-                    await refresh();
-                    toast.success(t("pro.resumed"));
-                  } catch {
-                    toast.error(t("pro.error"));
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                <RefreshCw className="size-4" /> {t("pro.resume")}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full text-destructive hover:text-destructive"
-                onClick={() => setConfirmCancel(true)}
-              >
-                <X className="size-4" /> {t("pro.cancel")}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <ChangePlanDialog open={changePlanOpen} onOpenChange={setChangePlanOpen} />
-
-      <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("pro.cancel_confirm_title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("pro.cancel_confirm_desc", { date: formatDate(nextDate, lang) })}
-              {isFamily && childCount > 0
-                ? ` ${t("pro.cancel_confirm_family", { count: String(childCount), date: formatDate(nextDate, lang) })}`
-                : ""}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("pro.keep")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                try {
-                  const res = await cancelFn({ data: { environment: getStripeEnvironment() } });
-                  if ("error" in res) throw new Error(res.error);
-                  await refresh();
-                  toast(
-                    t("pro.cancelled_on", {
-                      date: formatDate(nextDate, lang),
-                    }),
-                  );
-                } catch {
-                  toast.error(t("pro.error"));
-                }
-                setConfirmCancel(false);
-                onOpenChange(false);
-              }}
-            >
-              {t("pro.confirm_cancel")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
-
-function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { t } = useT();
-  const { settings, refresh } = useSettings();
-  const changeFn = useServerFn(changeStripePlan);
-  const [plan, setPlan] = useState<SubPlan>(settings.proPlan);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("pro.change_plan")}</DialogTitle>
-          <DialogDescription>{t("pro.change_plan_desc")}</DialogDescription>
+          <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-600 text-primary-foreground">
+            <Crown className="size-6" />
+          </div>
+          <DialogTitle className="text-center">{t("pro.manage_title")}</DialogTitle>
+          <DialogDescription className="text-center">
+            {cancelling ? t("pro.status.cancelling") : t("pro.status.active")}
+          </DialogDescription>
         </DialogHeader>
-        <PlanGrid plan={plan} onSelect={setPlan} />
 
-        <DialogFooter>
-          <Button
-            className="w-full"
-            disabled={plan === settings.proPlan}
-            onClick={async () => {
-              try {
-                const res = await changeFn({
-                  data: { priceId: PLAN_PRICE_IDS[plan], environment: getStripeEnvironment() },
-                });
-                if ("error" in res) throw new Error(res.error);
-                await refresh();
-                toast.success(t("pro.plan_changed"));
-              } catch {
-                toast.error(t("pro.error"));
-              }
-              onOpenChange(false);
-            }}
+        {isFamily && (
+          <p
+            className={`rounded-2xl p-3 text-xs ring-1 ${
+              cancelling
+                ? "bg-destructive/10 text-destructive ring-destructive/20"
+                : "bg-sage-50 text-sage-700 ring-sage-200"
+            }`}
           >
-            {t("pro.confirm_change")}
+            {cancelling
+              ? t("pro.family.children_lose", {
+                  count: String(childCount),
+                  date: formatDate(nextDate, lang),
+                })
+              : t("pro.family.children_active", { count: String(childCount) })}
+          </p>
+        )}
+
+        <div className="space-y-2">
+          <InfoRow
+            icon={<Sparkles className="size-4" />}
+            label={t("pro.plan")}
+            value={`${t(`pro.plan.${settings.proPlan}`)} · ${price}`}
+          />
+          <InfoRow
+            icon={<Calendar className="size-4" />}
+            label={cancelling ? t("pro.ends_on") : t("pro.next_billing")}
+            value={formatDate(nextDate, lang)}
+          />
+          <InfoRow
+            icon={<RefreshCw className="size-4" />}
+            label={t("pro.member_since")}
+            value={formatDate(sinceDate, lang)}
+          />
+          <InfoRow
+            icon={<Apple className="size-4" />}
+            label={t("pro.payment_method")}
+            value={settings.proPaymentMethod || t("pro.store.apple_id")}
+          />
+        </div>
+
+        <p className="text-center text-[11px] leading-snug text-sage-600">
+          {t("pro.store.manage_note")}
+        </p>
+
+        <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+          <Button className="w-full" onClick={() => openManageSubscriptions()}>
+            <Apple className="size-4" /> {t("pro.store.manage_in_appstore")}
+          </Button>
+          <Button variant="ghost" className="w-full" disabled={busy} onClick={restore}>
+            {busy ? t("pro.store.restoring") : t("pro.store.restore")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -22,7 +22,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicPaymentsAppleNotificationsRouteImport } from './routes/api/public/payments/apple-notifications'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -89,10 +89,10 @@ const ApiPublicIngestStepsRoute = ApiPublicIngestStepsRouteImport.update({
   path: '/api/public/ingest-steps',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPaymentsWebhookRoute =
-  ApiPublicPaymentsWebhookRouteImport.update({
-    id: '/api/public/payments/webhook',
-    path: '/api/public/payments/webhook',
+const ApiPublicPaymentsAppleNotificationsRoute =
+  ApiPublicPaymentsAppleNotificationsRouteImport.update({
+    id: '/api/public/payments/apple-notifications',
+    path: '/api/public/payments/apple-notifications',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -110,7 +110,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,7 +126,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,7 +143,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,7 +161,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/api/public/ingest-steps'
-    | '/api/public/payments/webhook'
+    | '/api/public/payments/apple-notifications'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,7 +177,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/api/public/ingest-steps'
-    | '/api/public/payments/webhook'
+    | '/api/public/payments/apple-notifications'
   id:
     | '__root__'
     | '/'
@@ -193,7 +193,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/api/public/ingest-steps'
-    | '/api/public/payments/webhook'
+    | '/api/public/payments/apple-notifications'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,7 +210,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
   ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
-  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicPaymentsAppleNotificationsRoute: typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -306,11 +306,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestStepsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+    '/api/public/payments/apple-notifications': {
+      id: '/api/public/payments/apple-notifications'
+      path: '/api/public/payments/apple-notifications'
+      fullPath: '/api/public/payments/apple-notifications'
+      preLoaderRoute: typeof ApiPublicPaymentsAppleNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -330,7 +330,8 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
   ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
-  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicPaymentsAppleNotificationsRoute:
+    ApiPublicPaymentsAppleNotificationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
