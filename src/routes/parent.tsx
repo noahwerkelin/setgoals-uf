@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, emptyChild, type ChildProfile } from "@/lib/settings";
-import { issueChildCode } from "@/lib/children.functions";
+import { issueChildCode, deleteChild } from "@/lib/children.functions";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 import {
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/parent")({
@@ -53,6 +55,7 @@ function Page() {
   const [apps, setApps] = useState(INITIAL_APPS);
   const [proOpen, setProOpen] = useState(false);
   const [editing, setEditing] = useState<ChildProfile | null>(null);
+  const [deleting, setDeleting] = useState<ChildProfile | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [editingChildST, setEditingChildST] = useState<ChildProfile | null>(null);
   const [editingMyST, setEditingMyST] = useState(false);
@@ -194,9 +197,18 @@ function Page() {
     copyCode(c.code);
   };
 
-  const remove = (id: string) => {
-    update("children", settings.children.filter((c) => c.id !== id));
+  const remove = async (child: ChildProfile, password: string): Promise<boolean> => {
+    try {
+      await deleteChild({ data: { childId: child.id, password } });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error";
+      toast.error(/password/i.test(msg) ? t("delete.wrong_password") : msg);
+      return false;
+    }
+    await update("children", settings.children.filter((c) => c.id !== child.id));
+    await refresh();
     toast.success(t("parent.child.removed"));
+    return true;
   };
 
 
@@ -364,7 +376,7 @@ function Page() {
                       <Pencil className="size-3.5" />
                     </button>
                     <button
-                      onClick={() => remove(k.id)}
+                      onClick={() => setDeleting(k)}
                       aria-label={t("parent.child.delete")}
                       className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
                     >
@@ -480,6 +492,19 @@ function Page() {
         onSave={save}
       />
 
+      <DeleteChildDialog
+        child={deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        onConfirm={async (pw) => {
+          if (!deleting) return false;
+          const ok = await remove(deleting, pw);
+          if (ok) setDeleting(null);
+          return ok;
+        }}
+      />
+
+
+
       <ScreenTimeDialog
         open={editingMyST}
         onOpenChange={setEditingMyST}
@@ -506,6 +531,66 @@ function Page() {
     </AppShell>
   );
 }
+
+function DeleteChildDialog({
+  child,
+  onOpenChange,
+  onConfirm,
+}: {
+  child: ChildProfile | null;
+  onOpenChange: (o: boolean) => void;
+  onConfirm: (password: string) => Promise<boolean>;
+}) {
+  const { t } = useT();
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const name = child?.name || "—";
+
+  useEffect(() => {
+    if (child) {
+      setPw("");
+      setBusy(false);
+    }
+  }, [child]);
+
+  return (
+    <Dialog open={child !== null} onOpenChange={onOpenChange}>
+      <DialogContent className="rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>{t("parent.child.delete_title", { n: name })}</DialogTitle>
+          <DialogDescription>{t("parent.child.delete_desc", { n: name })}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="del-child-pw">{t("parent.child.delete_pw")}</Label>
+          <Input
+            id="del-child-pw"
+            type="password"
+            autoComplete="current-password"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t("settings.cancel")}
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={!pw || busy}
+            onClick={async () => {
+              setBusy(true);
+              const ok = await onConfirm(pw);
+              if (!ok) setBusy(false);
+            }}
+          >
+            {busy ? t("parent.child.deleting") : t("parent.child.delete_confirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (

@@ -130,3 +130,69 @@ export const redeemChildCode = createServerFn({ method: "POST" })
 
     return { email, password };
   });
+
+const DeleteInput = z.object({
+  childId: z.string().uuid(),
+  password: z.string().min(1),
+});
+
+/**
+ * Parent-only: permanently delete a child profile and, when the child has
+ * joined, their auth account (which signs them out everywhere).
+ * Requires the parent's password as confirmation.
+ */
+export const deleteChild = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => DeleteInput.parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase, userId, claims } = context;
+    const email = (claims as { email?: string }).email;
+    if (!email) throw new Error("Password confirmation is not available for this account.");
+
+    // Re-authenticate the parent with a throwaway client (no session persistence).
+    const { createClient } = await import("@supabase/supabase-js");
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const check = createClient(process.env.SUPABASE_URL!, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+          const h = new Headers(init?.headers);
+          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+          h.set("apikey", key);
+          return fetch(input, { ...init, headers: h });
+        },
+      },
+    });
+    const { error: pwErr } = await check.auth.signInWithPassword({ email, password: data.password });
+    if (pwErr) throw new Error("Incorrect password.");
+    await check.auth.signOut();
+
+    const { data: child, error } = await supabase
+      .from("children")
+      .select("id, parent_id, auth_user_id")
+      .eq("id", data.childId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!child || child.parent_id !== userId) throw new Error("Not found");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const childUserId = child.auth_user_id as string | null;
+
+    if (childUserId) {
+      await supabaseAdmin.from("parent_child_relationships").delete().eq("child_user_id", childUserId);
+      await supabaseAdmin.from("activity_steps").delete().eq("user_id", childUserId);
+      await supabaseAdmin.from("earned_balances").delete().eq("user_id", childUserId);
+      await supabaseAdmin.from("streaks").delete().eq("user_id", childUserId);
+      await supabaseAdmin.from("restriction_settings").delete().eq("user_id", childUserId);
+      await supabaseAdmin.from("user_settings").delete().eq("user_id", childUserId);
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", childUserId);
+      await supabaseAdmin.from("profiles").delete().eq("id", childUserId);
+    }
+
+    await supabaseAdmin.from("children").delete().eq("id", child.id);
+    if (childUserId) {
+      const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(childUserId);
+      if (delErr) throw new Error(delErr.message);
+    }
+    return { ok: true };
+  });
