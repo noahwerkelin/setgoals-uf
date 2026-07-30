@@ -8,6 +8,8 @@ import { FriendsCard } from "@/components/FriendsCard";
 import { useT } from "@/lib/i18n";
 import { currentStreak, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
 import { useTodaySteps } from "@/lib/steps";
+import { fileToSquareDataUrl } from "@/lib/avatar";
+
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
