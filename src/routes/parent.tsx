@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n";
 import { useSettings, emptyChild, MAX_CHILDREN, type ChildProfile } from "@/lib/settings";
 import { issueChildCode, deleteChild, grantScreenTime } from "@/lib/children.functions";
 import { ProUpgradeDialog } from "@/components/Pro";
+import { ChildAvatarPicker, ChildAvatar, CHILD_EMOJIS } from "@/components/ChildAvatarPicker";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -45,7 +46,7 @@ const INITIAL_APPS: { key: string; state: AppState }[] = [
   { key: "cat.utilities", state: "approved" },
 ];
 
-const AVATAR_OPTIONS = ["🌱", "🌳", "🐻", "🦊", "🐼", "🦁", "🐸", "🦄", "⭐️", "🚀"];
+const AVATAR_OPTIONS = CHILD_EMOJIS;
 
 type ScreenTimeEdit = { stepsPer30: number; dailyCapHours: number };
 
@@ -371,9 +372,7 @@ function Page() {
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="grid size-11 place-items-center rounded-full bg-sage-200 text-xl">
-                      {k.avatar}
-                    </span>
+                    <ChildAvatar avatar={k.avatar} name={k.name} className="size-11 text-xl" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate">{k.name}</p>
                       <p className="text-xs text-sage-600">{ageFromBirthday(k.birthday, t)}</p>
