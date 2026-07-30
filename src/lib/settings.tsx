@@ -134,9 +134,17 @@ type ChildRow = {
   code: string;
   steps_per_30: number;
   daily_cap_hours: number;
+  bedtime?: string | null;
+  auth_user_id?: string | null;
+  invitation_status?: string | null;
+  invitation_expires_at?: string | null;
 };
 
-function mapChild(c: ChildRow): ChildProfile {
+export function mapChild(c: ChildRow): ChildProfile {
+  const expired =
+    !c.auth_user_id &&
+    c.invitation_expires_at != null &&
+    new Date(c.invitation_expires_at).getTime() < Date.now();
   return {
     id: c.id,
     name: c.name,
@@ -146,8 +154,34 @@ function mapChild(c: ChildRow): ChildProfile {
     code: c.code,
     stepsPer30: c.steps_per_30,
     dailyCapHours: c.daily_cap_hours,
+    bedtime: c.bedtime ?? "",
+    authUserId: c.auth_user_id ?? null,
+    invitationStatus: (c.auth_user_id
+      ? "connected"
+      : expired
+        ? "expired"
+        : ((c.invitation_status as InvitationStatus) ?? "pending")) as InvitationStatus,
+    invitationExpiresAt: c.invitation_expires_at ?? null,
   };
 }
+
+export function emptyChild(): ChildProfile {
+  return {
+    id: crypto.randomUUID(),
+    name: "",
+    birthday: "",
+    avatar: "🌱",
+    dailyGoal: 8000,
+    code: genChildCode(),
+    stepsPer30: 1000,
+    dailyCapHours: 3,
+    bedtime: "",
+    authUserId: null,
+    invitationStatus: "pending",
+    invitationExpiresAt: null,
+  };
+}
+
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
