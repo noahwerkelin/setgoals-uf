@@ -576,6 +576,12 @@ const DICTS: Record<Lang, Dict> = {
     "parent.child.created": "Child profile created",
     "parent.child.updated": "Profile updated",
     "parent.child.removed": "Child removed",
+    "parent.child.delete_title": "Delete {n}?",
+    "parent.child.delete_desc":
+      "This permanently deletes {n}'s profile and account, including all activity data. They will be signed out immediately. This cannot be undone.",
+    "parent.child.delete_confirm": "Delete child",
+    "parent.child.delete_pw": "Confirm with your password",
+    "parent.child.deleting": "Deleting…",
     "parent.child.copy_code": "Copy code",
     "parent.child.empty": "No children yet. Add one to get started.",
     "parent.child.code_help": "Your child enters this code once to join. It expires in 7 days.",
