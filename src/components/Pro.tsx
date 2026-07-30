@@ -250,20 +250,8 @@ function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <DialogTitle>{t("pro.change_plan")}</DialogTitle>
           <DialogDescription>{t("pro.change_plan_desc")}</DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-2">
-          {(["monthly", "yearly"] as SubPlan[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPlan(p)}
-              className={`rounded-2xl p-3 text-left ring-1 transition-colors ${
-                plan === p ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/10"
-              }`}
-            >
-              <p className="text-xs uppercase tracking-wide opacity-80">{t(`pro.plan.${p}`)}</p>
-              <p className="text-sm font-semibold">{t(`pro.price.${p}`)}</p>
-            </button>
-          ))}
-        </div>
+        <PlanGrid plan={plan} onSelect={setPlan} />
+
         <DialogFooter>
           <Button
             className="w-full"
