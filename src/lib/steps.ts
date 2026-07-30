@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
+import { useDayKey } from "./day";
 
 function todayISO() {
   const d = new Date();
@@ -25,6 +26,8 @@ export type DayTotals = {
 export function useTodaySteps() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  // Re-keys at local midnight so today's totals reset with the new day.
+  const dayKey = useDayKey();
 
   // realtime subscribe
   useEffect(() => {
@@ -46,7 +49,7 @@ export function useTodaySteps() {
   }, [user, qc]);
 
   return useQuery({
-    queryKey: ["today-steps", user?.id],
+    queryKey: ["today-steps", user?.id, dayKey],
     enabled: !!user,
     queryFn: async (): Promise<DayTotals> => {
       const { data } = await supabase
