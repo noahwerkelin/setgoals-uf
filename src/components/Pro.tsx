@@ -360,11 +360,12 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
             <AlertDialogAction
               onClick={async () => {
                 try {
-                  const res = await cancelFn({});
+                  const res = await cancelFn({ data: { environment: getStripeEnvironment() } });
+                  if ("error" in res) throw new Error(res.error);
                   await refresh();
                   toast(
                     t("pro.cancelled_on", {
-                      date: formatDate(new Date(res.expiresAt ?? nextDate), lang),
+                      date: formatDate(nextDate, lang),
                     }),
                   );
                 } catch {
