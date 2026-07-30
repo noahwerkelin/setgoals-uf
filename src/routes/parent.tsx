@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, emptyChild, type ChildProfile } from "@/lib/settings";
-import { issueChildCode } from "@/lib/children.functions";
+import { issueChildCode, deleteChild } from "@/lib/children.functions";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 import {
