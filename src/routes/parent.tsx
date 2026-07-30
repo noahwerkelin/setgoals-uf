@@ -53,6 +53,7 @@ function Page() {
   const [apps, setApps] = useState(INITIAL_APPS);
   const [proOpen, setProOpen] = useState(false);
   const [editing, setEditing] = useState<ChildProfile | null>(null);
+  const [deleting, setDeleting] = useState<ChildProfile | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [editingChildST, setEditingChildST] = useState<ChildProfile | null>(null);
   const [editingMyST, setEditingMyST] = useState(false);
