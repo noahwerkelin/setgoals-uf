@@ -69,9 +69,15 @@ function Page() {
       <div className="px-6 space-y-6 pb-8">
         {/* Hero */}
         <section
-          className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-sage-200 via-card to-card p-6 ring-1 ring-black/5 animate-rise"
+          className="relative overflow-hidden rounded-[28px] bg-card p-6 ring-1 ring-black/5 animate-rise"
         >
-          <div className="absolute -right-10 -top-10 size-40 rounded-full bg-sage-300/40 blur-2xl" aria-hidden />
+          <ProfileAura
+            activity={stepsToday / Math.max(1, settings.dailyGoal)}
+            screen={
+              earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours) /
+              Math.max(1, (settings.dailyCapHours || 3) * 60)
+            }
+          />
           <div className="relative flex flex-col items-center text-center gap-3">
             <button
               type="button"
