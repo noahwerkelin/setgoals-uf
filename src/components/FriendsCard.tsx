@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { UserPlus, Users, X, Search } from "lucide-react";
 import {
   Dialog,
@@ -9,7 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
-import { searchUsers, useFriends, type Friend } from "@/lib/friends";
+import { useFriends, type Friend } from "@/lib/friends";
+import { searchUsersByUsername } from "@/lib/friends.functions";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 export function FriendsCard() {
@@ -102,10 +105,15 @@ function AddFriendDialog({
 }) {
   const { t } = useT();
   const [q, setQ] = useState("");
-  const results = useMemo(() => {
-    if (q.trim().length < 2) return [];
-    return searchUsers(q, existing.map((f) => f.username));
-  }, [q, existing]);
+  const search = useServerFn(searchUsersByUsername);
+  const query = q.trim();
+  const { data: found = [] } = useQuery({
+    queryKey: ["user-search", query.toLowerCase()],
+    enabled: open && query.length >= 2,
+    queryFn: () => search({ data: { query } }),
+  });
+  const taken = new Set(existing.map((f) => f.username.toLowerCase()));
+  const results: Friend[] = found.filter((u) => !taken.has(u.username.toLowerCase()));
 
   return (
     <Dialog
