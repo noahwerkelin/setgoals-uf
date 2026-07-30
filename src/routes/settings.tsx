@@ -33,8 +33,7 @@ import { Lock, Palette } from "lucide-react";
 import { awardBadge } from "@/components/Badges";
 import { isUsernameAvailable } from "@/lib/username.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { cancelStripeSubscription } from "@/utils/payments.functions";
-import { getStripeEnvironment } from "@/lib/stripe";
+import { releaseEntitlement } from "@/utils/payments.functions";
 import {
   requestHealthAccess,
   revokeHealthAccess,
@@ -71,7 +70,7 @@ function Page() {
   const [themeOpen, setThemeOpen] = useState(false);
 
   const isChild = settings.role === "child";
-  const cancelSubFn = useServerFn(cancelStripeSubscription);
+  const releaseProFn = useServerFn(releaseEntitlement);
 
   const providerOf = (k: "hk" | "gf"): HealthProvider => (k === "hk" ? "healthkit" : "googlefit");
 
@@ -126,10 +125,12 @@ function Page() {
       toast.error(t("delete.wrong_password"));
       return false;
     }
-    // Stop future charges: the plan runs out at the end of the paid period.
+    // Release the local PRO entitlement. An App Store subscription itself can
+    // only be cancelled by the user in the App Store — we remind them of that.
     if (settings.isPro && !isChild) {
       try {
-        await cancelSubFn({ data: { environment: getStripeEnvironment() } });
+        await releaseProFn({});
+        toast(t("delete.cancel_in_appstore"));
       } catch {
         /* deletion must not be blocked by a billing hiccup */
       }

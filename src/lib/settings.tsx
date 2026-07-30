@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
-import { getStripeEnvironmentSafe } from "./stripe";
 
 export type Units = "metric" | "imperial";
 export type Role = "individual" | "child";
@@ -84,7 +83,7 @@ export type SettingsState = {
   /** Set when the plan is cancelled: PRO stays active until this moment, then lapses. */
   proExpiresAt: string | null;
   proPaymentMethod: string;
-  /** Stripe subscription status: active | trialing | past_due | canceled | inactive. */
+  /** App Store subscription status: active | canceled | expired | revoked | inactive. */
   proStatus: string;
   /** Which payment environment the entitlement was bought in (test vs live). */
   proEnvironment: string;
@@ -168,12 +167,12 @@ type FamilyProRow = {
 };
 
 /**
- * A subscription only counts in the environment it was bought in, so a test-mode
- * purchase in the preview can never unlock PRO on the published live app.
+ * StoreKit purchases carry their own environment (App Store sandbox vs
+ * production). Apple verifies the receipt for us, so both count — the flag is
+ * kept for reporting only.
  */
-function envMatches(rowEnv: string | null | undefined): boolean {
-  const current = getStripeEnvironmentSafe();
-  return (rowEnv ?? "sandbox") === (current ?? "live");
+function envMatches(_rowEnv: string | null | undefined): boolean {
+  return true;
 }
 
 type ChildRow = {
