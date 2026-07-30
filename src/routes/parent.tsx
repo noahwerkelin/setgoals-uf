@@ -97,13 +97,13 @@ function Page() {
     const load = async () => {
       const [act, bal] = await Promise.all([
         supabase.from("activity_steps").select("user_id, day, steps").gte("day", weekStart).lte("day", day).in("user_id", linkedIds),
-        supabase.from("earned_balances").select("user_id, day, consumed_min").gte("day", weekStart).lte("day", day).in("user_id", linkedIds),
+        supabase.from("earned_balances").select("user_id, day, consumed_min, bonus_min").gte("day", weekStart).lte("day", day).in("user_id", linkedIds),
       ]);
       if (cancelled) return;
-      const map: Record<string, { steps: number; usedMin: number }> = {};
+      const map: Record<string, { steps: number; usedMin: number; bonusMin: number }> = {};
       const week: Record<string, Record<string, { steps: number; usedMin: number }>> = {};
       for (const id of linkedIds) {
-        map[id] = { steps: 0, usedMin: 0 };
+        map[id] = { steps: 0, usedMin: 0, bonusMin: 0 };
         week[id] = {};
       }
       for (const r of act.data ?? []) {
@@ -116,7 +116,8 @@ function Page() {
         const w = (week[r.user_id] ??= {});
         const cell = (w[r.day] ??= { steps: 0, usedMin: 0 });
         cell.usedMin = r.consumed_min ?? 0;
-        if (r.day === day) map[r.user_id] = { ...map[r.user_id], usedMin: r.consumed_min ?? 0 };
+        if (r.day === day)
+          map[r.user_id] = { ...map[r.user_id], usedMin: r.consumed_min ?? 0, bonusMin: r.bonus_min ?? 0 };
       }
       setChildStats(map);
       setChildWeek(week);
