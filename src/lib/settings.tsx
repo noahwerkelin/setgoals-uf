@@ -429,9 +429,10 @@ export function formatDistance(km: number, units: Units, digits = 1): string {
 
 export function genChildCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "";
-  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return s;
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const out = [...bytes].map((b) => chars[b % chars.length]);
+  return `${out.slice(0, 4).join("")}-${out.slice(4).join("")}`;
 }
 
 export function earnedMinFromSteps(steps: number, stepsPer30: number, dailyCapHours: number): number {

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Shield, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone, Infinity as InfinityIcon, Zap } from "lucide-react";
+import { Shield, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone, Infinity as InfinityIcon, Zap, Link2, Share2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
