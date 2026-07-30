@@ -558,7 +558,7 @@ function Page() {
           const { error } = await supabase.auth.updateUser({ email: v });
           if (error) return toast.error(error.message);
           update("email", v);
-          toast.success("Confirmation email sent. Check your inbox.");
+          toast.success(t("account.email_confirm_sent"));
         }}
         t={t}
       />
@@ -569,7 +569,7 @@ function Page() {
         onSave={async (v) => {
           const { error } = await supabase.auth.updateUser({ password: v });
           if (error) return toast.error(error.message);
-          toast.success("Password updated");
+          toast.success(t("account.password_updated"));
         }}
         t={t}
       />

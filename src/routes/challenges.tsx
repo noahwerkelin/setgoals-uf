@@ -293,18 +293,18 @@ function Leaderboard() {
               period === p ? "bg-sage-600 text-primary-foreground" : "text-sage-700"
             }`}
           >
-            {p === "alltime" ? "All-time" : p}
+            {t(`lb.${p}`)}
           </button>
         ))}
       </div>
 
       {isLoading ? (
         <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
-          Loading leaderboard…
+          {t("lb.loading")}
         </p>
       ) : top.length === 0 ? (
         <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
-          No verified activity yet. Be the first!
+          {t("lb.empty")}
         </p>
       ) : (
         <ol className="space-y-2">

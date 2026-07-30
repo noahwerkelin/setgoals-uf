@@ -12,6 +12,7 @@ const Msg = z.object({
 
 const Input = z.object({
   messages: z.array(Msg).min(1).max(40),
+  lang: z.enum(["en", "sv"]).optional(),
   location: z
     .object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) })
     .optional(),
@@ -132,7 +133,8 @@ export const coachChat = createServerFn({ method: "POST" })
     const system = `You are SetGoals' built-in wellness coach. The user's name is ${displayName}.
 You help them earn screen time by being active, suggest nearby places to walk/run/hike, and answer questions about their current step + screen time progress.
 Always call the right tool when the user asks about their stats, screen time, or nearby places — never invent numbers or locations. Be concise (2-4 short sentences), warm, and concrete.
-Units preference: ${settings?.units ?? "metric"}.`;
+Units preference: ${settings?.units ?? "metric"}.
+Always reply in ${data.lang === "sv" ? "Swedish (svenska)" : "English"}, regardless of the language the user writes in.`;
 
     const result = await generateText({
       model,
@@ -142,6 +144,9 @@ Units preference: ${settings?.units ?? "metric"}.`;
       stopWhen: stepCountIs(6),
     });
 
-    const reply = result.text?.trim() || "I'm here — could you ask that another way?";
+    const reply = result.text?.trim() ||
+      (data.lang === "sv"
+        ? "Jag är här — kan du ställa frågan på ett annat sätt?"
+        : "I'm here — could you ask that another way?");
     return { reply };
   });

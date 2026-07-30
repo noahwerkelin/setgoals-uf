@@ -22,7 +22,7 @@ export const Route = createFileRoute("/coach")({
 type Msg = { role: "user" | "assistant"; content: string };
 
 function Page() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { settings } = useSettings();
   const sendChat = useServerFn(coachChat);
   const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: t("coach.seed") }]);
@@ -59,6 +59,7 @@ function Page() {
         data: {
           messages: next.map((m) => ({ role: m.role, content: m.content })),
           location: locRef.current ?? undefined,
+          lang,
         },
       });
       setMsgs((m) => [...m, { role: "assistant", content: res.reply }]);

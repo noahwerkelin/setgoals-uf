@@ -394,6 +394,38 @@ const DICTS: Record<Lang, Dict> = {
     "auth.password_updated": "Password updated. Please sign in.",
     "auth.back_to_signin": "Back to sign in",
     "auth.code_welcome": "Welcome, {name}!",
+    "auth.display_name": "Display name",
+    "auth.username_ph": "Username (letters, numbers, _)",
+    "auth.password_min": "Password (min 8 chars)",
+    "auth.signing_in": "Signing in…",
+    "auth.creating": "Creating…",
+    "auth.sending": "Sending…",
+    "auth.joining": "Joining…",
+    "auth.saving": "Saving…",
+    "auth.no_account": "No account?",
+    "auth.create_one": "Create one",
+    "auth.username_invalid": "Username must be 3–20 chars: letters, numbers, or underscores",
+    "auth.username_taken": "That username is already taken.",
+    "auth.username_check_failed": "Could not verify username. Try again.",
+    "auth.confirm_email": "Check your email to confirm your account",
+    "auth.code_len_error": "Enter the 8-character code, e.g. A7K9-PQ42",
+    "auth.code_failed": "Could not use this code.",
+    "auth.reset_enter_confirm": "Enter and confirm your new password.",
+    "auth.save_password": "Save password",
+    "account.email_confirm_sent": "Confirmation email sent. Check your inbox.",
+    "account.password_updated": "Password updated",
+    "lb.loading": "Loading leaderboard…",
+    "lb.empty": "No verified activity yet. Be the first!",
+    "lb.alltime": "All-time",
+    "lb.daily": "Daily",
+    "lb.weekly": "Weekly",
+    "lb.monthly": "Monthly",
+    "nf.title": "Page not found",
+    "nf.desc": "The page you're looking for doesn't exist or has been moved.",
+    "nf.home": "Go home",
+    "err.title": "This page didn't load",
+    "err.desc": "Something went wrong on our end. You can try refreshing or head back home.",
+    "err.retry": "Try again",
 
     "settings.title": "Settings",
     "settings.earning": "Earning rules",
@@ -1052,6 +1084,38 @@ const DICTS: Record<Lang, Dict> = {
     "auth.password_updated": "Lösenord uppdaterat. Logga in.",
     "auth.back_to_signin": "Tillbaka till inloggning",
     "auth.code_welcome": "Välkommen, {name}!",
+    "auth.display_name": "Visningsnamn",
+    "auth.username_ph": "Användarnamn (bokstäver, siffror, _)",
+    "auth.password_min": "Lösenord (minst 8 tecken)",
+    "auth.signing_in": "Loggar in…",
+    "auth.creating": "Skapar…",
+    "auth.sending": "Skickar…",
+    "auth.joining": "Ansluter…",
+    "auth.saving": "Sparar…",
+    "auth.no_account": "Inget konto?",
+    "auth.create_one": "Skapa ett",
+    "auth.username_invalid": "Användarnamnet måste vara 3–20 tecken: bokstäver, siffror eller understreck",
+    "auth.username_taken": "Det användarnamnet är upptaget.",
+    "auth.username_check_failed": "Kunde inte kontrollera användarnamnet. Försök igen.",
+    "auth.confirm_email": "Kolla din e-post för att bekräfta ditt konto",
+    "auth.code_len_error": "Ange den 8 tecken långa koden, t.ex. A7K9-PQ42",
+    "auth.code_failed": "Kunde inte använda den här koden.",
+    "auth.reset_enter_confirm": "Ange och bekräfta ditt nya lösenord.",
+    "auth.save_password": "Spara lösenord",
+    "account.email_confirm_sent": "Bekräftelsemail skickat. Kolla din inkorg.",
+    "account.password_updated": "Lösenord uppdaterat",
+    "lb.loading": "Laddar topplista…",
+    "lb.empty": "Ingen verifierad aktivitet ännu. Bli först!",
+    "lb.alltime": "Genom tiderna",
+    "lb.daily": "Dagligen",
+    "lb.weekly": "Veckovis",
+    "lb.monthly": "Månadsvis",
+    "nf.title": "Sidan hittades inte",
+    "nf.desc": "Sidan du letar efter finns inte eller har flyttats.",
+    "nf.home": "Till startsidan",
+    "err.title": "Sidan kunde inte laddas",
+    "err.desc": "Något gick fel hos oss. Prova att ladda om eller gå tillbaka till startsidan.",
+    "err.retry": "Försök igen",
 
     "settings.title": "Inställningar",
     "settings.earning": "Intjäningsregler",
@@ -1355,4 +1419,18 @@ export function useT() {
   const ctx = useContext(I18nCtx);
   if (!ctx) throw new Error("useT must be used inside I18nProvider");
   return ctx;
+}
+
+/** Read the persisted language without needing the provider (safe in error boundaries). */
+export function getStoredLang(): Lang {
+  if (typeof window === "undefined") return "en";
+  const stored = localStorage.getItem("sg.lang");
+  return stored === "sv" ? "sv" : "en";
+}
+
+/** Translate without the provider. */
+export function translate(lang: Lang, key: string, vars?: Record<string, string | number>) {
+  let s = DICTS[lang][key] ?? DICTS.en[key] ?? key;
+  if (vars) for (const k in vars) s = s.replace(`{${k}}`, String(vars[k]));
+  return s;
 }
