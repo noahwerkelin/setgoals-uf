@@ -87,8 +87,12 @@ function Page() {
   };
 
   const save = async (c: ChildProfile) => {
-    if (!c.name.trim()) {
-      toast.error(t("auth.required"));
+    if (!c.name.trim() || c.username.trim().length < 3) {
+      toast.error(t("parent.child.username_required"));
+      return;
+    }
+    if (settings.children.some((x) => x.id !== c.id && x.username.toLowerCase() === c.username.toLowerCase())) {
+      toast.error(t("parent.child.username_taken"));
       return;
     }
     if (isNew) {
