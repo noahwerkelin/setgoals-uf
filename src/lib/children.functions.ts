@@ -201,6 +201,8 @@ const GrantInput = z.object({
   childId: z.string().uuid(),
   minutes: z.number().int().min(1).max(600),
   note: z.string().trim().max(140).optional(),
+  // Caller's local calendar day (YYYY-MM-DD); gifted minutes expire at their local midnight.
+  day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
 /**
@@ -225,7 +227,11 @@ export const grantScreenTime = createServerFn({ method: "POST" })
     if (!childUserId) throw new Error("This child hasn't joined yet.");
 
     const now = new Date();
-    const day = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+    const utcDay = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+    // Accept the caller's local day only when it is within one day of UTC now.
+    const withinADay = (d: string) =>
+      Math.abs(new Date(`${d}T00:00:00Z`).getTime() - new Date(`${utcDay}T00:00:00Z`).getTime()) <= 86_400_000;
+    const day = data.day && withinADay(data.day) ? data.day : utcDay;
 
     const { data: existing, error: readErr } = await supabase
       .from("earned_balances")

@@ -6,6 +6,7 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, emptyChild, MAX_CHILDREN, type ChildProfile } from "@/lib/settings";
 import { issueChildCode, deleteChild, grantScreenTime } from "@/lib/children.functions";
+import { localDayKey } from "@/lib/day";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { ChildAvatarPicker, ChildAvatar, CHILD_EMOJIS } from "@/components/ChildAvatarPicker";
 import { toast } from "sonner";
@@ -597,7 +598,7 @@ function GiftScreenTimeDialog({
     if (!child) return;
     setBusy(true);
     try {
-      await grantScreenTime({ data: { childId: child.id, minutes, note: note.trim() || undefined } });
+      await grantScreenTime({ data: { childId: child.id, minutes, note: note.trim() || undefined, day: localDayKey() } });
       toast.success(t("parent.gift.done", { m: minutes, n: name }));
       onOpenChange(false);
     } catch (e) {

@@ -19,6 +19,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getLeaderboard, type LeaderboardRow as LbRow } from "@/lib/leaderboard.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTodaySteps, useWeekSteps } from "@/lib/steps";
+import { useDayKey } from "@/lib/day";
 import {
   todaysDailyChallenges,
   thisWeeksWeeklyChallenges,
@@ -244,10 +245,12 @@ function Leaderboard() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [period, setPeriod] = useState<LbPeriod>("daily");
+  // Rolls over at local midnight so daily standings reset with the new day.
+  const dayKey = useDayKey();
 
   const fetchLb = useServerFn(getLeaderboard);
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["leaderboard", period],
+    queryKey: ["leaderboard", period, dayKey],
     enabled: !!user,
     queryFn: async (): Promise<LbRow[]> =>
       fetchLb({ data: { period } }) as Promise<LbRow[]>,

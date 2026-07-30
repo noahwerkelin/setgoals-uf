@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { localDayKey, useDayKey } from "./day";
 
+/** Daily key used for balances — local calendar day, so it resets at local midnight. */
 export function todayKey(d = new Date()) {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+  return localDayKey(d);
 }
 
 /**
@@ -11,8 +13,10 @@ export function todayKey(d = new Date()) {
  */
 export function useBonusMin(): number {
   const [bonus, setBonus] = useState(0);
+  const day = useDayKey();
 
   useEffect(() => {
+    setBonus(0);
     let cancelled = false;
     const load = async () => {
       const { data: auth } = await supabase.auth.getUser();
@@ -22,7 +26,7 @@ export function useBonusMin(): number {
         .from("earned_balances")
         .select("bonus_min")
         .eq("user_id", uid)
-        .eq("day", todayKey())
+        .eq("day", day)
         .maybeSingle();
       if (!cancelled) setBonus(data?.bonus_min ?? 0);
     };
@@ -35,7 +39,7 @@ export function useBonusMin(): number {
       cancelled = true;
       void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [day]);
 
   return bonus;
 }
