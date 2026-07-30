@@ -86,7 +86,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
       // Never let someone buy a second plan on top of an active one.
       const existingSub = await findSubscription(stripe, userId);
-      if (existingSub) {
+      if (existingSub && ["active", "trialing", "past_due"].includes(existingSub.status)) {
         return { error: "You already have an active subscription. Use Change plan instead." };
       }
 
