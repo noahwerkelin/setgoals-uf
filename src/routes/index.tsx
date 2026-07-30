@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
-import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
 import { useTodaySteps, useHistorySteps } from "@/lib/steps";
 import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
 import { loadProST, computeRolloverMin } from "@/lib/screentime";
@@ -102,12 +102,15 @@ function Home() {
           <h1 className="text-2xl font-semibold tracking-tight">{t(greetingKey)}, {settings.displayName || "Lukas"}</h1>
         </div>
         <Link to="/profile" aria-label="Profile" className="size-10 overflow-hidden rounded-full bg-sage-200 ring-1 ring-black/5 grid place-items-center text-[10px] font-semibold uppercase tracking-widest text-sage-700">
-          {settings.avatar ? (
-            <img src={settings.avatar} alt="" className="size-full object-cover" />
+          {isImageAvatar(settings.avatar) ? (
+            <img src={settings.avatar!} alt="" className="size-full object-cover" />
+          ) : settings.avatar ? (
+            <span className="text-lg leading-none">{settings.avatar}</span>
           ) : (
             (settings.displayName || "LU").slice(0, 2).toUpperCase()
           )}
         </Link>
+
       </header>
 
       <div className="px-6 space-y-6">

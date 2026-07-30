@@ -5,7 +5,7 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
 import { FriendsCard } from "@/components/FriendsCard";
 import { useT } from "@/lib/i18n";
-import { currentStreak, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { currentStreak, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
 import { useTodaySteps } from "@/lib/steps";
 
 export const Route = createFileRoute("/profile")({
@@ -24,6 +24,9 @@ function Page() {
   const { data: today } = useTodaySteps();
   const stepsToday = today?.steps ?? 0;
   const isChild = settings.role === "child";
+  // A linked child's picture is chosen by their parent and synced down.
+  const avatarLocked = !!settings.linkedChild;
+
   const displayName = settings.displayName || settings.username || "You";
   const initials = displayName
     .split(" ")
@@ -72,20 +75,25 @@ function Page() {
           <div className="relative flex flex-col items-center text-center gap-3">
             <button
               type="button"
-              onClick={() => fileRef.current?.click()}
-              className="group relative grid size-24 place-items-center overflow-hidden rounded-full bg-sage-200 ring-4 ring-card shadow-lg shadow-sage-900/10"
+              onClick={() => !avatarLocked && fileRef.current?.click()}
+              disabled={avatarLocked}
+              className="group relative grid size-24 place-items-center overflow-hidden rounded-full bg-sage-200 ring-4 ring-card shadow-lg shadow-sage-900/10 disabled:cursor-default"
               aria-label={t("profile.change_photo")}
             >
-              {settings.avatar ? (
-                <img src={settings.avatar} alt={displayName} className="size-full object-cover" />
+              {isImageAvatar(settings.avatar) ? (
+                <img src={settings.avatar!} alt={displayName} className="size-full object-cover" />
+              ) : settings.avatar ? (
+                <span className="text-4xl leading-none">{settings.avatar}</span>
               ) : (
                 <span className="text-xl font-semibold uppercase tracking-widest text-sage-700">
                   {initials}
                 </span>
               )}
-              <span className="pointer-events-none absolute inset-x-0 bottom-0 flex h-7 items-center justify-center bg-black/45 text-white opacity-0 transition group-hover:opacity-100">
-                <Camera className="size-3.5" />
-              </span>
+              {!avatarLocked && (
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 flex h-7 items-center justify-center bg-black/45 text-white opacity-0 transition group-hover:opacity-100">
+                  <Camera className="size-3.5" />
+                </span>
+              )}
               {uploading && (
                 <span className="absolute inset-0 grid place-items-center bg-black/30 text-[10px] font-medium text-white">
                   …
@@ -107,26 +115,31 @@ function Page() {
               <p className="text-lg font-semibold leading-tight">{displayName}</p>
               <p className="mt-0.5 text-xs text-sage-600">@{settings.username}</p>
             </div>
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="rounded-full bg-sage-700 px-3.5 py-1.5 text-[11px] font-semibold text-white shadow-sm"
-              >
-                {t("profile.change_photo")}
-              </button>
-              {settings.avatar && (
+            {avatarLocked ? (
+              <p className="pt-1 text-[11px] text-sage-600">{t("profile.photo_parent_managed")}</p>
+            ) : (
+              <div className="flex items-center gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => update("avatar", null)}
-                  className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
-                  aria-label={t("profile.remove_photo")}
+                  onClick={() => fileRef.current?.click()}
+                  className="rounded-full bg-sage-700 px-3.5 py-1.5 text-[11px] font-semibold text-white shadow-sm"
                 >
-                  <Trash2 className="size-3.5" />
+                  {t("profile.change_photo")}
                 </button>
-              )}
-            </div>
+                {settings.avatar && (
+                  <button
+                    type="button"
+                    onClick={() => update("avatar", null)}
+                    className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
+                    aria-label={t("profile.remove_photo")}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
+
         </section>
 
         {/* Streak */}

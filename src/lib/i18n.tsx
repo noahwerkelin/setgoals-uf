@@ -202,6 +202,8 @@ const DICTS: Record<Lang, Dict> = {
     "profile.row.settings_sub": "Notifications, integrations, account",
     "profile.change_photo": "Change photo",
     "profile.remove_photo": "Remove photo",
+    "profile.photo_parent_managed": "Your parent chooses your profile picture",
+
     "profile.streak.title": "Daily streak",
     "profile.streak.days": "{n} days",
     "profile.streak.day": "1 day",
@@ -821,6 +823,8 @@ const DICTS: Record<Lang, Dict> = {
     "profile.row.settings_sub": "Notiser, integrationer, konto",
     "profile.change_photo": "Byt bild",
     "profile.remove_photo": "Ta bort bild",
+    "profile.photo_parent_managed": "Din förälder väljer din profilbild",
+
     "profile.streak.title": "Daglig svit",
     "profile.streak.days": "{n} dagar",
     "profile.streak.day": "1 dag",

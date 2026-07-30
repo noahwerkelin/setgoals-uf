@@ -29,7 +29,15 @@ export const CHILD_LOCKED_KEYS = [
   "dailyCapHours",
   "dailyGoal",
   "role",
+  // The parent picks the child's profile picture; it syncs down automatically.
+  "avatar",
 ] as const;
+
+/** Child avatars are emoji chosen by the parent; own-account avatars are uploaded images. */
+export function isImageAvatar(a: string | null | undefined): boolean {
+  return !!a && (a.startsWith("data:") || a.startsWith("http") || a.startsWith("/"));
+}
+
 
 
 export type StreakState = {
@@ -264,7 +272,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       username: p?.username ?? "",
       email: p?.email ?? user.email ?? "",
       password: "",
-      avatar: p?.avatar_url ?? null,
+      // Linked children always show the picture their parent picked for them.
+      avatar: linked ? (linked.avatar ?? p?.avatar_url ?? null) : (p?.avatar_url ?? null),
+
       children: kids.map(mapChild),
       linkedChild: linked,
       streak: {
