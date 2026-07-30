@@ -35,6 +35,12 @@ import { isUsernameAvailable } from "@/lib/username.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { cancelStripeSubscription } from "@/utils/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import {
+  requestHealthAccess,
+  revokeHealthAccess,
+  isProviderSupportedOnPlatform,
+  type HealthProvider,
+} from "@/lib/health-bridge";
 
 
 export const Route = createFileRoute("/settings")({
@@ -55,6 +61,8 @@ function Page() {
   const [capOpen, setCapOpen] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  const [connectNote, setConnectNote] = useState<string | null>(null);
   const [proOpen, setProOpen] = useState(false);
   const [nicknameOpen, setNicknameOpen] = useState(false);
   const [usernameOpen, setUsernameOpen] = useState(false);
@@ -64,6 +72,48 @@ function Page() {
 
   const isChild = settings.role === "child";
   const cancelSubFn = useServerFn(cancelStripeSubscription);
+
+  const providerOf = (k: "hk" | "gf"): HealthProvider => (k === "hk" ? "healthkit" : "googlefit");
+
+  const openConnect = (k: "hk" | "gf") => {
+    setConnectNote(
+      isProviderSupportedOnPlatform(providerOf(k)) ? null : t(k === "hk" ? "health.ios_only" : "health.android_only"),
+    );
+    setConnectKind(k);
+  };
+
+  /** Hand the request to the OS — it owns the permission sheet, not us. */
+  const connectHealth = async (k: "hk" | "gf") => {
+    const provider = providerOf(k);
+    setConnecting(true);
+    setConnectNote(null);
+    try {
+      const res = await requestHealthAccess(provider);
+      if (res.status === "granted") {
+        update(provider === "healthkit" ? "healthkitConnected" : "googlefitConnected", true);
+        toast.success(t("settings.connected"));
+        setConnectKind(null);
+        return;
+      }
+      if (res.status === "denied") setConnectNote(t("health.denied"));
+      else if (res.status === "unavailable")
+        setConnectNote(
+          res.reason === "wrong-platform"
+            ? t(k === "hk" ? "health.ios_only" : "health.android_only")
+            : t(k === "hk" ? "health.needs_ios_app" : "health.needs_android_app"),
+        );
+      else setConnectNote(t("health.error"));
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const disconnectHealth = async (provider: HealthProvider) => {
+    await revokeHealthAccess(provider);
+    update(provider === "healthkit" ? "healthkitConnected" : "googlefitConnected", false);
+    toast(t("settings.disconnect") + " ✓");
+  };
+
 
   const deleteAccount = async (password: string): Promise<boolean> => {
     const { data: u } = await supabase.auth.getUser();
@@ -209,30 +259,23 @@ function Page() {
           </Group>
         )}
 
-        {/* Integrations */}
+        {/* Integrations — permission is granted by the OS, never by us */}
         <Group title={t("settings.integrations")}>
           <IntegrationRow
             icon={<Smartphone className="size-4" />}
             label={t("settings.healthkit")}
             connected={settings.healthkitConnected}
-            onAction={() =>
-              settings.healthkitConnected
-                ? (update("healthkitConnected", false), toast(t("settings.disconnect") + " ✓"))
-                : setConnectKind("hk")
-            }
+            onAction={() => (settings.healthkitConnected ? disconnectHealth("healthkit") : openConnect("hk"))}
             t={t}
           />
           <IntegrationRow
             icon={<Activity className="size-4" />}
             label={t("settings.googlefit")}
             connected={settings.googlefitConnected}
-            onAction={() =>
-              settings.googlefitConnected
-                ? (update("googlefitConnected", false), toast(t("settings.disconnect") + " ✓"))
-                : setConnectKind("gf")
-            }
+            onAction={() => (settings.googlefitConnected ? disconnectHealth("googlefit") : openConnect("gf"))}
             t={t}
           />
+
           <ToggleRow
             label={t("settings.push")}
             checked={settings.pushOn}
@@ -388,8 +431,16 @@ function Page() {
         t={t}
       />
 
-      {/* Connect dialog */}
-      <Dialog open={connectKind !== null} onOpenChange={(o) => !o && setConnectKind(null)}>
+      {/* Connect dialog — the button only asks the OS; the system sheet decides */}
+      <Dialog
+        open={connectKind !== null}
+        onOpenChange={(o) => {
+          if (!o && !connecting) {
+            setConnectKind(null);
+            setConnectNote(null);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{connectKind === "hk" ? t("hk.title") : t("gf.title")}</DialogTitle>
@@ -402,21 +453,20 @@ function Page() {
             <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> {t("settings.scope.distance")}</li>
             <li className="flex items-center gap-2"><Check className="size-4 text-sage-600" /> {t("settings.scope.energy")}</li>
           </ul>
+          {connectNote && (
+            <p className="rounded-2xl bg-muted p-3 text-xs text-muted-foreground">{connectNote}</p>
+          )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setConnectKind(null)}>{t("settings.cancel")}</Button>
-            <Button
-              onClick={() => {
-                if (connectKind === "hk") update("healthkitConnected", true);
-                if (connectKind === "gf") update("googlefitConnected", true);
-                toast.success(t("settings.connected"));
-                setConnectKind(null);
-              }}
-            >
-              {t("hk.allow")}
+            <Button variant="ghost" disabled={connecting} onClick={() => { setConnectKind(null); setConnectNote(null); }}>
+              {t("settings.cancel")}
+            </Button>
+            <Button disabled={connecting} onClick={() => connectKind && connectHealth(connectKind)}>
+              {connecting ? t("health.waiting") : t("hk.allow")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* Report problem dialog */}
       <Dialog open={reportOpen} onOpenChange={(o) => { if (!o) setReportText(""); setReportOpen(o); }}>
