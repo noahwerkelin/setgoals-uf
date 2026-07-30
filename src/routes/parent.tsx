@@ -501,12 +501,6 @@ function ageFromBirthday(b: string, t: (k: string, vars?: Record<string, string 
   return t("parent.age", { n: age });
 }
 
-function mockSteps(id: string) {
-  let h = 0;
-  const seed = id + new Date().toDateString();
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  return 3000 + Math.abs(h % 7000);
-}
 
 function ScreenTimeDialog({
   open, onOpenChange, title, initial, onSave,
