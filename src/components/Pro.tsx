@@ -217,9 +217,9 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
 function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, lang } = useT();
   const { settings, refresh } = useSettings();
-  const cancelFn = useServerFn(cancelSubscription);
-  const resumeFn = useServerFn(resumeSubscription);
-  const payFn = useServerFn(updatePaymentMethod);
+  const cancelFn = useServerFn(cancelStripeSubscription);
+  const resumeFn = useServerFn(resumeStripeSubscription);
+  const portalFn = useServerFn(createPortalSession);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [busy, setBusy] = useState(false);
