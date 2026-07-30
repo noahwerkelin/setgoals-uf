@@ -92,7 +92,7 @@ function Page() {
                 <Sparkles className="size-6" />
               </div>
               <h3 className="text-base font-semibold">{t("coach.locked_title")}</h3>
-              <p className="text-sm text-sage-600">{t("coach.locked_desc")}</p>
+              <p className="text-sm text-sage-600">{t("pro.child_desc")}</p>
             </div>
           ) : (
             <ProLockCard titleKey="coach.locked_title" descKey="coach.locked_desc" onUpgrade={() => setProOpen(true)} />

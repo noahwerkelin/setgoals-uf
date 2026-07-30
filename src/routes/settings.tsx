@@ -145,33 +145,31 @@ function Page() {
         )}
 
 
-        {/* Personalization — PRO-gated color theme */}
-        {!isChild && (
-          <Group title={t("theme.title")}>
-            <button
-              onClick={() => (settings.isPro ? setThemeOpen(true) : setProOpen(true))}
-              className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-black/5 text-left"
-            >
-              <span className="grid size-10 place-items-center rounded-2xl bg-sage-100 text-sage-700">
-                <Palette className="size-5" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold capitalize">
-                  {t(`theme.${settings.isPro ? settings.themeColor : "sage"}`)}
-                </p>
-                <p className="text-xs text-sage-600">
-                  {settings.isPro ? t("theme.desc") : t("pro.unlock")}
-                </p>
-              </div>
-              <div className="flex items-center gap-1">
-                {THEME_COLORS.slice(0, 5).map((c) => (
-                  <span key={c.id} className="size-3.5 rounded-full ring-1 ring-black/10" style={{ background: c.swatch }} />
-                ))}
-              </div>
-              {settings.isPro ? <ChevronRight className="size-4" /> : <Lock className="size-4 text-sage-600" />}
-            </button>
-          </Group>
-        )}
+        {/* Personalization — PRO-gated color theme (children inherit via PRO Family) */}
+        <Group title={t("theme.title")}>
+          <button
+            onClick={() => (settings.isPro ? setThemeOpen(true) : setProOpen(true))}
+            className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-black/5 text-left"
+          >
+            <span className="grid size-10 place-items-center rounded-2xl bg-sage-100 text-sage-700">
+              <Palette className="size-5" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold capitalize">
+                {t(`theme.${settings.isPro ? settings.themeColor : "sage"}`)}
+              </p>
+              <p className="text-xs text-sage-600">
+                {settings.isPro ? t("theme.desc") : isChild ? t("pro.child_desc") : t("pro.unlock")}
+              </p>
+            </div>
+            <div className="flex items-center gap-1">
+              {THEME_COLORS.slice(0, 5).map((c) => (
+                <span key={c.id} className="size-3.5 rounded-full ring-1 ring-black/10" style={{ background: c.swatch }} />
+              ))}
+            </div>
+            {settings.isPro ? <ChevronRight className="size-4" /> : <Lock className="size-4 text-sage-600" />}
+          </button>
+        </Group>
 
 
         {/* Earning rules — only parents/individuals can change */}
