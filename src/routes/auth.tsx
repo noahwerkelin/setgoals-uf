@@ -16,7 +16,7 @@ export const Route = createFileRoute("/auth")({
   component: Page,
 });
 
-type Mode = "signin" | "signup" | "forgot";
+type Mode = "signin" | "signup" | "forgot" | "join";
 
 function Page() {
   const navigate = useNavigate();
@@ -43,26 +43,42 @@ function Page() {
             SetGoals
           </span>
           <h1 className="text-3xl font-semibold tracking-tight">
-            {mode === "signin" ? "Welcome back" : mode === "signup" ? "Create account" : "Reset password"}
+            {mode === "signin"
+              ? "Welcome back"
+              : mode === "signup"
+                ? "Create account"
+                : mode === "join"
+                  ? "Join your parent"
+                  : "Reset password"}
           </h1>
           <p className="text-sm text-sage-600">
             {mode === "signin"
               ? "Sign in to keep earning screen time."
               : mode === "signup"
                 ? "Start earning screen time by walking."
-                : "We'll email you a reset link."}
+                : mode === "join"
+                  ? "Enter the invitation code your parent gave you."
+                  : "We'll email you a reset link."}
           </p>
         </div>
 
         <div className="mt-8">
-          {mode === "signin" && <SignIn onForgot={() => setMode("forgot")} onSignup={() => setMode("signup")} />}
+          {mode === "signin" && (
+            <SignIn
+              onForgot={() => setMode("forgot")}
+              onSignup={() => setMode("signup")}
+              onJoin={() => setMode("join")}
+            />
+          )}
           {mode === "signup" && <SignUp onSignin={() => setMode("signin")} />}
           {mode === "forgot" && <Forgot onDone={() => setMode("signin")} />}
+          {mode === "join" && <JoinWithCode />}
         </div>
       </div>
     </div>
   );
 }
+
 
 function Field(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
