@@ -77,9 +77,10 @@ function Home() {
   const proST = useMemo(() => loadProST(), []);
   const rolloverMin = computeRolloverMin(yesterdaySteps, settings.stepsPer30, settings.dailyCapHours, proST, settings.isPro);
   const capMin = settings.dailyCapHours * 60;
+  const bonusMin = useBonusMin();
   const baseEarned = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);
-  const earnedMin = Math.min(capMin + rolloverMin, baseEarned + rolloverMin);
-  const remainingMin = Math.max(0, capMin + rolloverMin - earnedMin);
+  const earnedMin = Math.min(capMin + rolloverMin, baseEarned + rolloverMin) + bonusMin;
+  const remainingMin = Math.max(0, capMin + rolloverMin - Math.min(capMin + rolloverMin, baseEarned + rolloverMin));
   const ringProgress = Math.min(1, stepsToday / goal);
 
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
