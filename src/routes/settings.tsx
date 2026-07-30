@@ -32,6 +32,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Lock, Palette } from "lucide-react";
 import { awardBadge } from "@/components/Badges";
 import { isUsernameAvailable } from "@/lib/username.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { cancelStripeSubscription } from "@/utils/payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
