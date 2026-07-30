@@ -5,6 +5,8 @@ import { useAuth } from "./auth";
 export type Units = "metric" | "imperial";
 export type Role = "individual" | "child";
 
+export type InvitationStatus = "pending" | "connected" | "expired";
+
 export type ChildProfile = {
   id: string;
   name: string;
@@ -14,7 +16,20 @@ export type ChildProfile = {
   code: string;
   stepsPer30: number;
   dailyCapHours: number;
+  bedtime: string;
+  authUserId: string | null;
+  invitationStatus: InvitationStatus;
+  invitationExpiresAt: string | null;
 };
+
+/** Keys a child account is never allowed to change (enforced in DB too). */
+export const CHILD_LOCKED_KEYS = [
+  "stepsPer30",
+  "dailyCapHours",
+  "dailyGoal",
+  "role",
+] as const;
+
 
 export type StreakState = {
   count: number;
@@ -59,7 +74,10 @@ export type SettingsState = {
   password: string;
   avatar: string | null;
   children: ChildProfile[];
+  /** Set when this account is a child linked to a parent (read-only for the child). */
+  linkedChild: ChildProfile | null;
   streak: StreakState;
+
 };
 
 const DEFAULTS: SettingsState = {
@@ -86,7 +104,9 @@ const DEFAULTS: SettingsState = {
   password: "",
   avatar: null,
   children: [],
+  linkedChild: null,
   streak: { count: 0, lastGoalMetDate: null, best: 0 },
+
 };
 
 type Ctx = {
@@ -119,9 +139,17 @@ type ChildRow = {
   code: string;
   steps_per_30: number;
   daily_cap_hours: number;
+  bedtime?: string | null;
+  auth_user_id?: string | null;
+  invitation_status?: string | null;
+  invitation_expires_at?: string | null;
 };
 
-function mapChild(c: ChildRow): ChildProfile {
+export function mapChild(c: ChildRow): ChildProfile {
+  const expired =
+    !c.auth_user_id &&
+    c.invitation_expires_at != null &&
+    new Date(c.invitation_expires_at).getTime() < Date.now();
   return {
     id: c.id,
     name: c.name,
@@ -131,8 +159,34 @@ function mapChild(c: ChildRow): ChildProfile {
     code: c.code,
     stepsPer30: c.steps_per_30,
     dailyCapHours: c.daily_cap_hours,
+    bedtime: c.bedtime ?? "",
+    authUserId: c.auth_user_id ?? null,
+    invitationStatus: (c.auth_user_id
+      ? "connected"
+      : expired
+        ? "expired"
+        : ((c.invitation_status as InvitationStatus) ?? "pending")) as InvitationStatus,
+    invitationExpiresAt: c.invitation_expires_at ?? null,
   };
 }
+
+export function emptyChild(): ChildProfile {
+  return {
+    id: crypto.randomUUID(),
+    name: "",
+    birthday: "",
+    avatar: "🌱",
+    dailyGoal: 8000,
+    code: genChildCode(),
+    stepsPer30: 1000,
+    dailyCapHours: 3,
+    bedtime: "",
+    authUserId: null,
+    invitationStatus: "pending",
+    invitationExpiresAt: null,
+  };
+}
+
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -143,21 +197,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettings(DEFAULTS);
       return;
     }
-    const [profileRes, settingsRes, streakRes, childrenRes] = await Promise.all([
+    const [profileRes, settingsRes, streakRes, childrenRes, linkedRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("streaks").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("children").select("*").eq("parent_id", user.id),
+      supabase.from("children").select("*").eq("auth_user_id", user.id).maybeSingle(),
     ]);
     const p = profileRes.data;
     const s = settingsRes.data;
     const st = streakRes.data;
     const kids = (childrenRes.data ?? []) as ChildRow[];
+    const linked = linkedRes.data ? mapChild(linkedRes.data as ChildRow) : null;
 
     setSettings({
-      stepsPer30: s?.steps_per_30 ?? DEFAULTS.stepsPer30,
-      dailyCapHours: s?.daily_cap_hours ?? DEFAULTS.dailyCapHours,
-      dailyGoal: s?.daily_goal ?? DEFAULTS.dailyGoal,
+      // Parent-assigned rules win for a linked child account.
+      stepsPer30: linked?.stepsPer30 ?? s?.steps_per_30 ?? DEFAULTS.stepsPer30,
+      dailyCapHours: linked?.dailyCapHours ?? s?.daily_cap_hours ?? DEFAULTS.dailyCapHours,
+      dailyGoal: linked?.dailyGoal ?? s?.daily_goal ?? DEFAULTS.dailyGoal,
       healthkitConnected: s?.healthkit_connected ?? false,
       googlefitConnected: s?.googlefit_connected ?? false,
       pushOn: s?.push_on ?? true,
@@ -171,13 +228,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       proPaymentMethod: s?.pro_payment_method ?? "",
       themeColor: (s?.theme_color ?? "sage") as ThemeColor,
       bonusMinFromYesterday: 0,
-      role: ((p?.role === "parent" ? "individual" : p?.role) ?? "individual") as Role,
+      role: (linked ? "child" : ((p?.role === "parent" ? "individual" : p?.role) ?? "individual")) as Role,
       displayName: p?.display_name ?? "",
       username: p?.username ?? "",
       email: p?.email ?? user.email ?? "",
       password: "",
       avatar: p?.avatar_url ?? null,
       children: kids.map(mapChild),
+      linkedChild: linked,
       streak: {
         count: st?.count ?? 0,
         best: st?.best ?? 0,
@@ -185,6 +243,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       },
     });
   }, [user]);
+
+  // Realtime: keep parent and child in sync on child-profile changes.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`children-sync-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "children" }, () => {
+        load();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, load]);
+
 
   useEffect(() => {
     load();
@@ -226,6 +299,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       // are intentionally excluded — they are server-only and set by verified payment webhooks
       // using the service role. Client writes are also blocked by a DB trigger.
 
+      // A linked child account can never change parent-controlled rules.
+      // (Also enforced by RLS: children rows are read-only for the child.)
+      if (settings.linkedChild && (CHILD_LOCKED_KEYS as readonly string[]).includes(key as string)) {
+        return;
+      }
 
       if (key === "children") {
         // Full sync: replace children list (delete missing, upsert provided)
@@ -247,9 +325,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
               code: c.code,
               steps_per_30: c.stepsPer30,
               daily_cap_hours: c.dailyCapHours,
+              bedtime: c.bedtime || null,
             })),
           );
         }
+
         return;
       }
 
@@ -279,7 +359,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return;
       }
     },
-    [user],
+    [user, settings.linkedChild],
+
   );
 
   const recordSteps = useCallback(
@@ -348,9 +429,10 @@ export function formatDistance(km: number, units: Units, digits = 1): string {
 
 export function genChildCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "";
-  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return s;
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const out = [...bytes].map((b) => chars[b % chars.length]);
+  return `${out.slice(0, 4).join("")}-${out.slice(4).join("")}`;
 }
 
 export function earnedMinFromSteps(steps: number, stepsPer30: number, dailyCapHours: number): number {

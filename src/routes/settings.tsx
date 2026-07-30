@@ -242,7 +242,7 @@ function Page() {
         {/* Support */}
         <Group title={t("settings.support")}>
           <Row label={t("settings.report_problem")} onClick={() => setReportOpen(true)} />
-          <Row label={t("settings.delete_account")} danger onClick={() => setDeleteOpen(true)} />
+          {!isChild && <Row label={t("settings.delete_account")} danger onClick={() => setDeleteOpen(true)} />}
         </Group>
 
         <p className="pt-4 text-center text-[11px] text-sage-600">SetGoals UF · v1.0.0</p>

@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Shield, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone, Infinity as InfinityIcon, Zap } from "lucide-react";
+import { Shield, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone, Infinity as InfinityIcon, Zap, Link2, Share2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings, genChildCode, type ChildProfile } from "@/lib/settings";
+import { useSettings, emptyChild, type ChildProfile } from "@/lib/settings";
+import { issueChildCode } from "@/lib/children.functions";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 import {
@@ -47,7 +48,7 @@ type ScreenTimeEdit = { stepsPer30: number; dailyCapHours: number };
 
 function Page() {
   const { t } = useT();
-  const { settings, update } = useSettings();
+  const { settings, update, refresh } = useSettings();
   const [apps, setApps] = useState(INITIAL_APPS);
   const [proOpen, setProOpen] = useState(false);
   const [editing, setEditing] = useState<ChildProfile | null>(null);
@@ -76,16 +77,7 @@ function Page() {
   };
 
   const openNew = () => {
-    setEditing({
-      id: crypto.randomUUID(),
-      name: "",
-      birthday: "",
-      avatar: AVATAR_OPTIONS[0],
-      dailyGoal: 8000,
-      code: genChildCode(),
-      stepsPer30: 1000,
-      dailyCapHours: 3,
-    });
+    setEditing({ ...emptyChild(), avatar: AVATAR_OPTIONS[0] });
     setIsNew(true);
   };
 
@@ -94,25 +86,55 @@ function Page() {
     setIsNew(false);
   };
 
-  const save = (c: ChildProfile) => {
+  const save = async (c: ChildProfile) => {
     if (!c.name.trim()) {
       toast.error(t("auth.required"));
       return;
     }
     if (isNew) {
-      update("children", [...settings.children, c]);
+      await update("children", [...settings.children, c]);
+      try {
+        await issueChildCode({ data: { childId: c.id } });
+      } catch {
+        /* code stays as generated locally */
+      }
+      await refresh();
       toast.success(t("parent.child.created"));
     } else {
-      update("children", settings.children.map((x) => (x.id === c.id ? c : x)));
+      await update("children", settings.children.map((x) => (x.id === c.id ? c : x)));
       toast.success(t("parent.child.updated"));
     }
     setEditing(null);
+  };
+
+  const regenerate = async (c: ChildProfile) => {
+    try {
+      const r = await issueChildCode({ data: { childId: c.id } });
+      await refresh();
+      toast.success(t("parent.child.code_new", { c: r.code }));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const shareCode = async (c: ChildProfile) => {
+    const text = t("parent.child.share_text", { n: c.name || "", c: c.code });
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {
+        /* cancelled */
+      }
+    }
+    copyCode(c.code);
   };
 
   const remove = (id: string) => {
     update("children", settings.children.filter((c) => c.id !== id));
     toast.success(t("parent.child.removed"));
   };
+
 
   const saveChildST = (id: string, v: ScreenTimeEdit) => {
     update(
@@ -197,12 +219,18 @@ function Page() {
                 <Stat label={t("parent.steps_per_30")} value={settings.stepsPer30.toLocaleString()} />
                 <Stat label={t("parent.daily_cap")} value={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`} />
               </div>
-              <button
-                onClick={() => setEditingMyST(true)}
-                className="mt-4 w-full rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
-              >
-                {t("parent.edit_screentime")}
-              </button>
+              {isChild ? (
+                <p className="mt-4 rounded-xl bg-sage-50 px-3 py-2 text-[11px] text-sage-600 ring-1 ring-sage-200">
+                  {t("parent.child_locked")}
+                </p>
+              ) : (
+                <button
+                  onClick={() => setEditingMyST(true)}
+                  className="mt-4 w-full rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
+                >
+                  {t("parent.edit_screentime")}
+                </button>
+              )}
             </section>
 
             <section className="space-y-3">
@@ -221,7 +249,7 @@ function Page() {
                     <span className="text-sm font-medium truncate">{t(a.key)}</span>
                     <CategoryToggle
                       value={a.state}
-                      onChange={(next) => setState(a.key, next)}
+                      onChange={(next) => !isChild && setState(a.key, next)}
                       labelAlways={t("stmode.always_short")}
                       labelEarned={t("stmode.earned_short")}
                       ariaAlways={t("stmode.always") + " — " + t(a.key)}
@@ -232,7 +260,7 @@ function Page() {
               </div>
             </section>
 
-            <ProScreenTimeSection isPro={settings.isPro} onUpgrade={() => setProOpen(true)} categoryKeys={apps.map((a) => a.key)} />
+            {!isChild && <ProScreenTimeSection isPro={settings.isPro} onUpgrade={() => setProOpen(true)} categoryKeys={apps.map((a) => a.key)} />}
           </>
         )}
 
@@ -303,21 +331,60 @@ function Page() {
                     </button>
                   </div>
 
-                  <button
-                    onClick={() => copyCode(k.code)}
-                    className="mt-4 flex w-full items-center justify-between rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200"
-                  >
-                    <div className="text-left">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">
-                        {t("parent.child.code")}
-                      </p>
-                      <p className="text-base font-semibold tracking-[0.3em] text-sage-900">{k.code}</p>
+                  {k.invitationStatus === "connected" ? (
+                    <div className="mt-4 flex items-center gap-2 rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200">
+                      <Link2 className="size-4 text-sage-700" />
+                      <p className="text-xs font-semibold text-sage-900">{t("parent.child.status_connected")}</p>
                     </div>
-                    <span className="grid size-9 place-items-center rounded-full bg-sage-600 text-primary-foreground">
-                      <Copy className="size-4" />
-                    </span>
-                  </button>
-                  <p className="mt-1 px-1 text-[10px] text-sage-600">{t("parent.child.code_help")}</p>
+                  ) : (
+                    <>
+                      <div className="mt-4 rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-left min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">
+                              {t("parent.child.code")}
+                            </p>
+                            <p className="text-base font-semibold tracking-[0.2em] text-sage-900">{k.code}</p>
+                          </div>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                              k.invitationStatus === "expired"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {t(
+                              k.invitationStatus === "expired"
+                                ? "parent.child.status_expired"
+                                : "parent.child.status_pending",
+                            )}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-2">
+                          <button
+                            onClick={() => copyCode(k.code)}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-2 text-[11px] font-semibold text-sage-700 ring-1 ring-sage-200"
+                          >
+                            <Copy className="size-3.5" /> {t("parent.child.copy")}
+                          </button>
+                          <button
+                            onClick={() => shareCode(k)}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-2 text-[11px] font-semibold text-sage-700 ring-1 ring-sage-200"
+                          >
+                            <Share2 className="size-3.5" /> {t("parent.child.share")}
+                          </button>
+                          <button
+                            onClick={() => regenerate(k)}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-sage-600 px-2 py-2 text-[11px] font-semibold text-primary-foreground"
+                          >
+                            <RefreshCw className="size-3.5" /> {t("parent.child.regenerate")}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="mt-1 px-1 text-[10px] text-sage-600">{t("parent.child.code_help")}</p>
+                    </>
+                  )}
+
                 </article>
               );
             })}

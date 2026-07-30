@@ -79,39 +79,51 @@ export type Database = {
       }
       children: {
         Row: {
+          auth_user_id: string | null
           avatar: string | null
+          bedtime: string | null
           birthday: string | null
           code: string
           created_at: string
           daily_cap_hours: number
           daily_goal: number
           id: string
+          invitation_expires_at: string
+          invitation_status: string
           name: string
           parent_id: string
           steps_per_30: number
           updated_at: string
         }
         Insert: {
+          auth_user_id?: string | null
           avatar?: string | null
+          bedtime?: string | null
           birthday?: string | null
           code: string
           created_at?: string
           daily_cap_hours?: number
           daily_goal?: number
           id?: string
+          invitation_expires_at?: string
+          invitation_status?: string
           name: string
           parent_id: string
           steps_per_30?: number
           updated_at?: string
         }
         Update: {
+          auth_user_id?: string | null
           avatar?: string | null
+          bedtime?: string | null
           birthday?: string | null
           code?: string
           created_at?: string
           daily_cap_hours?: number
           daily_goal?: number
           id?: string
+          invitation_expires_at?: string
+          invitation_status?: string
           name?: string
           parent_id?: string
           steps_per_30?: number
@@ -169,6 +181,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      parent_child_relationships: {
+        Row: {
+          child_profile_id: string
+          child_user_id: string
+          id: string
+          linked_at: string
+          parent_id: string
+        }
+        Insert: {
+          child_profile_id: string
+          child_user_id: string
+          id?: string
+          linked_at?: string
+          parent_id: string
+        }
+        Update: {
+          child_profile_id?: string
+          child_user_id?: string
+          id?: string
+          linked_at?: string
+          parent_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_child_relationships_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: true
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -353,6 +397,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_parent_of: { Args: { _child_user_id: string }; Returns: boolean }
       leaderboard: {
         Args: { _period: string }
         Returns: {
