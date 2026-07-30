@@ -50,14 +50,15 @@ function Page() {
 
   const onPick = async (file: File) => {
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") update("avatar", reader.result);
+    try {
+      // Compress to a small square so it can be stored inline and rendered everywhere.
+      const dataUrl = await fileToSquareDataUrl(file);
+      await update("avatar", dataUrl);
+    } finally {
       setUploading(false);
-    };
-    reader.onerror = () => setUploading(false);
-    reader.readAsDataURL(file);
+    }
   };
+
 
   const streakLabel =
     streakCount === 0
