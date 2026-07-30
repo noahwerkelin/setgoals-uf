@@ -74,7 +74,10 @@ export type SettingsState = {
   password: string;
   avatar: string | null;
   children: ChildProfile[];
+  /** Set when this account is a child linked to a parent (read-only for the child). */
+  linkedChild: ChildProfile | null;
   streak: StreakState;
+
 };
 
 const DEFAULTS: SettingsState = {
