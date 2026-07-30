@@ -194,9 +194,18 @@ function Page() {
     copyCode(c.code);
   };
 
-  const remove = (id: string) => {
-    update("children", settings.children.filter((c) => c.id !== id));
+  const remove = async (child: ChildProfile, password: string): Promise<boolean> => {
+    try {
+      await deleteChild({ data: { childId: child.id, password } });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error";
+      toast.error(/password/i.test(msg) ? t("delete.wrong_password") : msg);
+      return false;
+    }
+    await update("children", settings.children.filter((c) => c.id !== child.id));
+    await refresh();
     toast.success(t("parent.child.removed"));
+    return true;
   };
 
 
