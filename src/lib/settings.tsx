@@ -38,7 +38,14 @@ export type StreakState = {
   best: number;
 };
 
-export type SubPlan = "monthly" | "yearly";
+export type SubPlan = "monthly" | "yearly" | "family_monthly" | "family_yearly";
+
+/** Maximum number of child profiles per account (also enforced in the DB). */
+export const MAX_CHILDREN = 5;
+
+export function isFamilyPlan(plan: SubPlan): boolean {
+  return plan === "family_monthly" || plan === "family_yearly";
+}
 export type ThemeColor = "sage" | "rose" | "blue" | "pink" | "lavender" | "amber" | "slate";
 
 export const THEME_COLORS: { id: ThemeColor; swatch: string }[] = [
@@ -201,12 +208,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettings(DEFAULTS);
       return;
     }
-    const [profileRes, settingsRes, streakRes, childrenRes, linkedRes] = await Promise.all([
+    const [profileRes, settingsRes, streakRes, childrenRes, linkedRes, familyProRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("streaks").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("children").select("*").eq("parent_id", user.id),
       supabase.from("children").select("*").eq("auth_user_id", user.id).maybeSingle(),
+      supabase.rpc("parent_family_pro"),
     ]);
     const p = profileRes.data;
     const s = settingsRes.data;
@@ -225,7 +233,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       anonymousLeaderboard: s?.anonymous_leaderboard ?? false,
       shareLocation: (s?.share_location ?? "while_using") as SettingsState["shareLocation"],
       units: (s?.units ?? "metric") as Units,
-      isPro: s?.is_pro ?? false,
+      // A linked child inherits PRO only from a parent's PRO Family plan.
+      isPro: linked ? familyProRes.data === true : (s?.is_pro ?? false),
       proSince: s?.pro_since ?? null,
       proPlan: (s?.pro_plan ?? "monthly") as SubPlan,
       proAutoRenew: s?.pro_auto_renew ?? true,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings, emptyChild, type ChildProfile } from "@/lib/settings";
+import { useSettings, emptyChild, MAX_CHILDREN, type ChildProfile } from "@/lib/settings";
 import { issueChildCode, deleteChild, grantScreenTime } from "@/lib/children.functions";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
@@ -142,6 +142,10 @@ function Page() {
   };
 
   const openNew = () => {
+    if (settings.children.length >= MAX_CHILDREN) {
+      toast.error(t("parent.child.limit_reached", { max: String(MAX_CHILDREN) }));
+      return;
+    }
     setEditing({ ...emptyChild(), avatar: AVATAR_OPTIONS[0] });
     setIsNew(true);
   };
@@ -161,6 +165,10 @@ function Page() {
       return;
     }
     if (isNew) {
+      if (settings.children.length >= MAX_CHILDREN) {
+        toast.error(t("parent.child.limit_reached", { max: String(MAX_CHILDREN) }));
+        return;
+      }
       await update("children", [...settings.children, c]);
       try {
         await issueChildCode({ data: { childId: c.id } });
@@ -494,12 +502,19 @@ function Page() {
               );
             })}
 
-            <button
-              onClick={openNew}
-              className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-sage-300 p-4 text-sm font-medium text-sage-700"
-            >
-              <Plus className="size-4" /> {t("parent.add_child")}
-            </button>
+            {settings.children.length >= MAX_CHILDREN ? (
+              <p className="rounded-3xl bg-sage-50 p-4 text-center text-xs text-sage-600 ring-1 ring-sage-200">
+                {t("parent.child.limit_reached", { max: String(MAX_CHILDREN) })}
+              </p>
+            ) : (
+              <button
+                onClick={openNew}
+                className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-sage-300 p-4 text-sm font-medium text-sage-700"
+              >
+                <Plus className="size-4" /> {t("parent.add_child")}
+              </button>
+            )}
+
           </section>
         )}
 

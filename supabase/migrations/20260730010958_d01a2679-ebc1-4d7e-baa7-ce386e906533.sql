@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_child_limit() FROM PUBLIC, anon, authenticated;

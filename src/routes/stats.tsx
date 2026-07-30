@@ -92,7 +92,7 @@ function Page() {
               </span>
               <h3 className="text-sm font-semibold">{t("stats.pro_title")}</h3>
             </div>
-            {!settings.isPro && (
+            {!settings.isPro && settings.role !== "child" && (
               <button
                 onClick={() => setProOpen(true)}
                 className="rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-primary-foreground"
@@ -102,8 +102,13 @@ function Page() {
             )}
           </div>
           <p className="mt-2 text-xs text-sage-600">
-            {settings.isPro ? t("stats.pro_sub") : t("stats.pro.locked")}
+            {settings.isPro
+              ? t("stats.pro_sub")
+              : settings.role === "child"
+                ? t("pro.child_desc")
+                : t("stats.pro.locked")}
           </p>
+
 
           <div className={`mt-4 space-y-4 ${settings.isPro ? "" : "pointer-events-none select-none blur-sm"}`}>
             {/* Activity score */}

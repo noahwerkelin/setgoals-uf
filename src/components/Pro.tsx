@@ -20,7 +20,35 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useT } from "@/lib/i18n";
-import { useSettings, type SubPlan } from "@/lib/settings";
+import { useSettings, isFamilyPlan, type SubPlan } from "@/lib/settings";
+
+const ALL_PLANS: SubPlan[] = ["monthly", "yearly", "family_monthly", "family_yearly"];
+
+function PlanGrid({ plan, onSelect }: { plan: SubPlan; onSelect: (p: SubPlan) => void }) {
+  const { t } = useT();
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {ALL_PLANS.map((p) => {
+        const active = plan === p;
+        return (
+          <button
+            key={p}
+            onClick={() => onSelect(p)}
+            className={`rounded-2xl p-3 text-left ring-1 transition-colors ${
+              active ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/10"
+            }`}
+          >
+            <p className="text-xs uppercase tracking-wide opacity-80">{t(`pro.plan.${p}`)}</p>
+            <p className="text-sm font-semibold">{t(`pro.price.${p}`)}</p>
+            {p.endsWith("yearly") && (
+              <p className={`text-[11px] ${active ? "text-white/80" : "text-sage-600"}`}>{t("pro.save_badge")}</p>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -40,10 +68,36 @@ function formatDate(d: Date, lang: string): string {
 
 export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { settings } = useSettings();
+  // Children can never purchase a plan — they inherit PRO from a parent's Family plan.
+  if (settings.role === "child") {
+    return <ChildProDialog open={open} onOpenChange={onOpenChange} />;
+  }
   if (settings.isPro) {
     return <ManageSubscriptionDialog open={open} onOpenChange={onOpenChange} />;
   }
   return <UpgradeDialog open={open} onOpenChange={onOpenChange} />;
+}
+
+function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { t } = useT();
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
+            <Sparkles className="size-6" />
+          </div>
+          <DialogTitle className="text-center">{t("pro.child_title")}</DialogTitle>
+          <DialogDescription className="text-center">{t("pro.child_desc")}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="sm:justify-stretch">
+          <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
+            {t("common.close")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
@@ -58,6 +112,7 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     "pro.feature.stats",
     "pro.feature.theme",
     "pro.feature.premium_badge",
+    ...(isFamilyPlan(plan) ? ["pro.feature.family"] : []),
   ];
 
   return (
@@ -80,25 +135,8 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
           ))}
         </ul>
 
-        <div className="grid grid-cols-2 gap-2">
-          {(["monthly", "yearly"] as SubPlan[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPlan(p)}
-              className={`rounded-2xl p-3 text-left ring-1 transition-colors ${
-                plan === p ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/10"
-              }`}
-            >
-              <p className="text-xs uppercase tracking-wide opacity-80">{t(`pro.plan.${p}`)}</p>
-              <p className="text-sm font-semibold">{t(`pro.price.${p}`)}</p>
-              {p === "yearly" && (
-                <p className={`text-[11px] ${plan === p ? "text-white/80" : "text-sage-600"}`}>
-                  {t("pro.save_badge")}
-                </p>
-              )}
-            </button>
-          ))}
-        </div>
+        <PlanGrid plan={plan} onSelect={setPlan} />
+
 
         <DialogFooter className="sm:justify-stretch">
           <Button
@@ -127,9 +165,9 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
   const [changePlanOpen, setChangePlanOpen] = useState(false);
 
   const since = settings.proSince ?? new Date().toISOString();
-  const nextDate = addMonths(since, settings.proPlan === "yearly" ? 12 : 1);
+  const nextDate = addMonths(since, settings.proPlan.endsWith("yearly") ? 12 : 1);
   const sinceDate = new Date(since);
-  const price = settings.proPlan === "yearly" ? t("pro.price.yearly") : t("pro.price.monthly");
+  const price = t(`pro.price.${settings.proPlan}`);
 
   return (
     <>
@@ -240,20 +278,8 @@ function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <DialogTitle>{t("pro.change_plan")}</DialogTitle>
           <DialogDescription>{t("pro.change_plan_desc")}</DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-2">
-          {(["monthly", "yearly"] as SubPlan[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPlan(p)}
-              className={`rounded-2xl p-3 text-left ring-1 transition-colors ${
-                plan === p ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/10"
-              }`}
-            >
-              <p className="text-xs uppercase tracking-wide opacity-80">{t(`pro.plan.${p}`)}</p>
-              <p className="text-sm font-semibold">{t(`pro.price.${p}`)}</p>
-            </button>
-          ))}
-        </div>
+        <PlanGrid plan={plan} onSelect={setPlan} />
+
         <DialogFooter>
           <Button
             className="w-full"
@@ -304,6 +330,8 @@ export function ProLockCard({
   onUpgrade,
 }: { titleKey: string; descKey: string; onUpgrade: () => void }) {
   const { t } = useT();
+  const { settings } = useSettings();
+  const isChild = settings.role === "child";
   return (
     <div className="rounded-3xl bg-card p-6 ring-1 ring-black/5 text-center space-y-3">
       <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
@@ -312,11 +340,13 @@ export function ProLockCard({
       <div className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-600">{t("pro.badge")}</p>
         <h3 className="text-base font-semibold">{t(titleKey)}</h3>
-        <p className="text-sm text-sage-600">{t(descKey)}</p>
+        <p className="text-sm text-sage-600">{isChild ? t("pro.child_desc") : t(descKey)}</p>
       </div>
-      <Button onClick={onUpgrade} className="w-full">
-        <Sparkles className="size-4" /> {t("pro.upgrade")}
-      </Button>
+      {!isChild && (
+        <Button onClick={onUpgrade} className="w-full">
+          <Sparkles className="size-4" /> {t("pro.upgrade")}
+        </Button>
+      )}
     </div>
   );
 }
