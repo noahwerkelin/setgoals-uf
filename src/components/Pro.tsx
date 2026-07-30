@@ -40,10 +40,36 @@ function formatDate(d: Date, lang: string): string {
 
 export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { settings } = useSettings();
+  // Children can never purchase a plan — they inherit PRO from a parent's Family plan.
+  if (settings.role === "child") {
+    return <ChildProDialog open={open} onOpenChange={onOpenChange} />;
+  }
   if (settings.isPro) {
     return <ManageSubscriptionDialog open={open} onOpenChange={onOpenChange} />;
   }
   return <UpgradeDialog open={open} onOpenChange={onOpenChange} />;
+}
+
+function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { t } = useT();
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
+            <Sparkles className="size-6" />
+          </div>
+          <DialogTitle className="text-center">{t("pro.child_title")}</DialogTitle>
+          <DialogDescription className="text-center">{t("pro.child_desc")}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="sm:justify-stretch">
+          <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
+            {t("common.close")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
