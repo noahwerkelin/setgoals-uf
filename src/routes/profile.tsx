@@ -24,6 +24,9 @@ function Page() {
   const { data: today } = useTodaySteps();
   const stepsToday = today?.steps ?? 0;
   const isChild = settings.role === "child";
+  // A linked child's picture is chosen by their parent and synced down.
+  const avatarLocked = !!settings.linkedChild;
+
   const displayName = settings.displayName || settings.username || "You";
   const initials = displayName
     .split(" ")
