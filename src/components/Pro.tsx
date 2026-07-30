@@ -23,12 +23,14 @@ import { useT } from "@/lib/i18n";
 import { useSettings, isFamilyPlan, type SubPlan } from "@/lib/settings";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  startSubscription,
-  cancelSubscription,
-  resumeSubscription,
-  changeSubscriptionPlan,
-  updatePaymentMethod,
-} from "@/lib/subscription.functions";
+  cancelStripeSubscription,
+  resumeStripeSubscription,
+  changeStripePlan,
+  createPortalSession,
+} from "@/utils/payments.functions";
+import { getStripeEnvironment, PLAN_PRICE_IDS } from "@/lib/stripe";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 const ALL_PLANS: SubPlan[] = ["monthly", "yearly", "family_monthly", "family_yearly"];
 
@@ -58,7 +60,7 @@ function PlanGrid({ plan, onSelect }: { plan: SubPlan; onSelect: (p: SubPlan) =>
   );
 }
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function addMonths(iso: string, months: number): Date {
   const d = new Date(iso);
@@ -74,8 +76,28 @@ function formatDate(d: Date, lang: string): string {
   });
 }
 
+/** After returning from the hosted checkout, poll until the webhook lands. */
+function useCheckoutReturn() {
+  const { refresh } = useSettings();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("checkout") !== "success") return;
+    url.searchParams.delete("checkout");
+    url.searchParams.delete("session_id");
+    window.history.replaceState({}, "", url.toString());
+    let tries = 0;
+    const tick = async () => {
+      await refresh();
+      if (++tries < 6) setTimeout(tick, 2000);
+    };
+    tick();
+  }, [refresh]);
+}
+
 export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { settings } = useSettings();
+  useCheckoutReturn();
   // Children can never purchase a plan — they inherit PRO from a parent's Family plan.
   if (settings.role === "child") {
     return <ChildProDialog open={open} onOpenChange={onOpenChange} />;
@@ -85,6 +107,7 @@ export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpen
   }
   return <UpgradeDialog open={open} onOpenChange={onOpenChange} />;
 }
+
 
 function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, lang } = useT();
@@ -120,10 +143,8 @@ function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
 function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
-  const { refresh } = useSettings();
-  const startFn = useServerFn(startSubscription);
   const [plan, setPlan] = useState<SubPlan>("monthly");
-  const [busy, setBusy] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const features = [
     "pro.feature.bonus",
@@ -135,61 +156,70 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     ...(isFamilyPlan(plan) ? ["pro.feature.family"] : []),
   ];
 
+  const returnUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${window.location.pathname}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+      : undefined;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) setCheckingOut(false);
+        onOpenChange(o);
+      }}
+    >
+      <DialogContent className={checkingOut ? "max-h-[85vh] overflow-y-auto" : undefined}>
         <DialogHeader>
           <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-600 text-primary-foreground">
             <Sparkles className="size-6" />
           </div>
           <DialogTitle className="text-center">{t("pro.title")}</DialogTitle>
-          <DialogDescription className="text-center">{t("pro.subtitle")}</DialogDescription>
+          <DialogDescription className="text-center">
+            {checkingOut ? t(`pro.plan.${plan}`) : t("pro.subtitle")}
+          </DialogDescription>
         </DialogHeader>
 
-        <ul className="space-y-2.5 py-1">
-          {features.map((k) => (
-            <li key={k} className="flex items-start gap-2 text-sm">
-              <Check className="mt-0.5 size-4 shrink-0 text-sage-600" />
-              <span>{t(k)}</span>
-            </li>
-          ))}
-        </ul>
+        {checkingOut ? (
+          <div className="space-y-2">
+            <PaymentTestModeBanner />
+            <StripeEmbeddedCheckout priceId={PLAN_PRICE_IDS[plan]} returnUrl={returnUrl} />
+            <Button variant="ghost" className="w-full" onClick={() => setCheckingOut(false)}>
+              {t("common.back") ?? "Back"}
+            </Button>
+          </div>
+        ) : (
+          <>
+            <ul className="space-y-2.5 py-1">
+              {features.map((k) => (
+                <li key={k} className="flex items-start gap-2 text-sm">
+                  <Check className="mt-0.5 size-4 shrink-0 text-sage-600" />
+                  <span>{t(k)}</span>
+                </li>
+              ))}
+            </ul>
 
-        <PlanGrid plan={plan} onSelect={setPlan} />
+            <PlanGrid plan={plan} onSelect={setPlan} />
 
-
-        <DialogFooter className="sm:justify-stretch">
-          <Button
-            className="w-full"
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await startFn({ data: { plan } });
-                await refresh();
-                toast.success(t("pro.welcome"));
-                onOpenChange(false);
-              } catch {
-                toast.error(t("pro.error"));
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            <Sparkles className="size-4" /> {t("pro.upgrade")}
-          </Button>
-        </DialogFooter>
+            <DialogFooter className="sm:justify-stretch">
+              <Button className="w-full" onClick={() => setCheckingOut(true)}>
+                <Sparkles className="size-4" /> {t("pro.upgrade")}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
 
+
 function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, lang } = useT();
   const { settings, refresh } = useSettings();
-  const cancelFn = useServerFn(cancelSubscription);
-  const resumeFn = useServerFn(resumeSubscription);
-  const payFn = useServerFn(updatePaymentMethod);
+  const cancelFn = useServerFn(cancelStripeSubscription);
+  const resumeFn = useServerFn(resumeStripeSubscription);
+  const portalFn = useServerFn(createPortalSession);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -258,12 +288,14 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
               action={
                 <button
                   onClick={async () => {
-                    const next = settings.proPaymentMethod.includes("Visa")
-                      ? "Mastercard •• 5454"
-                      : "Visa •• 4242";
-                    await payFn({ data: { method: next } });
-                    await refresh();
-                    toast.success(t("pro.payment_updated"));
+                    const res = await portalFn({
+                      data: {
+                        environment: getStripeEnvironment(),
+                        returnUrl: typeof window !== "undefined" ? window.location.href : undefined,
+                      },
+                    });
+                    if ("url" in res && res.url) window.location.href = res.url;
+                    else toast.error("error" in res ? res.error : t("pro.error"));
                   }}
                   className="text-xs font-medium text-sage-700 hover:underline"
                 >
@@ -284,7 +316,8 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
                 onClick={async () => {
                   setBusy(true);
                   try {
-                    await resumeFn({});
+                    const res = await resumeFn({ data: { environment: getStripeEnvironment() } });
+                    if ("error" in res) throw new Error(res.error);
                     await refresh();
                     toast.success(t("pro.resumed"));
                   } catch {
@@ -327,11 +360,12 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
             <AlertDialogAction
               onClick={async () => {
                 try {
-                  const res = await cancelFn({});
+                  const res = await cancelFn({ data: { environment: getStripeEnvironment() } });
+                  if ("error" in res) throw new Error(res.error);
                   await refresh();
                   toast(
                     t("pro.cancelled_on", {
-                      date: formatDate(new Date(res.expiresAt ?? nextDate), lang),
+                      date: formatDate(nextDate, lang),
                     }),
                   );
                 } catch {
@@ -353,7 +387,7 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
 function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
   const { settings, refresh } = useSettings();
-  const changeFn = useServerFn(changeSubscriptionPlan);
+  const changeFn = useServerFn(changeStripePlan);
   const [plan, setPlan] = useState<SubPlan>(settings.proPlan);
 
   return (
@@ -371,7 +405,10 @@ function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
             disabled={plan === settings.proPlan}
             onClick={async () => {
               try {
-                await changeFn({ data: { plan } });
+                const res = await changeFn({
+                  data: { priceId: PLAN_PRICE_IDS[plan], environment: getStripeEnvironment() },
+                });
+                if ("error" in res) throw new Error(res.error);
                 await refresh();
                 toast.success(t("pro.plan_changed"));
               } catch {
