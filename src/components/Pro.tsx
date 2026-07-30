@@ -316,7 +316,8 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
                 onClick={async () => {
                   setBusy(true);
                   try {
-                    await resumeFn({});
+                    const res = await resumeFn({ data: { environment: getStripeEnvironment() } });
+                    if ("error" in res) throw new Error(res.error);
                     await refresh();
                     toast.success(t("pro.resumed"));
                   } catch {
