@@ -35,6 +35,12 @@ import { isUsernameAvailable } from "@/lib/username.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { cancelStripeSubscription } from "@/utils/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import {
+  requestHealthAccess,
+  revokeHealthAccess,
+  isProviderSupportedOnPlatform,
+  type HealthProvider,
+} from "@/lib/health-bridge";
 
 
 export const Route = createFileRoute("/settings")({
