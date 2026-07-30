@@ -572,7 +572,7 @@ function DeleteChildDialog({
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            {t("common.cancel")}
+            {t("settings.cancel")}
           </Button>
           <Button
             variant="destructive"
