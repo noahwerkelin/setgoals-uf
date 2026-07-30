@@ -482,6 +482,13 @@ const DICTS: Record<Lang, Dict> = {
     "gf.title": "Connect Google Fit",
     "gf.desc": "We'll read your daily step count from Google Fit / Health Connect to credit screen time.",
     "hk.allow": "Allow access",
+    "health.waiting": "Waiting for your device…",
+    "health.denied": "Access was declined in the system dialog. You can allow it again from your device's Health privacy settings.",
+    "health.error": "Your device couldn't complete the request. Please try again.",
+    "health.ios_only": "Apple Health is only available on iPhone.",
+    "health.android_only": "Google Fit / Health Connect is only available on Android.",
+    "health.needs_ios_app": "Apple Health permission is granted by iOS itself. Open SetGoals in the iPhone app and allow access there — it will sync here automatically.",
+    "health.needs_android_app": "Health Connect permission is granted by Android itself. Open SetGoals in the Android app and allow access there — it will sync here automatically.",
 
     "common.back": "Back",
     "common.close": "Close",
