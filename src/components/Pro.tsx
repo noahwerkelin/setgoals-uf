@@ -84,6 +84,7 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     "pro.feature.stats",
     "pro.feature.theme",
     "pro.feature.premium_badge",
+    ...(isFamilyPlan(plan) ? ["pro.feature.family"] : []),
   ];
 
   return (
@@ -106,25 +107,8 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
           ))}
         </ul>
 
-        <div className="grid grid-cols-2 gap-2">
-          {(["monthly", "yearly"] as SubPlan[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPlan(p)}
-              className={`rounded-2xl p-3 text-left ring-1 transition-colors ${
-                plan === p ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/10"
-              }`}
-            >
-              <p className="text-xs uppercase tracking-wide opacity-80">{t(`pro.plan.${p}`)}</p>
-              <p className="text-sm font-semibold">{t(`pro.price.${p}`)}</p>
-              {p === "yearly" && (
-                <p className={`text-[11px] ${plan === p ? "text-white/80" : "text-sage-600"}`}>
-                  {t("pro.save_badge")}
-                </p>
-              )}
-            </button>
-          ))}
-        </div>
+        <PlanGrid plan={plan} onSelect={setPlan} />
+
 
         <DialogFooter className="sm:justify-stretch">
           <Button
