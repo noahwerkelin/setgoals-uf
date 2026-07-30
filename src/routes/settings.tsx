@@ -59,6 +59,7 @@ function Page() {
   const [themeOpen, setThemeOpen] = useState(false);
 
   const isChild = settings.role === "child";
+  const cancelSubFn = useServerFn(cancelStripeSubscription);
 
   const deleteAccount = async (password: string): Promise<boolean> => {
     const { data: u } = await supabase.auth.getUser();
@@ -70,6 +71,14 @@ function Page() {
     if (signInErr) {
       toast.error(t("delete.wrong_password"));
       return false;
+    }
+    // Stop future charges: the plan runs out at the end of the paid period.
+    if (settings.isPro && !isChild) {
+      try {
+        await cancelSubFn({ data: { environment: getStripeEnvironment() } });
+      } catch {
+        /* deletion must not be blocked by a billing hiccup */
+      }
     }
     await supabase.from("account_deletion_requests").insert({ user_id: u.user.id });
     await supabase.from("profiles").delete().eq("id", u.user.id);
