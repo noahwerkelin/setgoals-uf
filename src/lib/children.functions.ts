@@ -124,5 +124,5 @@ export const redeemChildCode = createServerFn({ method: "POST" })
       child_user_id: childUserId,
     });
 
-    return { ok: true };
+    return { email, password };
   });
