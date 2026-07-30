@@ -352,7 +352,8 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
 
 function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
-  const { settings, update } = useSettings();
+  const { settings, refresh } = useSettings();
+  const changeFn = useServerFn(changeSubscriptionPlan);
   const [plan, setPlan] = useState<SubPlan>(settings.proPlan);
 
   return (
@@ -368,10 +369,14 @@ function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <Button
             className="w-full"
             disabled={plan === settings.proPlan}
-            onClick={() => {
-              update("proPlan", plan);
-              update("proSince", new Date().toISOString());
-              toast.success(t("pro.plan_changed"));
+            onClick={async () => {
+              try {
+                await changeFn({ data: { plan } });
+                await refresh();
+                toast.success(t("pro.plan_changed"));
+              } catch {
+                toast.error(t("pro.error"));
+              }
               onOpenChange(false);
             }}
           >
