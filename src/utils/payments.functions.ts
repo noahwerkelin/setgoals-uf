@@ -107,8 +107,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
-        managed_payments: { enabled: true },
-        metadata: { userId, managed_payments: "true" },
+        // No tax is calculated or collected — customers pay the listed price.
+        metadata: { userId, managed_payments: "false" },
         ...(isRecurring && { subscription_data: { metadata: { userId } } }),
       } as any);
 
