@@ -57,11 +57,24 @@ async def open_as(playwright, *, role, family_pro, own_pro=False, theme="rose"):
     return browser, page
 
 
+async def wait_for_any(page, needles, selector=None, timeout_ms=15000):
+    """The app shows a splash screen for ~2.5s, so poll until the page settles."""
+    deadline = timeout_ms
+    while deadline > 0:
+        body = await page.inner_text("body")
+        if any(n in body for n in needles):
+            return body
+        if selector and await page.locator(selector).count():
+            return body
+        await page.wait_for_timeout(250)
+        deadline -= 250
+    return await page.inner_text("body")
+
+
 async def settings_theme_state(page) -> str:
     """Returns 'unlocked' | 'locked-child' | 'locked-individual' | 'unknown'."""
     await page.goto(f"{BASE_URL}/settings", wait_until="domcontentloaded")
-    await page.wait_for_timeout(1500)
-    body = await page.inner_text("body")
+    body = await wait_for_any(page, [THEME_UNLOCKED_COPY, CHILD_LOCK_COPY, INDIVIDUAL_LOCK_COPY])
     if THEME_UNLOCKED_COPY in body:
         return "unlocked"
     if CHILD_LOCK_COPY in body:
@@ -73,8 +86,7 @@ async def settings_theme_state(page) -> str:
 
 async def coach_state(page) -> str:
     await page.goto(f"{BASE_URL}/coach", wait_until="domcontentloaded")
-    await page.wait_for_timeout(1500)
-    body = await page.inner_text("body")
+    body = await wait_for_any(page, [COACH_LOCKED_TITLE, "Ask me anything", "coach"], selector="#coach-input")
     if COACH_LOCKED_TITLE in body:
         return "locked-child" if CHILD_LOCK_COPY in body else "locked-individual"
     return "unlocked" if await page.locator("#coach-input").count() else "unknown"
