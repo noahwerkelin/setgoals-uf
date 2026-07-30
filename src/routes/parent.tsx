@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Shield, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone, Infinity as InfinityIcon, Zap, Link2, Share2, RefreshCw } from "lucide-react";
+import { Shield, Plus, Lock, Sparkles, Copy, Pencil, Trash2, Clock, Smartphone, Infinity as InfinityIcon, Zap, Link2, Share2, RefreshCw, Gift } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
 import { useSettings, emptyChild, type ChildProfile } from "@/lib/settings";
-import { issueChildCode, deleteChild } from "@/lib/children.functions";
+import { issueChildCode, deleteChild, grantScreenTime } from "@/lib/children.functions";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { toast } from "sonner";
 import {
@@ -60,7 +60,8 @@ function Page() {
   const [editingChildST, setEditingChildST] = useState<ChildProfile | null>(null);
   const [editingMyST, setEditingMyST] = useState(false);
   const [tab, setTab] = useState<"personal" | "children">("personal");
-  const [childStats, setChildStats] = useState<Record<string, { steps: number; usedMin: number }>>({});
+  const [childStats, setChildStats] = useState<Record<string, { steps: number; usedMin: number; bonusMin: number }>>({});
+  const [gifting, setGifting] = useState<ChildProfile | null>(null);
   const [childWeek, setChildWeek] = useState<Record<string, Record<string, { steps: number; usedMin: number }>>>({});
 
   const isIndividual = settings.role === "individual";
@@ -352,7 +353,7 @@ function Page() {
             )}
 
             {settings.children.map((k, i) => {
-              const stats = (k.authUserId && childStats[k.authUserId]) || { steps: 0, usedMin: 0 };
+              const stats = (k.authUserId && childStats[k.authUserId]) || { steps: 0, usedMin: 0, bonusMin: 0 };
               const usedH = Math.floor(stats.usedMin / 60);
               const usedM = stats.usedMin % 60;
               return (
@@ -412,6 +413,26 @@ function Page() {
                       className="mt-3 w-full rounded-xl bg-white px-3 py-2 text-xs font-semibold text-sage-700 ring-1 ring-sage-200"
                     >
                       {t("parent.edit_screentime")}
+                    </button>
+                  </div>
+
+                  <div className="mt-3 rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
+                    <div className="flex items-center gap-2">
+                      <Gift className="size-4 text-sage-700" />
+                      <p className="text-xs font-semibold text-sage-900">{t("parent.gift.title")}</p>
+                    </div>
+                    <p className="mt-1 text-[11px] text-sage-600">{t("parent.gift.sub")}</p>
+                    {stats.bonusMin > 0 && (
+                      <p className="mt-2 inline-block rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-sage-700 ring-1 ring-sage-200">
+                        {t("parent.gift.given_today", { m: stats.bonusMin })}
+                      </p>
+                    )}
+                    <button
+                      disabled={!k.authUserId}
+                      onClick={() => setGifting(k)}
+                      className="mt-3 w-full rounded-xl bg-sage-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                    >
+                      {k.authUserId ? t("parent.gift.cta") : t("parent.gift.needs_join")}
                     </button>
                   </div>
 
@@ -506,6 +527,11 @@ function Page() {
 
 
 
+      <GiftScreenTimeDialog
+        child={gifting}
+        onOpenChange={(o) => !o && setGifting(null)}
+      />
+
       <ScreenTimeDialog
         open={editingMyST}
         onOpenChange={setEditingMyST}
@@ -530,6 +556,92 @@ function Page() {
         onSave={(v) => editingChildST && saveChildST(editingChildST.id, v)}
       />
     </AppShell>
+  );
+}
+
+function GiftScreenTimeDialog({
+  child,
+  onOpenChange,
+}: {
+  child: ChildProfile | null;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const { t } = useT();
+  const [minutes, setMinutes] = useState(30);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const name = child?.name || "—";
+
+  useEffect(() => {
+    if (child) {
+      setMinutes(30);
+      setNote("");
+      setBusy(false);
+    }
+  }, [child]);
+
+  const submit = async () => {
+    if (!child) return;
+    setBusy(true);
+    try {
+      await grantScreenTime({ data: { childId: child.id, minutes, note: note.trim() || undefined } });
+      toast.success(t("parent.gift.done", { m: minutes, n: name }));
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={child !== null} onOpenChange={onOpenChange}>
+      <DialogContent className="rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>{t("parent.gift.dialog_title", { n: name })}</DialogTitle>
+          <DialogDescription>{t("parent.gift.dialog_desc")}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {[15, 30, 45, 60, 90, 120].map((m) => (
+              <button
+                key={m}
+                onClick={() => setMinutes(m)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${
+                  minutes === m
+                    ? "bg-sage-600 text-white ring-sage-600"
+                    : "bg-sage-50 text-sage-700 ring-sage-200"
+                }`}
+              >
+                {m}m
+              </button>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gift-min">{t("parent.gift.minutes")}</Label>
+            <Input
+              id="gift-min"
+              type="number"
+              min={1}
+              max={600}
+              value={minutes}
+              onChange={(e) => setMinutes(Math.max(1, Math.min(600, Number(e.target.value) || 0)))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gift-note">{t("parent.gift.note")}</Label>
+            <Input id="gift-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={140} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t("settings.cancel")}
+          </Button>
+          <Button disabled={busy || minutes < 1} onClick={submit}>
+            {busy ? t("parent.gift.sending") : t("parent.gift.confirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
