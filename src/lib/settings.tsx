@@ -452,7 +452,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return;
       }
     },
-    [user, settings.linkedChild],
+    [user, settings.linkedChild, load],
 
   );
 
