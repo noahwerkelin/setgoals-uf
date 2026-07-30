@@ -180,22 +180,8 @@ function Home() {
 
         <FamilyCard />
 
-        <Link
-          to="/leaderboards"
-          className="flex items-center justify-between rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise"
-          style={{ animationDelay: "300ms" }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-xl bg-sage-100 text-sage-700">
-              <Zap className="size-4" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold">{t("home.leaderboards")}</p>
-              <p className="text-xs text-sage-600">{t("home.lb_sub")}</p>
-            </div>
-          </div>
-          <ChevronRight className="size-4 text-sage-600" />
-        </Link>
+        <LeaderboardTile stepsToday={stepsToday} />
+
       </div>
     </AppShell>
   );
