@@ -490,6 +490,19 @@ function Page() {
         onSave={save}
       />
 
+      <DeleteChildDialog
+        child={deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        onConfirm={async (pw) => {
+          if (!deleting) return false;
+          const ok = await remove(deleting, pw);
+          if (ok) setDeleting(null);
+          return ok;
+        }}
+      />
+
+
+
       <ScreenTimeDialog
         open={editingMyST}
         onOpenChange={setEditingMyST}
