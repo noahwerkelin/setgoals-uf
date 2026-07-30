@@ -83,10 +83,18 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       } = await supabase.auth.getUser();
 
       const stripe = createStripeClient(data.environment);
+
+      // Never let someone buy a second plan on top of an active one.
+      const existingSub = await findSubscription(stripe, userId);
+      if (existingSub) {
+        return { error: "You already have an active subscription. Use Change plan instead." };
+      }
+
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
       if (!prices.data.length) return { error: "Price not found" };
       const stripePrice = prices.data[0];
       const isRecurring = stripePrice.type === "recurring";
+
 
       const customerId = await resolveOrCreateCustomer(stripe, {
         email: user?.email ?? undefined,
