@@ -570,6 +570,7 @@ const DICTS: Record<Lang, Dict> = {
     "parent.child.copy_code": "Copy code",
     "parent.child.empty": "No children yet. Add one to get started.",
     "parent.child.code_help": "Your child enters this code once to join. It expires in 7 days.",
+    "parent.child_locked": "Your parent sets these rules.",
     "auth.join_code": "Join with parent code",
     "auth.join_title": "Join your parent",
     "auth.join_sub": "Enter the invitation code your parent gave you.",

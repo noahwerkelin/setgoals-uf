@@ -219,12 +219,18 @@ function Page() {
                 <Stat label={t("parent.steps_per_30")} value={settings.stepsPer30.toLocaleString()} />
                 <Stat label={t("parent.daily_cap")} value={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`} />
               </div>
-              <button
-                onClick={() => setEditingMyST(true)}
-                className="mt-4 w-full rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
-              >
-                {t("parent.edit_screentime")}
-              </button>
+              {isChild ? (
+                <p className="mt-4 rounded-xl bg-sage-50 px-3 py-2 text-[11px] text-sage-600 ring-1 ring-sage-200">
+                  {t("parent.child_locked")}
+                </p>
+              ) : (
+                <button
+                  onClick={() => setEditingMyST(true)}
+                  className="mt-4 w-full rounded-xl bg-sage-100 px-3 py-2 text-xs font-semibold text-sage-700"
+                >
+                  {t("parent.edit_screentime")}
+                </button>
+              )}
             </section>
 
             <section className="space-y-3">
@@ -243,7 +249,7 @@ function Page() {
                     <span className="text-sm font-medium truncate">{t(a.key)}</span>
                     <CategoryToggle
                       value={a.state}
-                      onChange={(next) => setState(a.key, next)}
+                      onChange={(next) => !isChild && setState(a.key, next)}
                       labelAlways={t("stmode.always_short")}
                       labelEarned={t("stmode.earned_short")}
                       ariaAlways={t("stmode.always") + " — " + t(a.key)}
@@ -254,7 +260,7 @@ function Page() {
               </div>
             </section>
 
-            <ProScreenTimeSection isPro={settings.isPro} onUpgrade={() => setProOpen(true)} categoryKeys={apps.map((a) => a.key)} />
+            {!isChild && <ProScreenTimeSection isPro={settings.isPro} onUpgrade={() => setProOpen(true)} categoryKeys={apps.map((a) => a.key)} />}
           </>
         )}
 
