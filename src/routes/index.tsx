@@ -9,6 +9,7 @@ import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from
 import { useTodaySteps, useHistorySteps } from "@/lib/steps";
 import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
 import { loadProST, computeRolloverMin } from "@/lib/screentime";
+import { useBonusMin } from "@/lib/bonus";
 
 
 export const Route = createFileRoute("/")({
