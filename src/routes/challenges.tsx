@@ -275,8 +275,12 @@ function Leaderboard() {
   const top = rows.slice(0, 50);
 
   useEffect(() => {
-    if (period === "daily" && youRank > 0) recordLeaderboardRank("national", youRank);
-  }, [period, youRank]);
+    if (period !== "daily" || youRank <= 0) return;
+    recordLeaderboardRank("national", youRank, {
+      steps: youRow?.total_steps ?? 0,
+      participants: rows.length,
+    });
+  }, [period, youRank, youRow?.total_steps, rows.length]);
 
   return (
     <div className="space-y-5">
