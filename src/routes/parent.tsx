@@ -494,12 +494,19 @@ function Page() {
               );
             })}
 
-            <button
-              onClick={openNew}
-              className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-sage-300 p-4 text-sm font-medium text-sage-700"
-            >
-              <Plus className="size-4" /> {t("parent.add_child")}
-            </button>
+            {settings.children.length >= MAX_CHILDREN ? (
+              <p className="rounded-3xl bg-sage-50 p-4 text-center text-xs text-sage-600 ring-1 ring-sage-200">
+                {t("parent.child.limit_reached", { max: String(MAX_CHILDREN) })}
+              </p>
+            ) : (
+              <button
+                onClick={openNew}
+                className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-sage-300 p-4 text-sm font-medium text-sage-700"
+              >
+                <Plus className="size-4" /> {t("parent.add_child")}
+              </button>
+            )}
+
           </section>
         )}
 
