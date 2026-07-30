@@ -80,22 +80,43 @@ function Page() {
   useEffect(() => {
     if (!linkedIds.length) {
       setChildStats({});
+      setChildWeek({});
       return;
     }
     let cancelled = false;
     const today = new Date();
-    const day = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const day = fmt(today);
+    const weekStartDate = new Date(today);
+    weekStartDate.setDate(weekStartDate.getDate() - 6);
+    const weekStart = fmt(weekStartDate);
     const load = async () => {
       const [act, bal] = await Promise.all([
-        supabase.from("activity_steps").select("user_id, steps").eq("day", day).in("user_id", linkedIds),
-        supabase.from("earned_balances").select("user_id, consumed_min").eq("day", day).in("user_id", linkedIds),
+        supabase.from("activity_steps").select("user_id, day, steps").gte("day", weekStart).lte("day", day).in("user_id", linkedIds),
+        supabase.from("earned_balances").select("user_id, day, consumed_min").gte("day", weekStart).lte("day", day).in("user_id", linkedIds),
       ]);
       if (cancelled) return;
       const map: Record<string, { steps: number; usedMin: number }> = {};
-      for (const id of linkedIds) map[id] = { steps: 0, usedMin: 0 };
-      for (const r of act.data ?? []) map[r.user_id] = { ...map[r.user_id], steps: (map[r.user_id]?.steps ?? 0) + (r.steps ?? 0) };
-      for (const r of bal.data ?? []) map[r.user_id] = { ...map[r.user_id], usedMin: r.consumed_min ?? 0 };
+      const week: Record<string, Record<string, { steps: number; usedMin: number }>> = {};
+      for (const id of linkedIds) {
+        map[id] = { steps: 0, usedMin: 0 };
+        week[id] = {};
+      }
+      for (const r of act.data ?? []) {
+        const w = (week[r.user_id] ??= {});
+        const cell = (w[r.day] ??= { steps: 0, usedMin: 0 });
+        cell.steps += r.steps ?? 0;
+        if (r.day === day) map[r.user_id] = { ...map[r.user_id], steps: (map[r.user_id]?.steps ?? 0) + (r.steps ?? 0) };
+      }
+      for (const r of bal.data ?? []) {
+        const w = (week[r.user_id] ??= {});
+        const cell = (w[r.day] ??= { steps: 0, usedMin: 0 });
+        cell.usedMin = r.consumed_min ?? 0;
+        if (r.day === day) map[r.user_id] = { ...map[r.user_id], usedMin: r.consumed_min ?? 0 };
+      }
       setChildStats(map);
+      setChildWeek(week);
     };
     void load();
     const channel = supabase
