@@ -137,9 +137,9 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
   const [changePlanOpen, setChangePlanOpen] = useState(false);
 
   const since = settings.proSince ?? new Date().toISOString();
-  const nextDate = addMonths(since, settings.proPlan === "yearly" ? 12 : 1);
+  const nextDate = addMonths(since, settings.proPlan.endsWith("yearly") ? 12 : 1);
   const sinceDate = new Date(since);
-  const price = settings.proPlan === "yearly" ? t("pro.price.yearly") : t("pro.price.monthly");
+  const price = t(`pro.price.${settings.proPlan}`);
 
   return (
     <>
