@@ -381,6 +381,8 @@ function Page() {
                     />
                   </div>
 
+                  <WeeklySummary week={(k.authUserId && childWeek[k.authUserId]) || {}} />
+
                   <div className="mt-4 rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
                     <div className="flex items-center gap-2">
                       <Clock className="size-4 text-sage-700" />
