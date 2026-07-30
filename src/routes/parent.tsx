@@ -325,21 +325,60 @@ function Page() {
                     </button>
                   </div>
 
-                  <button
-                    onClick={() => copyCode(k.code)}
-                    className="mt-4 flex w-full items-center justify-between rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200"
-                  >
-                    <div className="text-left">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">
-                        {t("parent.child.code")}
-                      </p>
-                      <p className="text-base font-semibold tracking-[0.3em] text-sage-900">{k.code}</p>
+                  {k.invitationStatus === "connected" ? (
+                    <div className="mt-4 flex items-center gap-2 rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200">
+                      <Link2 className="size-4 text-sage-700" />
+                      <p className="text-xs font-semibold text-sage-900">{t("parent.child.status_connected")}</p>
                     </div>
-                    <span className="grid size-9 place-items-center rounded-full bg-sage-600 text-primary-foreground">
-                      <Copy className="size-4" />
-                    </span>
-                  </button>
-                  <p className="mt-1 px-1 text-[10px] text-sage-600">{t("parent.child.code_help")}</p>
+                  ) : (
+                    <>
+                      <div className="mt-4 rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-left min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest text-sage-600">
+                              {t("parent.child.code")}
+                            </p>
+                            <p className="text-base font-semibold tracking-[0.2em] text-sage-900">{k.code}</p>
+                          </div>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                              k.invitationStatus === "expired"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {t(
+                              k.invitationStatus === "expired"
+                                ? "parent.child.status_expired"
+                                : "parent.child.status_pending",
+                            )}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-2">
+                          <button
+                            onClick={() => copyCode(k.code)}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-2 text-[11px] font-semibold text-sage-700 ring-1 ring-sage-200"
+                          >
+                            <Copy className="size-3.5" /> {t("parent.child.copy")}
+                          </button>
+                          <button
+                            onClick={() => shareCode(k)}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-white px-2 py-2 text-[11px] font-semibold text-sage-700 ring-1 ring-sage-200"
+                          >
+                            <Share2 className="size-3.5" /> {t("parent.child.share")}
+                          </button>
+                          <button
+                            onClick={() => regenerate(k)}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-sage-600 px-2 py-2 text-[11px] font-semibold text-primary-foreground"
+                          >
+                            <RefreshCw className="size-3.5" /> {t("parent.child.regenerate")}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="mt-1 px-1 text-[10px] text-sage-600">{t("parent.child.code_help")}</p>
+                    </>
+                  )}
+
                 </article>
               );
             })}
