@@ -530,6 +530,66 @@ function Page() {
   );
 }
 
+function DeleteChildDialog({
+  child,
+  onOpenChange,
+  onConfirm,
+}: {
+  child: ChildProfile | null;
+  onOpenChange: (o: boolean) => void;
+  onConfirm: (password: string) => Promise<boolean>;
+}) {
+  const { t } = useT();
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const name = child?.name || "—";
+
+  useEffect(() => {
+    if (child) {
+      setPw("");
+      setBusy(false);
+    }
+  }, [child]);
+
+  return (
+    <Dialog open={child !== null} onOpenChange={onOpenChange}>
+      <DialogContent className="rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>{t("parent.child.delete_title", { n: name })}</DialogTitle>
+          <DialogDescription>{t("parent.child.delete_desc", { n: name })}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="del-child-pw">{t("parent.child.delete_pw")}</Label>
+          <Input
+            id="del-child-pw"
+            type="password"
+            autoComplete="current-password"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={!pw || busy}
+            onClick={async () => {
+              setBusy(true);
+              const ok = await onConfirm(pw);
+              if (!ok) setBusy(false);
+            }}
+          >
+            {busy ? t("parent.child.deleting") : t("parent.child.delete_confirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-sage-50 p-3 ring-1 ring-black/5">
