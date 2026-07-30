@@ -370,9 +370,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         const existingIds = new Set((existing ?? []).map((r) => r.id));
         const newIds = new Set(list.map((c) => c.id));
         const toDelete = [...existingIds].filter((id) => !newIds.has(id));
-        if (toDelete.length) await supabase.from("children").delete().in("id", toDelete);
+        if (toDelete.length) {
+          const { error } = await supabase.from("children").delete().in("id", toDelete);
+          if (error) throw new Error(error.message);
+        }
         if (list.length) {
-          await supabase.from("children").upsert(
+          const { error } = await supabase.from("children").upsert(
             list.map((c) => ({
               id: c.id,
               parent_id: user.id,
@@ -387,6 +390,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
               bedtime: c.bedtime || null,
             })),
           );
+          if (error) throw new Error(error.message);
         }
 
         return;
