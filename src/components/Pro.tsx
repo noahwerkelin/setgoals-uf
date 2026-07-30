@@ -387,7 +387,7 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
 function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
   const { settings, refresh } = useSettings();
-  const changeFn = useServerFn(changeSubscriptionPlan);
+  const changeFn = useServerFn(changeStripePlan);
   const [plan, setPlan] = useState<SubPlan>(settings.proPlan);
 
   return (
