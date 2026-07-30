@@ -25,3 +25,15 @@ export async function fileToSquareDataUrl(file: File, size = 256): Promise<strin
     return dataUrl;
   }
 }
+
+/** Initials from a display name (or username) — used as the default avatar. */
+export function initialsFromName(name?: string | null): string {
+  const clean = (name ?? "").replace(/^@/, "").trim();
+  if (!clean) return "?";
+  const parts = clean.split(/[\s._-]+/).filter(Boolean);
+  const letters =
+    parts.length > 1
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : clean.slice(0, 2);
+  return letters.toUpperCase();
+}
