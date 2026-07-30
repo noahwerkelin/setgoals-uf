@@ -156,33 +156,32 @@ function Page() {
     setIsNew(false);
   };
 
-  const save = async (c: ChildProfile) => {
-    if (!c.name.trim() || c.username.trim().length < 3) {
-      toast.error(t("parent.child.username_required"));
-      return;
-    }
+  const save = async (c: ChildProfile): Promise<string | null> => {
+    if (!c.name.trim()) return t("parent.child.name_required");
+    if (c.username.trim().length < 3) return t("parent.child.username_required");
     if (settings.children.some((x) => x.id !== c.id && x.username.toLowerCase() === c.username.toLowerCase())) {
-      toast.error(t("parent.child.username_taken"));
-      return;
+      return t("parent.child.username_taken");
     }
-    if (isNew) {
-      if (settings.children.length >= MAX_CHILDREN) {
-        toast.error(t("parent.child.limit_reached", { max: String(MAX_CHILDREN) }));
-        return;
-      }
-      await update("children", [...settings.children, c]);
-      try {
-        await issueChildCode({ data: { childId: c.id } });
-      } catch {
-        /* code stays as generated locally */
+    try {
+      if (isNew) {
+        if (settings.children.length >= MAX_CHILDREN) {
+          return t("parent.child.limit_reached", { max: String(MAX_CHILDREN) });
+        }
+        await update("children", [...settings.children, c]);
+        try {
+          await issueChildCode({ data: { childId: c.id } });
+        } catch {
+          /* code stays as generated locally */
+        }
+      } else {
+        await update("children", settings.children.map((x) => (x.id === c.id ? c : x)));
       }
       await refresh();
-      toast.success(t("parent.child.created"));
-    } else {
-      await update("children", settings.children.map((x) => (x.id === c.id ? c : x)));
-      toast.success(t("parent.child.updated"));
+    } catch (e) {
+      return e instanceof Error ? e.message : "Error";
     }
     setEditing(null);
+    return null;
   };
 
   const regenerate = async (c: ChildProfile) => {
@@ -866,13 +865,19 @@ function ChildEditDialog({
   initial: ChildProfile | null;
   isNew: boolean;
   onOpenChange: (o: boolean) => void;
-  onSave: (c: ChildProfile) => void;
+  onSave: (c: ChildProfile) => Promise<string | null>;
 }) {
   const { t } = useT();
   const [draft, setDraft] = useState<ChildProfile | null>(initial);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open && initial) setDraft(initial);
+    if (open && initial) {
+      setDraft(initial);
+      setError(null);
+      setSaving(false);
+    }
   }, [open, initial]);
 
   if (!draft) return null;
@@ -988,9 +993,22 @@ function ChildEditDialog({
           </div>
         </div>
 
+        {error && <p className="px-1 text-xs font-medium text-destructive">{error}</p>}
+
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
-          <Button onClick={() => onSave(draft)}>{t("parent.child.save")}</Button>
+          <Button variant="ghost" disabled={saving} onClick={() => onOpenChange(false)}>
+            {t("settings.cancel")}
+          </Button>
+          <Button
+            disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              setError(await onSave(draft));
+              setSaving(false);
+            }}
+          >
+            {saving ? t("parent.child.saving") : t("parent.child.save")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
