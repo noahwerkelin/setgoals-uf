@@ -330,6 +330,8 @@ export function ProLockCard({
   onUpgrade,
 }: { titleKey: string; descKey: string; onUpgrade: () => void }) {
   const { t } = useT();
+  const { settings } = useSettings();
+  const isChild = settings.role === "child";
   return (
     <div className="rounded-3xl bg-card p-6 ring-1 ring-black/5 text-center space-y-3">
       <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
@@ -338,11 +340,13 @@ export function ProLockCard({
       <div className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-600">{t("pro.badge")}</p>
         <h3 className="text-base font-semibold">{t(titleKey)}</h3>
-        <p className="text-sm text-sage-600">{t(descKey)}</p>
+        <p className="text-sm text-sage-600">{isChild ? t("pro.child_desc") : t(descKey)}</p>
       </div>
-      <Button onClick={onUpgrade} className="w-full">
-        <Sparkles className="size-4" /> {t("pro.upgrade")}
-      </Button>
+      {!isChild && (
+        <Button onClick={onUpgrade} className="w-full">
+          <Sparkles className="size-4" /> {t("pro.upgrade")}
+        </Button>
+      )}
     </div>
   );
 }
