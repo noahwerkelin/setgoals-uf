@@ -196,3 +196,68 @@ export const deleteChild = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+const GrantInput = z.object({
+  childId: z.string().uuid(),
+  minutes: z.number().int().min(1).max(600),
+  note: z.string().trim().max(140).optional(),
+});
+
+/**
+ * Parent-only: gift bonus screen-time minutes to a linked child for today,
+ * on top of whatever they earned by walking. The minutes land in the same
+ * daily balance the Screen Time bridge reads, so the child's allowance
+ * updates immediately.
+ */
+export const grantScreenTime = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => GrantInput.parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: true; bonusMin: number }> => {
+    const { supabase, userId } = context;
+    const { data: child, error } = await supabase
+      .from("children")
+      .select("id, parent_id, auth_user_id")
+      .eq("id", data.childId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!child || child.parent_id !== userId) throw new Error("Not found");
+    const childUserId = child.auth_user_id as string | null;
+    if (!childUserId) throw new Error("This child hasn't joined yet.");
+
+    const now = new Date();
+    const day = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+
+    const { data: existing, error: readErr } = await supabase
+      .from("earned_balances")
+      .select("bonus_min")
+      .eq("user_id", childUserId)
+      .eq("day", day)
+      .maybeSingle();
+    if (readErr) throw readErr;
+
+    const bonusMin = (existing?.bonus_min ?? 0) + data.minutes;
+    if (existing) {
+      const { error: upErr } = await supabase
+        .from("earned_balances")
+        .update({ bonus_min: bonusMin, updated_at: new Date().toISOString() })
+        .eq("user_id", childUserId)
+        .eq("day", day);
+      if (upErr) throw upErr;
+    } else {
+      const { error: insErr } = await supabase
+        .from("earned_balances")
+        .insert({ user_id: childUserId, day, bonus_min: bonusMin });
+      if (insErr) throw insErr;
+    }
+
+    const { error: logErr } = await supabase.from("screentime_grants").insert({
+      parent_id: userId,
+      child_user_id: childUserId,
+      day,
+      minutes: data.minutes,
+      note: data.note || null,
+    });
+    if (logErr) throw logErr;
+
+    return { ok: true, bonusMin };
+  });

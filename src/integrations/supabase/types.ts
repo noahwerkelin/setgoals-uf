@@ -163,6 +163,7 @@ export type Database = {
       }
       earned_balances: {
         Row: {
+          bonus_min: number
           consumed_min: number
           day: string
           earned_min: number
@@ -170,6 +171,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bonus_min?: number
           consumed_min?: number
           day?: string
           earned_min?: number
@@ -177,6 +179,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bonus_min?: number
           consumed_min?: number
           day?: string
           earned_min?: number
@@ -280,6 +283,36 @@ export type Database = {
           kind?: Database["public"]["Enums"]["restriction_kind"]
           label?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      screentime_grants: {
+        Row: {
+          child_user_id: string
+          created_at: string
+          day: string
+          id: string
+          minutes: number
+          note: string | null
+          parent_id: string
+        }
+        Insert: {
+          child_user_id: string
+          created_at?: string
+          day?: string
+          id?: string
+          minutes: number
+          note?: string | null
+          parent_id: string
+        }
+        Update: {
+          child_user_id?: string
+          created_at?: string
+          day?: string
+          id?: string
+          minutes?: number
+          note?: string | null
+          parent_id?: string
         }
         Relationships: []
       }

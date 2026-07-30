@@ -9,6 +9,7 @@ import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from
 import { useTodaySteps, useHistorySteps } from "@/lib/steps";
 import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
 import { loadProST, computeRolloverMin } from "@/lib/screentime";
+import { useBonusMin } from "@/lib/bonus";
 
 
 export const Route = createFileRoute("/")({
@@ -77,9 +78,10 @@ function Home() {
   const proST = useMemo(() => loadProST(), []);
   const rolloverMin = computeRolloverMin(yesterdaySteps, settings.stepsPer30, settings.dailyCapHours, proST, settings.isPro);
   const capMin = settings.dailyCapHours * 60;
+  const bonusMin = useBonusMin();
   const baseEarned = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);
-  const earnedMin = Math.min(capMin + rolloverMin, baseEarned + rolloverMin);
-  const remainingMin = Math.max(0, capMin + rolloverMin - earnedMin);
+  const earnedMin = Math.min(capMin + rolloverMin, baseEarned + rolloverMin) + bonusMin;
+  const remainingMin = Math.max(0, capMin + rolloverMin - Math.min(capMin + rolloverMin, baseEarned + rolloverMin));
   const ringProgress = Math.min(1, stepsToday / goal);
 
   const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
@@ -134,6 +136,12 @@ function Home() {
               <p className="text-lg font-medium tabular-nums text-sage-600">{formatScreenMin(remainingMin)}</p>
             </div>
           </div>
+
+          {bonusMin > 0 && (
+            <p className="-mt-2 rounded-full bg-sage-100 px-3 py-1.5 text-[11px] font-semibold text-sage-700 ring-1 ring-sage-200">
+              {t("home.bonus_gift", { m: formatScreenMin(bonusMin) })}
+            </p>
+          )}
         </section>
 
         <section className={`grid gap-4 animate-rise ${settings.role === "child" ? "grid-cols-1" : "grid-cols-2"}`} style={{ animationDelay: "120ms" }}>
