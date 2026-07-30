@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, ChevronRight, Flame, Footprints, MapPin, Sparkles, Trophy, Zap } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { CheckCircle2, ChevronRight, Flame, Footprints, MapPin, Plus, Sparkles, Trophy, Zap } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
