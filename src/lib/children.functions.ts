@@ -89,12 +89,15 @@ export const redeemChildCode = createServerFn({ method: "POST" })
       throw new Error("This invitation code has expired. Ask your parent for a new one.");
     }
 
+    const email = `child.${child.id}@child.setgoals.app`;
+    const password = randomPassword();
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
-      password: data.password,
+      email,
+      password,
       email_confirm: true,
       user_metadata: { display_name: child.name, avatar_url: child.avatar },
     });
+
     if (createErr || !created.user) throw new Error(createErr?.message ?? "Could not create the account.");
     const childUserId = created.user.id;
 
