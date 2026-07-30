@@ -104,7 +104,9 @@ const DEFAULTS: SettingsState = {
   password: "",
   avatar: null,
   children: [],
+  linkedChild: null,
   streak: { count: 0, lastGoalMetDate: null, best: 0 },
+
 };
 
 type Ctx = {
