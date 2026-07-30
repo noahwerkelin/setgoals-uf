@@ -10,6 +10,7 @@ export type InvitationStatus = "pending" | "connected" | "expired";
 export type ChildProfile = {
   id: string;
   name: string;
+  username: string;
   birthday: string;
   avatar: string;
   dailyGoal: number;
@@ -133,6 +134,7 @@ export function currentStreak(s: StreakState): number {
 type ChildRow = {
   id: string;
   name: string;
+  username?: string | null;
   birthday: string | null;
   avatar: string | null;
   daily_goal: number;
@@ -153,6 +155,7 @@ export function mapChild(c: ChildRow): ChildProfile {
   return {
     id: c.id,
     name: c.name,
+    username: c.username ?? "",
     birthday: c.birthday ?? "",
     avatar: c.avatar ?? "🌱",
     dailyGoal: c.daily_goal,
@@ -174,6 +177,7 @@ export function emptyChild(): ChildProfile {
   return {
     id: crypto.randomUUID(),
     name: "",
+    username: "",
     birthday: "",
     avatar: "🌱",
     dailyGoal: 8000,
@@ -319,6 +323,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
               id: c.id,
               parent_id: user.id,
               name: c.name,
+              username: c.username ? c.username.toLowerCase() : null,
               birthday: c.birthday || null,
               avatar: c.avatar,
               daily_goal: c.dailyGoal,
