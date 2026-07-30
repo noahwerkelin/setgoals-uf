@@ -393,6 +393,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      family_today: {
+        Args: never
+        Returns: {
+          avatar: string
+          is_self: boolean
+          member_id: string
+          name: string
+          relation: string
+          steps: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
