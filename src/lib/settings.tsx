@@ -299,6 +299,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       // are intentionally excluded — they are server-only and set by verified payment webhooks
       // using the service role. Client writes are also blocked by a DB trigger.
 
+      // A linked child account can never change parent-controlled rules.
+      // (Also enforced by RLS: children rows are read-only for the child.)
+      if (settings.linkedChild && (CHILD_LOCKED_KEYS as readonly string[]).includes(key as string)) {
+        return;
+      }
 
       if (key === "children") {
         // Full sync: replace children list (delete missing, upsert provided)
@@ -320,9 +325,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
               code: c.code,
               steps_per_30: c.stepsPer30,
               daily_cap_hours: c.dailyCapHours,
+              bedtime: c.bedtime || null,
             })),
           );
         }
+
         return;
       }
 
