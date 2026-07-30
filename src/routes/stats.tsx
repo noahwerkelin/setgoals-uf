@@ -18,8 +18,6 @@ export const Route = createFileRoute("/stats")({
   component: Page,
 });
 
-const DAY_KEYS = ["M", "T", "W", "T", "F", "S", "S"] as const;
-
 function Page() {
   const { t, lang } = useT();
   const { settings } = useSettings();
@@ -27,11 +25,58 @@ function Page() {
   const { data: history = [] } = useHistorySteps(180);
   const insights = computeInsights(history, settings.dailyGoal, settings.stepsPer30, settings.dailyCapHours);
   const messages = buildMessages(insights, lang);
+  const locale = lang === "sv" ? "sv-SE" : "en-US";
   const WEEK = week.map((d) => d.steps);
   const MAX = Math.max(1, ...WEEK);
   const [proOpen, setProOpen] = useState(false);
   const avg = WEEK.length ? Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length) : 0;
   const weeklyEarnedMin = WEEK.reduce((a, s) => a + earnedMinFromSteps(s, settings.stepsPer30, settings.dailyCapHours), 0);
+
+  const dayLabel = (iso: string, opts: Intl.DateTimeFormatOptions) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString(locale, opts);
+  };
+
+  // Last 7 days vs the 7 days before that — from real logged activity.
+  const last7 = history.slice(-7).reduce((a, d) => a + d.steps, 0);
+  const prev7 = history.slice(-14, -7).reduce((a, d) => a + d.steps, 0);
+  const vsLastPct = prev7 > 0 ? Math.round(((last7 - prev7) / prev7) * 100) : null;
+
+  // Goal completion over the last 30 days (days with any data count toward it).
+  const goal = Math.max(1, settings.dailyGoal || 1);
+  const last30 = history.slice(-30);
+  const goalPct = last30.length
+    ? Math.round((last30.filter((d) => d.steps >= goal).length / last30.length) * 100)
+    : 0;
+
+  // Active days this week = days that hit the goal.
+  const activeDays = week.filter((d) => d.steps >= goal).length;
+
+  // Best day in the last 30 days.
+  const best = last30.reduce<{ day: string; steps: number } | null>(
+    (acc, d) => (!acc || d.steps > acc.steps ? { day: d.day, steps: d.steps } : acc),
+    null,
+  );
+
+  // Weekly averages for the trend line (last 8 weeks).
+  const weeks: number[] = [];
+  for (let i = 8; i >= 1; i--) {
+    const slice = history.slice(-7 * i, history.length - 7 * (i - 1));
+    weeks.push(slice.length ? slice.reduce((a, d) => a + d.steps, 0) / slice.length : 0);
+  }
+  const trendMax = Math.max(1, ...weeks);
+  const points = weeks.map((v, i) => {
+    const x = (i / Math.max(1, weeks.length - 1)) * 300;
+    const y = 95 - (v / trendMax) * 85;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const linePath = `M${points.join(" L")}`;
+  const areaPath = `${linePath} L300,100 L0,100 Z`;
+  const recent4 = weeks.slice(-4).reduce((a, b) => a + b, 0);
+  const prior4 = weeks.slice(0, 4).reduce((a, b) => a + b, 0);
+  const trendPct = prior4 > 0 ? Math.round(((recent4 - prior4) / prior4) * 100) : null;
+  const hasTrendData = weeks.some((v) => v > 0);
+
   return (
     <AppShell>
       <PageHeader eyebrow={t("stats.eyebrow")} title={t("stats.title")} />
@@ -42,18 +87,24 @@ function Page() {
               <p className="text-[10px] font-medium uppercase tracking-widest text-sage-600">{t("stats.avg")}</p>
               <p className="text-3xl font-semibold tabular-nums">{avg.toLocaleString()}</p>
             </div>
-            <span className="rounded-full bg-sage-100 px-3 py-1 text-xs font-medium text-sage-700">{t("stats.vs_last")}</span>
+            <span className="rounded-full bg-sage-100 px-3 py-1 text-xs font-medium text-sage-700">
+              {vsLastPct === null
+                ? t("stats.no_data")
+                : t("stats.vs_last", { pct: `${vsLastPct > 0 ? "+" : ""}${vsLastPct}` })}
+            </span>
           </div>
           <div className="mt-6 grid grid-cols-7 items-end gap-2 h-40">
-            {WEEK.map((v, i) => (
-              <div key={i} className="flex h-full flex-col items-center gap-2">
+            {week.map((d, i) => (
+              <div key={d.day} className="flex h-full flex-col items-center gap-2">
                 <div className="flex h-full w-full items-end">
                   <div
                     className="w-full rounded-t-lg bg-sage-600"
-                    style={{ height: `${(v / MAX) * 100}%`, opacity: i === 4 ? 1 : 0.55 }}
+                    style={{ height: `${(d.steps / MAX) * 100}%`, opacity: i === week.length - 1 ? 1 : 0.55 }}
                   />
                 </div>
-                <span className="text-[10px] font-medium text-sage-600">{t(`stats.day.${DAY_KEYS[i]}`)}</span>
+                <span className="text-[10px] font-medium text-sage-600">
+                  {dayLabel(d.day, { weekday: "narrow" }).toUpperCase()}
+                </span>
               </div>
             ))}
           </div>
@@ -61,27 +112,32 @@ function Page() {
 
         <section className="grid grid-cols-2 gap-4">
           <Card label={t("stats.screen")} value={formatScreenMin(weeklyEarnedMin)} sub={t("stats.screen_sub")} />
-          <Card label={t("stats.goal")} value="86%" sub={t("stats.goal_sub")} />
-          <Card label={t("stats.active")} value="6 / 7" sub={t("stats.active_sub")} />
-          <Card label={t("stats.best")} value="11,200" sub={t("stats.best_sub")} />
+          <Card label={t("stats.goal")} value={`${goalPct}%`} sub={t("stats.goal_sub")} />
+          <Card label={t("stats.active")} value={`${activeDays} / ${Math.max(1, week.length)}`} sub={t("stats.active_sub")} />
+          <Card
+            label={t("stats.best")}
+            value={best && best.steps > 0 ? best.steps.toLocaleString() : "—"}
+            sub={best && best.steps > 0 ? dayLabel(best.day, { weekday: "long" }) : t("stats.no_data")}
+          />
         </section>
 
         <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5">
           <h3 className="text-sm font-semibold">{t("stats.trend")}</h3>
-          <svg viewBox="0 0 300 100" className="mt-3 w-full">
-            <path
-              d="M0,80 C40,60 70,70 100,55 S180,30 220,40 S290,20 300,25"
-              fill="none"
-              stroke="oklch(0.58 0.038 142)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-            <path
-              d="M0,80 C40,60 70,70 100,55 S180,30 220,40 S290,20 300,25 L300,100 L0,100 Z"
-              fill="oklch(0.58 0.038 142 / 0.12)"
-            />
-          </svg>
-          <p className="mt-2 text-xs text-sage-600">{t("stats.trend_sub")}</p>
+          {hasTrendData ? (
+            <>
+              <svg viewBox="0 0 300 100" className="mt-3 w-full">
+                <path d={linePath} fill="none" stroke="oklch(0.58 0.038 142)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={areaPath} fill="oklch(0.58 0.038 142 / 0.12)" />
+              </svg>
+              <p className="mt-2 text-xs text-sage-600">
+                {trendPct === null
+                  ? t("stats.no_data")
+                  : t("stats.trend_sub", { pct: `${trendPct > 0 ? "+" : ""}${trendPct}` })}
+              </p>
+            </>
+          ) : (
+            <p className="mt-3 text-xs text-sage-600">{t("stats.no_data")}</p>
+          )}
         </section>
 
         <section className={`relative overflow-hidden rounded-3xl p-5 ring-1 ${settings.isPro ? "bg-card ring-black/5" : "bg-sage-50 ring-sage-200"}`}>
