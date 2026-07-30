@@ -288,12 +288,14 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
               action={
                 <button
                   onClick={async () => {
-                    const next = settings.proPaymentMethod.includes("Visa")
-                      ? "Mastercard •• 5454"
-                      : "Visa •• 4242";
-                    await payFn({ data: { method: next } });
-                    await refresh();
-                    toast.success(t("pro.payment_updated"));
+                    const res = await portalFn({
+                      data: {
+                        environment: getStripeEnvironment(),
+                        returnUrl: typeof window !== "undefined" ? window.location.href : undefined,
+                      },
+                    });
+                    if ("url" in res && res.url) window.location.href = res.url;
+                    else toast.error("error" in res ? res.error : t("pro.error"));
                   }}
                   className="text-xs font-medium text-sage-700 hover:underline"
                 >
