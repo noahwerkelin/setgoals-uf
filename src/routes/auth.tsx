@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/lib/auth";
+import { redeemChildCode } from "@/lib/children.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -114,7 +115,7 @@ function SocialButtons() {
   );
 }
 
-function SignIn({ onForgot, onSignup }: { onForgot: () => void; onSignup: () => void }) {
+function SignIn({ onForgot, onSignup, onJoin }: { onForgot: () => void; onSignup: () => void; onJoin: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -140,6 +141,13 @@ function SignIn({ onForgot, onSignup }: { onForgot: () => void; onSignup: () => 
         {busy ? "Signing in…" : "Sign in"}
       </button>
       <SocialButtons />
+      <button
+        type="button"
+        onClick={onJoin}
+        className="mt-2 w-full rounded-full bg-sage-100 py-3 text-sm font-semibold text-sage-800 ring-1 ring-sage-200"
+      >
+        Join with parent code
+      </button>
       <p className="mt-6 text-center text-xs text-sage-600">
         No account?{" "}
         <button type="button" onClick={onSignup} className="font-semibold text-sage-800 hover:underline">
@@ -225,6 +233,60 @@ function Forgot({ onDone }: { onDone: () => void }) {
       <Field type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <button disabled={busy} type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
         {busy ? "Sending…" : "Send reset link"}
+      </button>
+    </form>
+  );
+}
+
+function JoinWithCode() {
+  const [code, setCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (clean.length !== 8) return toast.error("Enter the 8-character code, e.g. A7K9-PQ42");
+    if (password.length < 8) return toast.error("Password must be at least 8 characters");
+    setBusy(true);
+    try {
+      await redeemChildCode({ data: { code: clean, email, password } });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("You're connected to your parent!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not use this code.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form className="space-y-3" onSubmit={submit}>
+      <Field
+        placeholder="A7K9-PQ42"
+        value={code}
+        onChange={(e) => {
+          const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+          setCode(raw.length > 4 ? `${raw.slice(0, 4)}-${raw.slice(4)}` : raw);
+        }}
+        required
+        autoCapitalize="characters"
+        className="text-center text-lg font-semibold tracking-[0.3em]"
+      />
+      <Field type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+      <Field
+        type="password"
+        placeholder="Password (min 8 chars)"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+        minLength={8}
+        autoComplete="new-password"
+      />
+      <button disabled={busy} type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+        {busy ? "Joining…" : "Join"}
       </button>
     </form>
   );
