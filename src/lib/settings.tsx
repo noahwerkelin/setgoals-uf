@@ -432,12 +432,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
 
       if (profileKeys[key]) {
-        await supabase
+        const { error } = await supabase
           .from("profiles")
           .update({ [profileKeys[key]!]: value } as never)
           .eq("id", user.id);
+        if (error) {
+          // Keep UI truthful: revert the optimistic change if the write failed.
+          await load();
+          throw new Error(error.message);
+        }
         return;
       }
+
       if (settingsKeys[key]) {
         await supabase
           .from("user_settings")
@@ -446,7 +452,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return;
       }
     },
-    [user, settings.linkedChild],
+    [user, settings.linkedChild, load],
 
   );
 
