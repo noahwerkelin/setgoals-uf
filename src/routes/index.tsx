@@ -10,6 +10,7 @@ import { useTodaySteps, useHistorySteps } from "@/lib/steps";
 import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
 import { loadProST, computeRolloverMin } from "@/lib/screentime";
 import { useBonusMin } from "@/lib/bonus";
+import { ChildAvatar } from "@/components/ChildAvatarPicker";
 
 
 export const Route = createFileRoute("/")({
@@ -461,7 +462,7 @@ function FamilyCard() {
           const local = settings.children.find(
             (c) => c.id === r.member_id || c.authUserId === r.member_id,
           );
-          const name = (r.is_self ? settings.name : null) || local?.name || r.name || "—";
+          const name = (r.is_self ? settings.displayName : null) || local?.name || r.name || "—";
           const avatar = r.is_self
             ? (settings.avatar ?? r.avatar)
             : (local?.avatar ?? r.avatar);
