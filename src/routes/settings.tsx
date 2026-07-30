@@ -61,6 +61,8 @@ function Page() {
   const [capOpen, setCapOpen] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
   const [connectKind, setConnectKind] = useState<"hk" | "gf" | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  const [connectNote, setConnectNote] = useState<string | null>(null);
   const [proOpen, setProOpen] = useState(false);
   const [nicknameOpen, setNicknameOpen] = useState(false);
   const [usernameOpen, setUsernameOpen] = useState(false);
