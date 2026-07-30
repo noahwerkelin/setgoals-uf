@@ -8,7 +8,7 @@ import { FriendsCard } from "@/components/FriendsCard";
 import { useT } from "@/lib/i18n";
 import { currentStreak, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
 import { useTodaySteps } from "@/lib/steps";
-import { fileToSquareDataUrl } from "@/lib/avatar";
+import { fileToSquareDataUrl, initialsFromName } from "@/lib/avatar";
 
 
 export const Route = createFileRoute("/profile")({
@@ -31,12 +31,7 @@ function Page() {
   const avatarLocked = !!settings.linkedChild;
 
   const displayName = settings.displayName || settings.username || "You";
-  const initials = displayName
-    .split(" ")
-    .map((s) => s[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  const initials = initialsFromName(displayName);
 
   const streakCount = currentStreak(settings.streak);
   const goalMetToday = (() => {
@@ -95,7 +90,7 @@ function Page() {
               ) : settings.avatar ? (
                 <span className="text-4xl leading-none">{settings.avatar}</span>
               ) : (
-                <span className="text-xl font-semibold uppercase tracking-widest text-sage-700">
+                <span className="text-3xl font-semibold uppercase tracking-wider text-sage-700">
                   {initials}
                 </span>
               )}

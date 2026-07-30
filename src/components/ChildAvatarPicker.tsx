@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { isImageAvatar } from "@/lib/settings";
-import { fileToSquareDataUrl } from "@/lib/avatar";
+import { fileToSquareDataUrl, initialsFromName } from "@/lib/avatar";
 import { useT } from "@/lib/i18n";
 
 
@@ -15,7 +15,16 @@ export function ChildAvatar({ avatar, name, className = "" }: { avatar: string |
       </span>
     );
   }
-  return <span className={`grid place-items-center rounded-full bg-sage-200 ${className}`}>{avatar || "🌱"}</span>;
+  if (avatar) {
+    return <span className={`grid place-items-center rounded-full bg-sage-200 ${className}`}>{avatar}</span>;
+  }
+  return (
+    <span
+      className={`grid place-items-center rounded-full bg-sage-200 font-semibold uppercase tracking-wider text-sage-700 ${className}`}
+    >
+      <span className="text-[0.5em] leading-none">{initialsFromName(name)}</span>
+    </span>
+  );
 }
 
 export { fileToSquareDataUrl };
