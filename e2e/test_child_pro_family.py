@@ -92,67 +92,80 @@ async def coach_state(page) -> str:
     return "unlocked" if await page.locator("#coach-input").count() else "unknown"
 
 
+async def scenario(pw, name, *, role, family_pro, own_pro, expect_settings, expect_coach, shot=None):
+    print(f"\n[{name}]")
+    browser, page = await open_as(pw, role=role, family_pro=family_pro, own_pro=own_pro)
+    s = await settings_theme_state(page)
+    check(f"{name}: theme picker -> {expect_settings}", s == expect_settings, detail=s)
+    if shot:
+        await page.screenshot(path=str(SCREENSHOTS / f"{shot}_settings.png"))
+    c = await coach_state(page)
+    check(f"{name}: AI coach -> {expect_coach}", c == expect_coach, detail=c)
+    if shot:
+        await page.screenshot(path=str(SCREENSHOTS / f"{shot}_coach.png"))
+    await browser.close()
+
+
 async def main():
     SCREENSHOTS.mkdir(exist_ok=True)
     async with async_playwright() as pw:
-        # 1. Child, parent has an ACTIVE PRO Family plan -> everything unlocked.
-        print("\n[1] child + active PRO Family")
-        browser, page = await open_as(
-            pw, role="child", family_pro={"active": True, "cancelling": False, "ends_at": None}
-        )
-        state = await settings_theme_state(page)
-        check("theme picker unlocked for child on active family plan", state == "unlocked", detail=str(state"unlocked"))
-        await page.screenshot(path=str(SCREENSHOTS / "1_child_active_settings.png"))
-        state = await coach_state(page)
-        check("AI coach usable for child on active family plan", state == "unlocked", detail=str(state"unlocked"))
-        await page.screenshot(path=str(SCREENSHOTS / "1_child_active_coach.png"))
-        await browser.close()
-
-        # 2. Child, parent has NO family plan -> locked with child-specific copy.
-        print("\n[2] child + no PRO Family")
-        browser, page = await open_as(
-            pw, role="child", family_pro={"active": False, "cancelling": False, "ends_at": None}
-        )
-        state = await settings_theme_state(page)
-        check("theme picker locked for child without family plan", state == "locked-child", detail=str(state"locked-child"))
-        await page.screenshot(path=str(SCREENSHOTS / "2_child_locked_settings.png"))
-        state = await coach_state(page)
-        check("AI coach locked for child without family plan", state == "locked-child", detail=str(state"locked-child"))
-        await page.screenshot(path=str(SCREENSHOTS / "2_child_locked_coach.png"))
-        await browser.close()
-
-        # 3. Child, parent cancelled but the period has not ended -> still unlocked.
-        print("\n[3] child + cancelled-but-active PRO Family")
-        browser, page = await open_as(
+        # Child, parent has an ACTIVE PRO Family plan -> everything unlocked.
+        await scenario(
             pw,
+            "child + active PRO Family",
+            role="child",
+            family_pro={"active": True, "cancelling": False, "ends_at": None},
+            own_pro=False,
+            expect_settings="unlocked",
+            expect_coach="unlocked",
+            shot="1_child_active",
+        )
+
+        # Child, parent has NO family plan -> locked with child-specific copy.
+        await scenario(
+            pw,
+            "child + no PRO Family",
+            role="child",
+            family_pro={"active": False, "cancelling": False, "ends_at": None},
+            own_pro=False,
+            expect_settings="locked-child",
+            expect_coach="locked-child",
+            shot="2_child_locked",
+        )
+
+        # Child, parent cancelled but the period has not ended -> still unlocked.
+        await scenario(
+            pw,
+            "child + cancelled-but-active PRO Family",
             role="child",
             family_pro={"active": True, "cancelling": True, "ends_at": "2099-01-01T00:00:00Z"},
+            own_pro=False,
+            expect_settings="unlocked",
+            expect_coach="unlocked",
         )
-        check("theme picker still unlocked until period end", await settings_theme_state(page) == "unlocked", detail=str(await settings_theme_state(page)"unlocked"))
-        check("AI coach still usable until period end", await coach_state(page) == "unlocked", detail=str(await coach_state(page)"unlocked"))
-        await browser.close()
 
-        # 4. Child, own is_pro row is true but no family plan -> must stay locked
-        #    (a child can never self-grant PRO).
-        print("\n[4] child + stale own is_pro, no family plan")
-        browser, page = await open_as(
+        # Child whose own is_pro row is true but with no family plan must stay
+        # locked -- a child can never self-grant PRO.
+        await scenario(
             pw,
+            "child + stale own is_pro, no family plan",
             role="child",
-            own_pro=True,
             family_pro={"active": False, "cancelling": False, "ends_at": None},
+            own_pro=True,
+            expect_settings="locked-child",
+            expect_coach="locked-child",
         )
-        check("child cannot self-grant theme access", await settings_theme_state(page) == "locked-child", detail=str(await settings_theme_state(page)"locked-child"))
-        check("child cannot self-grant coach access", await coach_state(page) == "locked-child", detail=str(await coach_state(page)"locked-child"))
-        await browser.close()
 
-        # 5. Individual (non-child) without PRO -> generic upgrade copy, not the parent copy.
-        print("\n[5] individual without PRO")
-        browser, page = await open_as(
-            pw, role="individual", family_pro={"active": False, "cancelling": False, "ends_at": None}
+        # Individual (non-child) without PRO -> generic upsell, not the parent copy.
+        await scenario(
+            pw,
+            "individual without PRO",
+            role="individual",
+            family_pro={"active": False, "cancelling": False, "ends_at": None},
+            own_pro=False,
+            expect_settings="locked-individual",
+            expect_coach="locked-individual",
         )
-        check("individual sees generic PRO upsell", await settings_theme_state(page) == "locked-individual", detail=str(await settings_theme_state(page)"locked-individual"))
-        check("individual coach shows generic PRO lock", await coach_state(page) == "locked-individual", detail=str(await coach_state(page)"locked-individual"))
-        await browser.close()
 
     print(f"\n{checks - len(failures)}/{checks} checks passed")
     if failures:
