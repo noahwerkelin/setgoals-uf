@@ -149,83 +149,90 @@ function Page() {
 
         </section>
 
-        {/* Streak */}
-        <section
-          className="relative overflow-hidden rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise"
-          style={{ animationDelay: "60ms" }}
-        >
-          <div className="flex items-center gap-4">
-            <span
-              className={`relative grid size-14 place-items-center rounded-2xl ${
-                streakCount > 0 ? "bg-orange-100 text-orange-600" : "bg-sage-100 text-sage-600"
+        {/* Today */}
+        <section className="space-y-3 animate-rise" style={{ animationDelay: "60ms" }}>
+          <SectionLabel>{t("profile.section.today")}</SectionLabel>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Mini label={t("profile.mini.steps")} value={stepsToday.toLocaleString()} />
+            <Mini
+              label={t("profile.mini.earned")}
+              value={formatScreenMin(
+                earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours),
+              )}
+            />
+          </div>
+
+          <div className="relative overflow-hidden rounded-3xl bg-card p-5 ring-1 ring-black/5">
+            <div className="flex items-center gap-4">
+              <span
+                className={`relative grid size-14 place-items-center rounded-2xl ${
+                  streakCount > 0 ? "bg-orange-100 text-orange-600" : "bg-sage-100 text-sage-600"
+                }`}
+              >
+                <Flame className="size-6" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">
+                  {t("profile.streak.title")}
+                </p>
+                <p className="text-2xl font-semibold tabular-nums leading-tight">{streakCount}</p>
+                <p className="mt-0.5 text-xs text-sage-600">{streakLabel}</p>
+              </div>
+              <div className="text-right text-[10px] font-medium uppercase tracking-wider text-sage-600">
+                {t("profile.streak.best", { n: String(settings.streak.best) })}
+              </div>
+            </div>
+            <p
+              className={`mt-3 rounded-xl px-3 py-2 text-xs ${
+                goalMetToday
+                  ? "bg-sage-100 text-sage-700"
+                  : streakCount > 0
+                    ? "bg-amber-50 text-amber-700"
+                    : "bg-sage-50 text-sage-600"
               }`}
             >
-              <Flame className="size-6" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-medium uppercase tracking-wider text-sage-600">
-                {t("profile.streak.title")}
-              </p>
-              <p className="text-2xl font-semibold tabular-nums leading-tight">{streakCount}</p>
-              <p className="mt-0.5 text-xs text-sage-600">{streakLabel}</p>
-            </div>
-            <div className="text-right text-[10px] font-medium uppercase tracking-wider text-sage-600">
-              {t("profile.streak.best", { n: String(settings.streak.best) })}
-            </div>
-          </div>
-          <p
-            className={`mt-3 rounded-xl px-3 py-2 text-xs ${
-              goalMetToday
-                ? "bg-sage-100 text-sage-700"
+              {goalMetToday
+                ? t("profile.streak.active")
                 : streakCount > 0
-                  ? "bg-amber-50 text-amber-700"
-                  : "bg-sage-50 text-sage-600"
-            }`}
-          >
-            {goalMetToday
-              ? t("profile.streak.active")
-              : streakCount > 0
-                ? t("profile.streak.at_risk")
-                : t("profile.streak.zero")}
-          </p>
+                  ? t("profile.streak.at_risk")
+                  : t("profile.streak.zero")}
+            </p>
+          </div>
         </section>
 
-        {/* Stats — today */}
-        <section className="grid grid-cols-3 gap-3 animate-rise" style={{ animationDelay: "120ms" }}>
-          <Mini label={t("profile.mini.steps")} value={stepsToday.toLocaleString()} />
-          <Mini label={t("profile.mini.earned")} value={formatScreenMin(earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours))} />
-          <Mini label={t("profile.mini.streak")} value={`${streakCount}d`} />
+        {/* Progress & social */}
+        <section className="space-y-3 animate-rise" style={{ animationDelay: "120ms" }}>
+          <SectionLabel>{t("profile.section.progress")}</SectionLabel>
+          <ProfileBadgeStrip />
+          <FriendsCard />
         </section>
 
-        {/* Badges */}
-        <ProfileBadgeStrip />
-
-        {/* Friends */}
-        <FriendsCard />
-
-
-        {/* Nav */}
-        <nav className="space-y-2 animate-rise" style={{ animationDelay: "180ms" }}>
-          <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
-          {!isChild && (
-            <>
-              <Row
-                to="/parent"
-                icon={<Shield className="size-4" />}
-                label={t("profile.row.screentime")}
-                subtitle={t("profile.row.screentime_sub")}
-              />
-              <Row
-                to="/parent"
-                hash="children"
-                icon={<Users className="size-4" />}
-                label={t("profile.row.children")}
-                subtitle={t("profile.row.children_sub")}
-              />
-            </>
-          )}
-          <Row to="/settings" icon={<Settings className="size-4" />} label={t("profile.row.settings")} subtitle={t("profile.row.settings_sub")} />
-        </nav>
+        {/* Manage */}
+        <section className="space-y-3 animate-rise" style={{ animationDelay: "180ms" }}>
+          <SectionLabel>{t("profile.section.manage")}</SectionLabel>
+          <nav className="overflow-hidden rounded-3xl bg-card ring-1 ring-black/5 divide-y divide-black/5">
+            <Row to="/stats" icon={<BarChart3 className="size-4" />} label={t("profile.row.stats")} subtitle={t("profile.row.stats_sub")} />
+            {!isChild && (
+              <>
+                <Row
+                  to="/parent"
+                  icon={<Shield className="size-4" />}
+                  label={t("profile.row.screentime")}
+                  subtitle={t("profile.row.screentime_sub")}
+                />
+                <Row
+                  to="/parent"
+                  hash="children"
+                  icon={<Users className="size-4" />}
+                  label={t("profile.row.children")}
+                  subtitle={t("profile.row.children_sub")}
+                />
+              </>
+            )}
+            <Row to="/settings" icon={<Settings className="size-4" />} label={t("profile.row.settings")} subtitle={t("profile.row.settings_sub")} />
+          </nav>
+        </section>
       </div>
     </AppShell>
   );
