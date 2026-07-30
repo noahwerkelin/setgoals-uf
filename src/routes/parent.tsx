@@ -373,7 +373,7 @@ function Page() {
                       <Pencil className="size-3.5" />
                     </button>
                     <button
-                      onClick={() => remove(k.id)}
+                      onClick={() => setDeleting(k)}
                       aria-label={t("parent.child.delete")}
                       className="grid size-8 place-items-center rounded-full bg-sage-100 text-sage-700"
                     >
