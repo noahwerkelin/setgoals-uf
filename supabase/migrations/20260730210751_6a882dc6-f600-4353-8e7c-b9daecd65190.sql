@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.username_available(text) FROM anon, authenticated;
