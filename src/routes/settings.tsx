@@ -73,6 +73,48 @@ function Page() {
   const isChild = settings.role === "child";
   const cancelSubFn = useServerFn(cancelStripeSubscription);
 
+  const providerOf = (k: "hk" | "gf"): HealthProvider => (k === "hk" ? "healthkit" : "googlefit");
+
+  const openConnect = (k: "hk" | "gf") => {
+    setConnectNote(
+      isProviderSupportedOnPlatform(providerOf(k)) ? null : t(k === "hk" ? "health.ios_only" : "health.android_only"),
+    );
+    setConnectKind(k);
+  };
+
+  /** Hand the request to the OS — it owns the permission sheet, not us. */
+  const connectHealth = async (k: "hk" | "gf") => {
+    const provider = providerOf(k);
+    setConnecting(true);
+    setConnectNote(null);
+    try {
+      const res = await requestHealthAccess(provider);
+      if (res.status === "granted") {
+        update(provider === "healthkit" ? "healthkitConnected" : "googlefitConnected", true);
+        toast.success(t("settings.connected"));
+        setConnectKind(null);
+        return;
+      }
+      if (res.status === "denied") setConnectNote(t("health.denied"));
+      else if (res.status === "unavailable")
+        setConnectNote(
+          res.reason === "wrong-platform"
+            ? t(k === "hk" ? "health.ios_only" : "health.android_only")
+            : t(k === "hk" ? "health.needs_ios_app" : "health.needs_android_app"),
+        );
+      else setConnectNote(t("health.error"));
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const disconnectHealth = async (provider: HealthProvider) => {
+    await revokeHealthAccess(provider);
+    update(provider === "healthkit" ? "healthkitConnected" : "googlefitConnected", false);
+    toast(t("settings.disconnect") + " ✓");
+  };
+
+
   const deleteAccount = async (password: string): Promise<boolean> => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user?.email) return false;
