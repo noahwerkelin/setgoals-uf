@@ -26,6 +26,18 @@ export function getStripeEnvironment(): StripeEnv {
   return paymentsEnvironment();
 }
 
+/**
+ * Same as getStripeEnvironment() but never throws. Used by entitlement checks
+ * that must keep working in builds where payments aren't configured yet.
+ */
+export function getStripeEnvironmentSafe(): StripeEnv | null {
+  try {
+    return paymentsEnvironment();
+  } catch {
+    return null;
+  }
+}
+
 /** App plan ids -> catalog price ids created in the payment provider. */
 export const PLAN_PRICE_IDS = {
   monthly: "pro_monthly",

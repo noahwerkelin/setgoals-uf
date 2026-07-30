@@ -416,10 +416,12 @@ export type Database = {
           healthkit_connected: boolean
           is_pro: boolean
           pro_auto_renew: boolean
+          pro_environment: string
           pro_expires_at: string | null
           pro_payment_method: string | null
           pro_plan: Database["public"]["Enums"]["sub_plan"]
           pro_since: string | null
+          pro_status: string
           push_on: boolean
           share_location: Database["public"]["Enums"]["share_location_mode"]
           steps_per_30: number
@@ -437,10 +439,12 @@ export type Database = {
           healthkit_connected?: boolean
           is_pro?: boolean
           pro_auto_renew?: boolean
+          pro_environment?: string
           pro_expires_at?: string | null
           pro_payment_method?: string | null
           pro_plan?: Database["public"]["Enums"]["sub_plan"]
           pro_since?: string | null
+          pro_status?: string
           push_on?: boolean
           share_location?: Database["public"]["Enums"]["share_location_mode"]
           steps_per_30?: number
@@ -458,10 +462,12 @@ export type Database = {
           healthkit_connected?: boolean
           is_pro?: boolean
           pro_auto_renew?: boolean
+          pro_environment?: string
           pro_expires_at?: string | null
           pro_payment_method?: string | null
           pro_plan?: Database["public"]["Enums"]["sub_plan"]
           pro_since?: string | null
+          pro_status?: string
           push_on?: boolean
           share_location?: Database["public"]["Enums"]["share_location_mode"]
           steps_per_30?: number
@@ -515,6 +521,8 @@ export type Database = {
           active: boolean
           cancelling: boolean
           ends_at: string
+          environment: string
+          status: string
         }[]
       }
       pro_is_active: { Args: { _user_id: string }; Returns: boolean }

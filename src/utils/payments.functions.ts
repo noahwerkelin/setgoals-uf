@@ -1,10 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
+import { clearEntitlement, fetchCardLabel, syncSubscription } from "@/lib/entitlements.server";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
 type MutationResult = { ok: true } | { error: string };
+type SyncResult =
+  | { isPro: boolean; status: string; plan: string | null; paymentMethod: string }
+  | { error: string };
+
 
 async function resolveOrCreateCustomer(
   stripe: ReturnType<typeof createStripeClient>,
@@ -78,10 +83,18 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       } = await supabase.auth.getUser();
 
       const stripe = createStripeClient(data.environment);
+
+      // Never let someone buy a second plan on top of an active one.
+      const existingSub = await findSubscription(stripe, userId);
+      if (existingSub && ["active", "trialing", "past_due"].includes(existingSub.status)) {
+        return { error: "You already have an active subscription. Use Change plan instead." };
+      }
+
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
       if (!prices.data.length) return { error: "Price not found" };
       const stripePrice = prices.data[0];
       const isRecurring = stripePrice.type === "recurring";
+
 
       const customerId = await resolveOrCreateCustomer(stripe, {
         email: user?.email ?? undefined,
@@ -189,6 +202,42 @@ export const changeStripePlan = createServerFn({ method: "POST" })
         cancel_at_period_end: false,
       });
       return { ok: true };
+    } catch (error) {
+      return { error: getStripeErrorMessage(error) };
+    }
+  });
+
+/**
+ * Reconcile entitlement straight from Stripe.
+ *
+ * Webhooks are the primary path, but they can be delayed or dropped — this is
+ * called right after checkout and whenever the PRO dashboard opens, so a paid
+ * user is never left without access (and a lapsed one never keeps it).
+ */
+export const syncSubscriptionStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { environment: StripeEnv }) => data)
+  .handler(async ({ data, context }): Promise<SyncResult> => {
+    try {
+      const { userId, supabase } = context;
+
+      // Children inherit PRO Family from a parent; they have no billing of their own.
+      const { data: childRow } = await supabase
+        .from("children")
+        .select("id")
+        .eq("auth_user_id", userId)
+        .maybeSingle();
+      if (childRow) return { isPro: false, status: "inherited", plan: null, paymentMethod: "" };
+
+      const stripe = createStripeClient(data.environment);
+      const sub = await findSubscription(stripe, userId);
+      if (!sub) {
+        await clearEntitlement(userId, data.environment);
+        return { isPro: false, status: "inactive", plan: null, paymentMethod: "" };
+      }
+      const paymentMethod = await fetchCardLabel(stripe, sub);
+      const res = await syncSubscription(sub, data.environment, { userId, paymentMethod });
+      return { isPro: res.isPro, status: res.status, plan: res.plan, paymentMethod };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
