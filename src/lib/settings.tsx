@@ -233,7 +233,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       anonymousLeaderboard: s?.anonymous_leaderboard ?? false,
       shareLocation: (s?.share_location ?? "while_using") as SettingsState["shareLocation"],
       units: (s?.units ?? "metric") as Units,
-      isPro: s?.is_pro ?? false,
+      // A linked child inherits PRO only from a parent's PRO Family plan.
+      isPro: linked ? familyProRes.data === true : (s?.is_pro ?? false),
       proSince: s?.pro_since ?? null,
       proPlan: (s?.pro_plan ?? "monthly") as SubPlan,
       proAutoRenew: s?.pro_auto_renew ?? true,
