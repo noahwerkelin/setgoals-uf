@@ -238,10 +238,18 @@ function Page() {
   );
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="px-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-sage-600">
+      {children}
+    </h2>
+  );
+}
+
 function Mini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-card p-3 text-center ring-1 ring-black/5">
-      <p className="text-base font-semibold tabular-nums">{value}</p>
+    <div className="rounded-2xl bg-card p-4 text-center ring-1 ring-black/5">
+      <p className="text-lg font-semibold tabular-nums">{value}</p>
       <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-sage-600">{label}</p>
     </div>
   );
