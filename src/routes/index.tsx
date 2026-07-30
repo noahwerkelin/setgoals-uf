@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
-import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
 import { useTodaySteps, useHistorySteps } from "@/lib/steps";
 import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
 import { loadProST, computeRolloverMin } from "@/lib/screentime";
