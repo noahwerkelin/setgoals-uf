@@ -21,6 +21,14 @@ import { Button } from "@/components/ui/button";
 
 import { useT } from "@/lib/i18n";
 import { useSettings, isFamilyPlan, type SubPlan } from "@/lib/settings";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  startSubscription,
+  cancelSubscription,
+  resumeSubscription,
+  changeSubscriptionPlan,
+  updatePaymentMethod,
+} from "@/lib/subscription.functions";
 
 const ALL_PLANS: SubPlan[] = ["monthly", "yearly", "family_monthly", "family_yearly"];
 
@@ -79,7 +87,15 @@ export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpen
 }
 
 function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { t } = useT();
+  const { t, lang } = useT();
+  const { settings } = useSettings();
+  const fam = settings.parentFamily;
+  const endsAt = fam?.endsAt ? formatDate(new Date(fam.endsAt), lang) : null;
+  const desc = fam?.cancelling && endsAt
+    ? t("pro.child_ending", { date: endsAt })
+    : fam?.active
+      ? t("pro.child_active")
+      : t("pro.child_desc");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -87,8 +103,10 @@ function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
           <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
             <Sparkles className="size-6" />
           </div>
-          <DialogTitle className="text-center">{t("pro.child_title")}</DialogTitle>
-          <DialogDescription className="text-center">{t("pro.child_desc")}</DialogDescription>
+          <DialogTitle className="text-center">
+            {fam?.active ? t("pro.child_active_title") : t("pro.child_title")}
+          </DialogTitle>
+          <DialogDescription className="text-center">{desc}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-stretch">
           <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
@@ -102,8 +120,10 @@ function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
 function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
-  const { update } = useSettings();
+  const { refresh } = useSettings();
+  const startFn = useServerFn(startSubscription);
   const [plan, setPlan] = useState<SubPlan>("monthly");
+  const [busy, setBusy] = useState(false);
 
   const features = [
     "pro.feature.bonus",
@@ -141,13 +161,19 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
         <DialogFooter className="sm:justify-stretch">
           <Button
             className="w-full"
-            onClick={() => {
-              update("isPro", true);
-              update("proPlan", plan);
-              update("proSince", new Date().toISOString());
-              update("proAutoRenew", true);
-              toast.success(t("pro.welcome"));
-              onOpenChange(false);
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await startFn({ data: { plan } });
+                await refresh();
+                toast.success(t("pro.welcome"));
+                onOpenChange(false);
+              } catch {
+                toast.error(t("pro.error"));
+              } finally {
+                setBusy(false);
+              }
             }}
           >
             <Sparkles className="size-4" /> {t("pro.upgrade")}
