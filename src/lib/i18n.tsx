@@ -1414,3 +1414,17 @@ export function useT() {
   if (!ctx) throw new Error("useT must be used inside I18nProvider");
   return ctx;
 }
+
+/** Read the persisted language without needing the provider (safe in error boundaries). */
+export function getStoredLang(): Lang {
+  if (typeof window === "undefined") return "en";
+  const stored = localStorage.getItem("sg.lang");
+  return stored === "sv" ? "sv" : "en";
+}
+
+/** Translate without the provider. */
+export function translate(lang: Lang, key: string, vars?: Record<string, string | number>) {
+  let s = DICTS[lang][key] ?? DICTS.en[key] ?? key;
+  if (vars) for (const k in vars) s = s.replace(`{${k}}`, String(vars[k]));
+  return s;
+}
