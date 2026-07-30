@@ -87,12 +87,14 @@ function Home() {
   const remainingMin = Math.max(0, capMin + rolloverMin - Math.min(capMin + rolloverMin, baseEarned + rolloverMin));
   const ringProgress = Math.min(1, stepsToday / goal);
 
-  const date = now.toLocaleDateString(lang === "sv" ? "sv-SE" : undefined, {
+  const rawDate = now.toLocaleDateString(lang === "sv" ? "sv-SE" : "en-US", {
     timeZone: tz,
     weekday: "long",
     month: "short",
     day: "numeric",
   });
+  const date = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
+
   const distance = formatDistance(distanceKm, settings.units);
   const [distValue, distUnit] = distance.split(" ");
 
