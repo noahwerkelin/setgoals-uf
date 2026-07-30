@@ -368,6 +368,7 @@ export type Database = {
           healthkit_connected: boolean
           is_pro: boolean
           pro_auto_renew: boolean
+          pro_expires_at: string | null
           pro_payment_method: string | null
           pro_plan: Database["public"]["Enums"]["sub_plan"]
           pro_since: string | null
@@ -388,6 +389,7 @@ export type Database = {
           healthkit_connected?: boolean
           is_pro?: boolean
           pro_auto_renew?: boolean
+          pro_expires_at?: string | null
           pro_payment_method?: string | null
           pro_plan?: Database["public"]["Enums"]["sub_plan"]
           pro_since?: string | null
@@ -408,6 +410,7 @@ export type Database = {
           healthkit_connected?: boolean
           is_pro?: boolean
           pro_auto_renew?: boolean
+          pro_expires_at?: string | null
           pro_payment_method?: string | null
           pro_plan?: Database["public"]["Enums"]["sub_plan"]
           pro_since?: string | null
@@ -457,6 +460,15 @@ export type Database = {
         }[]
       }
       parent_family_pro: { Args: never; Returns: boolean }
+      parent_family_pro_status: {
+        Args: never
+        Returns: {
+          active: boolean
+          cancelling: boolean
+          ends_at: string
+        }[]
+      }
+      pro_is_active: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

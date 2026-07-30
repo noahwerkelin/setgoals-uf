@@ -72,7 +72,11 @@ export type SettingsState = {
   proSince: string | null;
   proPlan: SubPlan;
   proAutoRenew: boolean;
+  /** Set when the plan is cancelled: PRO stays active until this moment, then lapses. */
+  proExpiresAt: string | null;
   proPaymentMethod: string;
+  /** For child accounts: status of the parent's PRO Family plan. */
+  parentFamily: { active: boolean; cancelling: boolean; endsAt: string | null } | null;
   themeColor: ThemeColor;
   bonusMinFromYesterday: number;
   role: Role;
@@ -102,7 +106,9 @@ const DEFAULTS: SettingsState = {
   proSince: null,
   proPlan: "monthly",
   proAutoRenew: true,
+  proExpiresAt: null,
   proPaymentMethod: "",
+  parentFamily: null,
   themeColor: "sage",
   bonusMinFromYesterday: 0,
   role: "individual",
@@ -137,6 +143,8 @@ export function currentStreak(s: StreakState): number {
   const diff = daysBetween(s.lastGoalMetDate, todayISO());
   return diff <= 1 ? s.count : 0;
 }
+
+type FamilyProRow = { active: boolean; cancelling: boolean; ends_at: string | null };
 
 type ChildRow = {
   id: string;
@@ -214,13 +222,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       supabase.from("streaks").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("children").select("*").eq("parent_id", user.id),
       supabase.from("children").select("*").eq("auth_user_id", user.id).maybeSingle(),
-      supabase.rpc("parent_family_pro"),
+      supabase.rpc("parent_family_pro_status"),
     ]);
     const p = profileRes.data;
     const s = settingsRes.data;
     const st = streakRes.data;
     const kids = (childrenRes.data ?? []) as ChildRow[];
     const linked = linkedRes.data ? mapChild(linkedRes.data as ChildRow) : null;
+    const fam = (familyProRes.data as FamilyProRow[] | null)?.[0];
+    const family = {
+      active: fam?.active ?? false,
+      cancelling: fam?.cancelling ?? false,
+      endsAt: fam?.ends_at ?? null,
+    };
+    const proExpired = !!s?.pro_expires_at && new Date(s.pro_expires_at).getTime() <= Date.now();
+    const ownProActive = (s?.is_pro ?? false) && !proExpired;
 
     setSettings({
       // Parent-assigned rules win for a linked child account.
@@ -233,12 +249,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       anonymousLeaderboard: s?.anonymous_leaderboard ?? false,
       shareLocation: (s?.share_location ?? "while_using") as SettingsState["shareLocation"],
       units: (s?.units ?? "metric") as Units,
-      // A linked child inherits PRO only from a parent's PRO Family plan.
-      isPro: linked ? familyProRes.data === true : (s?.is_pro ?? false),
+      // A linked child inherits PRO only from a parent's *active* PRO Family plan.
+      isPro: linked ? family.active : ownProActive,
       proSince: s?.pro_since ?? null,
       proPlan: (s?.pro_plan ?? "monthly") as SubPlan,
       proAutoRenew: s?.pro_auto_renew ?? true,
+      proExpiresAt: s?.pro_expires_at ?? null,
       proPaymentMethod: s?.pro_payment_method ?? "",
+      parentFamily: linked ? family : null,
       themeColor: (s?.theme_color ?? "sage") as ThemeColor,
       bonusMinFromYesterday: 0,
       role: (linked ? "child" : ((p?.role === "parent" ? "individual" : p?.role) ?? "individual")) as Role,
@@ -271,10 +289,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
   }, [user, load]);
 
+  // Child accounts can't read the parent's billing row directly, so re-check the
+  // inherited PRO Family entitlement on focus and on a slow interval. This is also
+  // what makes access lapse on its own once a cancelled plan reaches its end date.
+  useEffect(() => {
+    if (!user) return;
+    const tick = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      load();
+    };
+    const id = window.setInterval(tick, 5 * 60_000);
+    window.addEventListener("focus", tick);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", tick);
+    };
+  }, [user, load]);
 
   useEffect(() => {
     load();
   }, [load]);
+
 
   // Apply theme
   useEffect(() => {

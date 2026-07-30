@@ -21,6 +21,14 @@ import { Button } from "@/components/ui/button";
 
 import { useT } from "@/lib/i18n";
 import { useSettings, isFamilyPlan, type SubPlan } from "@/lib/settings";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  startSubscription,
+  cancelSubscription,
+  resumeSubscription,
+  changeSubscriptionPlan,
+  updatePaymentMethod,
+} from "@/lib/subscription.functions";
 
 const ALL_PLANS: SubPlan[] = ["monthly", "yearly", "family_monthly", "family_yearly"];
 
@@ -79,7 +87,15 @@ export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpen
 }
 
 function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { t } = useT();
+  const { t, lang } = useT();
+  const { settings } = useSettings();
+  const fam = settings.parentFamily;
+  const endsAt = fam?.endsAt ? formatDate(new Date(fam.endsAt), lang) : null;
+  const desc = fam?.cancelling && endsAt
+    ? t("pro.child_ending", { date: endsAt })
+    : fam?.active
+      ? t("pro.child_active")
+      : t("pro.child_desc");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -87,8 +103,10 @@ function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
           <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
             <Sparkles className="size-6" />
           </div>
-          <DialogTitle className="text-center">{t("pro.child_title")}</DialogTitle>
-          <DialogDescription className="text-center">{t("pro.child_desc")}</DialogDescription>
+          <DialogTitle className="text-center">
+            {fam?.active ? t("pro.child_active_title") : t("pro.child_title")}
+          </DialogTitle>
+          <DialogDescription className="text-center">{desc}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-stretch">
           <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
@@ -102,8 +120,10 @@ function ChildProDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
 function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
-  const { update } = useSettings();
+  const { refresh } = useSettings();
+  const startFn = useServerFn(startSubscription);
   const [plan, setPlan] = useState<SubPlan>("monthly");
+  const [busy, setBusy] = useState(false);
 
   const features = [
     "pro.feature.bonus",
@@ -141,13 +161,19 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
         <DialogFooter className="sm:justify-stretch">
           <Button
             className="w-full"
-            onClick={() => {
-              update("isPro", true);
-              update("proPlan", plan);
-              update("proSince", new Date().toISOString());
-              update("proAutoRenew", true);
-              toast.success(t("pro.welcome"));
-              onOpenChange(false);
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await startFn({ data: { plan } });
+                await refresh();
+                toast.success(t("pro.welcome"));
+                onOpenChange(false);
+              } catch {
+                toast.error(t("pro.error"));
+              } finally {
+                setBusy(false);
+              }
             }}
           >
             <Sparkles className="size-4" /> {t("pro.upgrade")}
@@ -160,13 +186,22 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
 
 function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, lang } = useT();
-  const { settings, update } = useSettings();
+  const { settings, refresh } = useSettings();
+  const cancelFn = useServerFn(cancelSubscription);
+  const resumeFn = useServerFn(resumeSubscription);
+  const payFn = useServerFn(updatePaymentMethod);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const since = settings.proSince ?? new Date().toISOString();
-  const nextDate = addMonths(since, settings.proPlan.endsWith("yearly") ? 12 : 1);
+  const cancelling = !settings.proAutoRenew && !!settings.proExpiresAt;
+  const nextDate = settings.proExpiresAt
+    ? new Date(settings.proExpiresAt)
+    : addMonths(since, settings.proPlan.endsWith("yearly") ? 12 : 1);
   const sinceDate = new Date(since);
+  const isFamily = isFamilyPlan(settings.proPlan);
+  const childCount = settings.children.length;
   const price = t(`pro.price.${settings.proPlan}`);
 
   return (
@@ -179,9 +214,26 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
             </div>
             <DialogTitle className="text-center">{t("pro.manage_title")}</DialogTitle>
             <DialogDescription className="text-center">
-              {settings.proAutoRenew ? t("pro.status.active") : t("pro.status.cancelling")}
+              {cancelling ? t("pro.status.cancelling") : t("pro.status.active")}
             </DialogDescription>
           </DialogHeader>
+
+          {isFamily && (
+            <p
+              className={`rounded-2xl p-3 text-xs ring-1 ${
+                cancelling
+                  ? "bg-destructive/10 text-destructive ring-destructive/20"
+                  : "bg-sage-50 text-sage-700 ring-sage-200"
+              }`}
+            >
+              {cancelling
+                ? t("pro.family.children_lose", {
+                    count: String(childCount),
+                    date: formatDate(nextDate, lang),
+                  })
+                : t("pro.family.children_active", { count: String(childCount) })}
+            </p>
+          )}
 
           <div className="space-y-2">
             <InfoRow
@@ -191,7 +243,7 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
             />
             <InfoRow
               icon={<Calendar className="size-4" />}
-              label={settings.proAutoRenew ? t("pro.next_billing") : t("pro.ends_on")}
+              label={cancelling ? t("pro.ends_on") : t("pro.next_billing")}
               value={formatDate(nextDate, lang)}
             />
             <InfoRow
@@ -205,11 +257,12 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
               value={settings.proPaymentMethod}
               action={
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const next = settings.proPaymentMethod.includes("Visa")
                       ? "Mastercard •• 5454"
                       : "Visa •• 4242";
-                    update("proPaymentMethod", next);
+                    await payFn({ data: { method: next } });
+                    await refresh();
                     toast.success(t("pro.payment_updated"));
                   }}
                   className="text-xs font-medium text-sage-700 hover:underline"
@@ -224,13 +277,34 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
             <Button variant="outline" className="w-full" onClick={() => setChangePlanOpen(true)}>
               {t("pro.change_plan")}
             </Button>
-            <Button
-              variant="outline"
-              className="w-full text-destructive hover:text-destructive"
-              onClick={() => setConfirmCancel(true)}
-            >
-              <X className="size-4" /> {t("pro.cancel")}
-            </Button>
+            {cancelling ? (
+              <Button
+                className="w-full"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    await resumeFn({});
+                    await refresh();
+                    toast.success(t("pro.resumed"));
+                  } catch {
+                    toast.error(t("pro.error"));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                <RefreshCw className="size-4" /> {t("pro.resume")}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full text-destructive hover:text-destructive"
+                onClick={() => setConfirmCancel(true)}
+              >
+                <X className="size-4" /> {t("pro.cancel")}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -243,16 +317,26 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
             <AlertDialogTitle>{t("pro.cancel_confirm_title")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("pro.cancel_confirm_desc", { date: formatDate(nextDate, lang) })}
+              {isFamily && childCount > 0
+                ? ` ${t("pro.cancel_confirm_family", { count: String(childCount), date: formatDate(nextDate, lang) })}`
+                : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("pro.keep")}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                update("isPro", false);
-                update("proAutoRenew", false);
-                update("proSince", null);
-                toast(t("pro.cancelled"));
+              onClick={async () => {
+                try {
+                  const res = await cancelFn({});
+                  await refresh();
+                  toast(
+                    t("pro.cancelled_on", {
+                      date: formatDate(new Date(res.expiresAt ?? nextDate), lang),
+                    }),
+                  );
+                } catch {
+                  toast.error(t("pro.error"));
+                }
                 setConfirmCancel(false);
                 onOpenChange(false);
               }}
@@ -268,7 +352,8 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
 
 function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useT();
-  const { settings, update } = useSettings();
+  const { settings, refresh } = useSettings();
+  const changeFn = useServerFn(changeSubscriptionPlan);
   const [plan, setPlan] = useState<SubPlan>(settings.proPlan);
 
   return (
@@ -284,10 +369,14 @@ function ChangePlanDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <Button
             className="w-full"
             disabled={plan === settings.proPlan}
-            onClick={() => {
-              update("proPlan", plan);
-              update("proSince", new Date().toISOString());
-              toast.success(t("pro.plan_changed"));
+            onClick={async () => {
+              try {
+                await changeFn({ data: { plan } });
+                await refresh();
+                toast.success(t("pro.plan_changed"));
+              } catch {
+                toast.error(t("pro.error"));
+              }
               onOpenChange(false);
             }}
           >

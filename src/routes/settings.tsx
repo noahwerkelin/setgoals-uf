@@ -87,8 +87,8 @@ function Page() {
     <AppShell>
       <PageHeader title={t("settings.title")} />
       <div className="px-6 space-y-6">
-        {/* PRO — hidden for children (no in-app purchases) */}
-        {!isChild && (
+        {/* PRO — purchase hidden for children (no in-app purchases), status still shown */}
+        {!isChild ? (
           <button
             onClick={() => setProOpen(true)}
             className={`w-full text-left rounded-3xl p-5 ring-1 transition-colors ${
@@ -104,13 +104,46 @@ function Page() {
               <div className="flex-1">
                 <p className="text-sm font-semibold">{t("pro.title")}</p>
                 <p className={`text-xs ${settings.isPro ? "text-white/80" : "text-sage-600"}`}>
-                  {settings.isPro ? t("pro.active") : t("pro.subtitle")}
+                  {settings.isPro
+                    ? settings.proExpiresAt
+                      ? t("pro.status.ends_on_short", {
+                          date: new Date(settings.proExpiresAt).toLocaleDateString(
+                            lang === "sv" ? "sv-SE" : "en-US",
+                            { year: "numeric", month: "short", day: "numeric" },
+                          ),
+                        })
+                      : t("pro.active")
+                    : t("pro.subtitle")}
                 </p>
               </div>
               <ChevronRight className="size-4" />
             </div>
           </button>
+        ) : (
+          <div className="w-full rounded-3xl bg-card p-5 ring-1 ring-black/5">
+            <div className="flex items-center gap-3">
+              <span className="grid size-10 place-items-center rounded-2xl bg-sage-100 text-sage-700">
+                <Sparkles className="size-5" />
+              </span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold">{t("pro.title")}</p>
+                <p className="text-xs text-sage-600">
+                  {settings.parentFamily?.cancelling && settings.parentFamily.endsAt
+                    ? t("pro.child_ending", {
+                        date: new Date(settings.parentFamily.endsAt).toLocaleDateString(
+                          lang === "sv" ? "sv-SE" : "en-US",
+                          { year: "numeric", month: "short", day: "numeric" },
+                        ),
+                      })
+                    : settings.isPro
+                      ? t("pro.child_active")
+                      : t("pro.child_desc")}
+                </p>
+              </div>
+            </div>
+          </div>
         )}
+
 
         {/* Personalization — PRO-gated color theme */}
         {!isChild && (
