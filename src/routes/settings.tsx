@@ -148,6 +148,8 @@ function Page() {
         {/* Personalization — PRO-gated color theme (children inherit via PRO Family) */}
         <Group title={t("theme.title")}>
           <button
+            data-testid="theme-row"
+            data-locked={settings.isPro ? "false" : "true"}
             onClick={() => (settings.isPro ? setThemeOpen(true) : setProOpen(true))}
             className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-black/5 text-left"
           >

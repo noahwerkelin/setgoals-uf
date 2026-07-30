@@ -87,7 +87,7 @@ function Page() {
         />
         <div className="px-6">
           {settings.role === "child" ? (
-            <div className="rounded-3xl bg-card p-6 ring-1 ring-black/5 text-center space-y-3">
+            <div data-testid="coach-lock-child" className="rounded-3xl bg-card p-6 ring-1 ring-black/5 text-center space-y-3">
               <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-sage-100 text-sage-700">
                 <Sparkles className="size-6" />
               </div>
