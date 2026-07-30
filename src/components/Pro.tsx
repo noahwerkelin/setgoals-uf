@@ -27,6 +27,7 @@ import {
   resumeStripeSubscription,
   changeStripePlan,
   createPortalSession,
+  syncSubscriptionStatus,
 } from "@/utils/payments.functions";
 import { getStripeEnvironment, PLAN_PRICE_IDS } from "@/lib/stripe";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
@@ -79,6 +80,7 @@ function formatDate(d: Date, lang: string): string {
 /** After returning from the hosted checkout, poll until the webhook lands. */
 function useCheckoutReturn() {
   const { refresh } = useSettings();
+  const syncFn = useServerFn(syncSubscriptionStatus);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
@@ -87,12 +89,23 @@ function useCheckoutReturn() {
     url.searchParams.delete("session_id");
     window.history.replaceState({}, "", url.toString());
     let tries = 0;
+    let stopped = false;
     const tick = async () => {
+      if (stopped) return;
+      // Pull the truth from Stripe rather than waiting on the webhook.
+      try {
+        await syncFn({ data: { environment: getStripeEnvironment() } });
+      } catch {
+        /* fall back to the plain refresh below */
+      }
       await refresh();
-      if (++tries < 6) setTimeout(tick, 2000);
+      if (++tries < 5) setTimeout(tick, 2500);
     };
     tick();
-  }, [refresh]);
+    return () => {
+      stopped = true;
+    };
+  }, [refresh, syncFn]);
 }
 
 export function ProUpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
@@ -220,6 +233,7 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
   const cancelFn = useServerFn(cancelStripeSubscription);
   const resumeFn = useServerFn(resumeStripeSubscription);
   const portalFn = useServerFn(createPortalSession);
+  const syncFn = useServerFn(syncSubscriptionStatus);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -233,6 +247,37 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
   const isFamily = isFamilyPlan(settings.proPlan);
   const childCount = settings.children.length;
   const price = t(`pro.price.${settings.proPlan}`);
+  const pastDue = settings.proStatus === "past_due";
+
+  // Reconcile with Stripe every time the dashboard opens so the shown plan,
+  // card and renewal date can never drift from the real subscription.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await syncFn({ data: { environment: getStripeEnvironment() } });
+      } catch {
+        /* keep showing the cached state */
+      }
+      if (!cancelled) await refresh();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, syncFn, refresh]);
+
+  const openPortal = async () => {
+    const res = await portalFn({
+      data: {
+        environment: getStripeEnvironment(),
+        returnUrl: typeof window !== "undefined" ? window.location.href : undefined,
+      },
+    });
+    // The Stripe portal refuses to render in an iframe — always a new tab.
+    if ("url" in res && res.url) window.open(res.url, "_blank", "noopener,noreferrer");
+    else toast.error("error" in res ? res.error : t("pro.error"));
+  };
 
   return (
     <>
@@ -244,9 +289,22 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
             </div>
             <DialogTitle className="text-center">{t("pro.manage_title")}</DialogTitle>
             <DialogDescription className="text-center">
-              {cancelling ? t("pro.status.cancelling") : t("pro.status.active")}
+              {pastDue
+                ? t("pro.status.past_due")
+                : cancelling
+                  ? t("pro.status.cancelling")
+                  : t("pro.status.active")}
             </DialogDescription>
           </DialogHeader>
+
+          {pastDue && (
+            <div className="rounded-2xl bg-destructive/10 p-3 text-xs text-destructive ring-1 ring-destructive/20">
+              <p>{t("pro.past_due_desc")}</p>
+              <button onClick={openPortal} className="mt-1 font-semibold underline">
+                {t("pro.fix_payment")}
+              </button>
+            </div>
+          )}
 
           {isFamily && (
             <p
@@ -284,19 +342,10 @@ function ManageSubscriptionDialog({ open, onOpenChange }: { open: boolean; onOpe
             <InfoRow
               icon={<CreditCard className="size-4" />}
               label={t("pro.payment_method")}
-              value={settings.proPaymentMethod}
+              value={settings.proPaymentMethod || t("pro.no_card")}
               action={
                 <button
-                  onClick={async () => {
-                    const res = await portalFn({
-                      data: {
-                        environment: getStripeEnvironment(),
-                        returnUrl: typeof window !== "undefined" ? window.location.href : undefined,
-                      },
-                    });
-                    if ("url" in res && res.url) window.location.href = res.url;
-                    else toast.error("error" in res ? res.error : t("pro.error"));
-                  }}
+                  onClick={openPortal}
                   className="text-xs font-medium text-sage-700 hover:underline"
                 >
                   {t("pro.update")}
