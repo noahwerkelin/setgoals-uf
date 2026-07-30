@@ -206,3 +206,39 @@ export const changeStripePlan = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(error) };
     }
   });
+
+/**
+ * Reconcile entitlement straight from Stripe.
+ *
+ * Webhooks are the primary path, but they can be delayed or dropped — this is
+ * called right after checkout and whenever the PRO dashboard opens, so a paid
+ * user is never left without access (and a lapsed one never keeps it).
+ */
+export const syncSubscriptionStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { environment: StripeEnv }) => data)
+  .handler(async ({ data, context }): Promise<SyncResult> => {
+    try {
+      const { userId, supabase } = context;
+
+      // Children inherit PRO Family from a parent; they have no billing of their own.
+      const { data: childRow } = await supabase
+        .from("children")
+        .select("id")
+        .eq("auth_user_id", userId)
+        .maybeSingle();
+      if (childRow) return { isPro: false, status: "inherited", plan: null, paymentMethod: "" };
+
+      const stripe = createStripeClient(data.environment);
+      const sub = await findSubscription(stripe, userId);
+      if (!sub) {
+        await clearEntitlement(userId, data.environment);
+        return { isPro: false, status: "inactive", plan: null, paymentMethod: "" };
+      }
+      const paymentMethod = await fetchCardLabel(stripe, sub);
+      const res = await syncSubscription(sub, data.environment, { userId, paymentMethod });
+      return { isPro: res.isPro, status: res.status, plan: res.plan, paymentMethod };
+    } catch (error) {
+      return { error: getStripeErrorMessage(error) };
+    }
+  });
