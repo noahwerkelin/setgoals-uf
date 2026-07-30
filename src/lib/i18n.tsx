@@ -814,6 +814,9 @@ const DICTS: Record<Lang, Dict> = {
     "lb.you": "Du",
 
     "profile.title": "Profil",
+    "profile.section.today": "Idag",
+    "profile.section.progress": "Framsteg",
+    "profile.section.manage": "Hantera",
     "profile.meta": "Åldersgrupp · Tonåring · Med sedan okt 2024",
     "profile.mini.steps": "Steg",
     "profile.mini.earned": "Intjänat",
