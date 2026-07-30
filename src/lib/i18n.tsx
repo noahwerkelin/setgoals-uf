@@ -1124,6 +1124,13 @@ const DICTS: Record<Lang, Dict> = {
     "gf.title": "Anslut Google Fit",
     "gf.desc": "Vi läser ditt dagliga stegantal från Google Fit / Health Connect för att tilldela skärmtid.",
     "hk.allow": "Tillåt åtkomst",
+    "health.waiting": "Väntar på din enhet…",
+    "health.denied": "Åtkomsten nekades i systemdialogen. Du kan tillåta den igen i enhetens integritetsinställningar för hälsa.",
+    "health.error": "Din enhet kunde inte slutföra begäran. Försök igen.",
+    "health.ios_only": "Apple Hälsa finns bara på iPhone.",
+    "health.android_only": "Google Fit / Health Connect finns bara på Android.",
+    "health.needs_ios_app": "Behörighet till Apple Hälsa ges av iOS. Öppna SetGoals i iPhone-appen och tillåt åtkomst där — det synkas hit automatiskt.",
+    "health.needs_android_app": "Behörighet till Health Connect ges av Android. Öppna SetGoals i Android-appen och tillåt åtkomst där — det synkas hit automatiskt.",
 
     "common.back": "Tillbaka",
     "common.close": "Stäng",
