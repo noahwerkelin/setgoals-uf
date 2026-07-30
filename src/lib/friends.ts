@@ -90,3 +90,31 @@ export function searchUsers(query: string, excludeUsernames: string[] = []): Fri
     (u) => !skip.has(u.username.toLowerCase()) && u.username.toLowerCase().includes(q),
   ).slice(0, 8);
 }
+
+/**
+ * Deterministic step count for a friend on a given local day.
+ * Keeps the friends leaderboard stable within a day and resets it at midnight.
+ */
+export function friendStepsForDay(f: Friend, dayKey: string): number {
+  let h = 2166136261;
+  const seed = `${f.id}:${dayKey}`;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const r = ((h >>> 0) % 1000) / 1000; // 0..1
+  const base = f.steps || 6000;
+  return Math.round(base * (0.55 + r * 0.9));
+}
+
+/** Friends ranked by today's steps, including the current user. */
+export function friendsRankToday(
+  friends: Friend[],
+  myStepsToday: number,
+  dayKey: string,
+): { rank: number; total: number } {
+  const scores = friends.map((f) => friendStepsForDay(f, dayKey));
+  const total = scores.length + 1;
+  const ahead = scores.filter((s) => s > myStepsToday).length;
+  return { rank: ahead + 1, total };
+}
