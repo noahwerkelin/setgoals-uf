@@ -1,15 +1,14 @@
 /**
- * Server-only entitlement sync.
+ * Server-only entitlement sync for Apple StoreKit purchases.
  *
  * The `user_settings` billing columns are protected by a DB trigger: only the
- * service role may write them. Both the payment webhook and the authenticated
- * "reconcile my subscription" server function funnel through here so the
- * entitlement rules live in exactly one place.
+ * service role may write them. Both the App Store server notification route and
+ * the authenticated "sync my purchase" server function funnel through here so
+ * the entitlement rules live in exactly one place.
  */
 import { createClient } from "@supabase/supabase-js";
-import type { StripeEnv, createStripeClient } from "@/lib/stripe.server";
-
-type Stripe = ReturnType<typeof createStripeClient>;
+import type { AppleTransaction } from "@/lib/apple-jws.server";
+import { appleEnv } from "@/lib/apple-jws.server";
 
 let _admin: any = null;
 /** Service-role client (bypasses RLS + the billing guard trigger). */
@@ -23,158 +22,171 @@ export function adminClient(): any {
   return _admin;
 }
 
-export const PLAN_BY_PRICE: Record<string, string> = {
-  pro_monthly: "monthly",
-  pro_yearly: "yearly",
-  pro_family_monthly: "family_monthly",
-  pro_family_yearly: "family_yearly",
+/** App Store product id -> app plan id. Mirrors src/lib/storekit.ts. */
+export const PLAN_BY_PRODUCT_ID: Record<string, string> = {
+  "app.setgoals.pro.monthly": "monthly",
+  "app.setgoals.pro.yearly": "yearly",
+  "app.setgoals.pro.family.monthly": "family_monthly",
+  "app.setgoals.pro.family.yearly": "family_yearly",
 };
 
-/** Statuses that still grant access. `past_due` keeps access while Stripe retries. */
-export const ACTIVE_STATUSES = ["active", "trialing", "past_due"];
+const PAYMENT_METHOD = "Apple App Store";
 
-export function resolvePriceId(item: any): string {
-  return (
-    item?.price?.lookup_key || item?.price?.metadata?.lovable_external_id || item?.price?.id || ""
-  );
+function iso(ms: number | null | undefined): string | null {
+  return ms ? new Date(ms).toISOString() : null;
 }
 
-function iso(seconds: number | null | undefined): string | null {
-  return seconds ? new Date(seconds * 1000).toISOString() : null;
-}
-
-function customerId(subscription: any): string {
-  return typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id ?? "";
-}
-
-/** Human label for the card on file, e.g. "Visa •• 4242". */
-export async function fetchCardLabel(stripe: Stripe, subscription: any): Promise<string> {
-  try {
-    const pmId =
-      typeof subscription.default_payment_method === "string"
-        ? subscription.default_payment_method
-        : subscription.default_payment_method?.id;
-    let pm: any = typeof subscription.default_payment_method === "object" ? subscription.default_payment_method : null;
-    if (!pm && pmId) pm = await stripe.paymentMethods.retrieve(pmId);
-    if (!pm) {
-      const cust: any = await stripe.customers.retrieve(customerId(subscription));
-      const defId = cust?.invoice_settings?.default_payment_method;
-      if (defId) pm = await stripe.paymentMethods.retrieve(typeof defId === "string" ? defId : defId.id);
-    }
-    if (!pm) return "";
-    if (pm.card) {
-      const brand = String(pm.card.brand ?? "card");
-      return `${brand.charAt(0).toUpperCase()}${brand.slice(1)} •• ${pm.card.last4}`;
-    }
-    return String(pm.type ?? "");
-  } catch {
-    return "";
-  }
-}
-
-/** Find the app user behind a Stripe subscription, with DB fallbacks. */
-export async function resolveUserId(subscription: any, env: StripeEnv): Promise<string | null> {
-  const fromMeta = subscription.metadata?.userId;
-  if (fromMeta) return fromMeta;
-  const db = adminClient();
-  const bySub = await db
-    .from("subscriptions")
-    .select("user_id")
-    .eq("stripe_subscription_id", subscription.id)
-    .maybeSingle();
-  if (bySub.data?.user_id) return bySub.data.user_id;
-  const cust = customerId(subscription);
-  if (!cust) return null;
-  const byCust = await db
-    .from("subscriptions")
-    .select("user_id")
-    .eq("stripe_customer_id", cust)
-    .eq("environment", env)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return byCust.data?.user_id ?? null;
-}
-
-export type SyncResult = {
-  userId: string | null;
+export type EntitlementState = {
   isPro: boolean;
   plan: string | null;
   status: string;
   expiresAt: string | null;
+  autoRenew: boolean;
+  environment: "sandbox" | "live";
 };
 
+/** Work out what a verified transaction means right now. */
+export function evaluateTransaction(
+  txn: AppleTransaction,
+  opts: { autoRenew?: boolean } = {},
+): EntitlementState {
+  const plan = PLAN_BY_PRODUCT_ID[txn.productId] ?? null;
+  const env = appleEnv(txn.environment);
+  const expiresAt = txn.expiresDate ?? null;
+  const revoked = !!txn.revocationDate;
+  const active = !revoked && (!expiresAt || expiresAt > Date.now());
+  const autoRenew = opts.autoRenew ?? true;
+
+  let status = "inactive";
+  if (revoked) status = "revoked";
+  else if (active) status = autoRenew ? "active" : "canceled";
+  else status = "expired";
+
+  return {
+    isPro: active,
+    plan,
+    status,
+    expiresAt: iso(expiresAt),
+    autoRenew: active && autoRenew,
+    environment: env,
+  };
+}
+
 /**
- * Write the Stripe subscription state into `subscriptions` + `user_settings`.
- * `paymentMethod` is optional; pass "" to leave the stored card untouched.
+ * Persist a verified App Store transaction into `subscriptions` + `user_settings`.
+ * `userId` may be null for notifications we cannot attribute yet — the row is
+ * still recorded so a later sync can pick it up.
  */
-export async function syncSubscription(
-  subscription: any,
-  env: StripeEnv,
-  opts: { userId?: string | null; paymentMethod?: string } = {},
-): Promise<SyncResult> {
+export async function syncAppleTransaction(
+  txn: AppleTransaction,
+  opts: { userId?: string | null; autoRenew?: boolean } = {},
+): Promise<EntitlementState & { userId: string | null }> {
   const db = adminClient();
-  const userId = opts.userId ?? (await resolveUserId(subscription, env));
-  const item = subscription.items?.data?.[0];
-  const priceId = resolvePriceId(item);
-  const plan = PLAN_BY_PRICE[priceId] ?? null;
-  const periodStart = item?.current_period_start ?? subscription.current_period_start;
-  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
-  const cancelling = !!subscription.cancel_at_period_end;
-  const status: string = subscription.status;
-  const stillInPaidPeriod = !!periodEnd && periodEnd * 1000 > Date.now();
-  const isPro =
-    ACTIVE_STATUSES.includes(status) || (status === "canceled" && stillInPaidPeriod);
+  const state = evaluateTransaction(txn, opts);
+  const userId = opts.userId ?? (await resolveUserId(txn));
 
   await db.from("subscriptions").upsert(
     {
       ...(userId ? { user_id: userId } : {}),
-      stripe_subscription_id: subscription.id,
-      stripe_customer_id: customerId(subscription),
-      product_id: item?.price?.product ?? "",
-      price_id: priceId,
-      status,
-      current_period_start: iso(periodStart),
-      current_period_end: iso(periodEnd),
-      cancel_at_period_end: cancelling,
-      environment: env,
+      provider: "apple",
+      provider_txn_id: txn.originalTransactionId,
+      provider_account_id: txn.appAccountToken ?? "",
+      product_id: txn.productId,
+      price_id: state.plan ?? txn.productId,
+      status: state.status,
+      current_period_start: iso(txn.purchaseDate ?? txn.originalPurchaseDate ?? null),
+      current_period_end: state.expiresAt,
+      cancel_at_period_end: state.isPro && !state.autoRenew,
+      environment: state.environment,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "stripe_subscription_id" },
+    { onConflict: "provider_txn_id" },
   );
-
-  const expiresAt = cancelling || status === "canceled" ? iso(periodEnd) : null;
 
   if (userId) {
     await db
       .from("user_settings")
       .update({
-        is_pro: isPro,
-        ...(plan ? { pro_plan: plan } : {}),
-        pro_auto_renew: !cancelling && status !== "canceled",
-        pro_since: iso(subscription.start_date) ?? new Date().toISOString(),
-        pro_expires_at: expiresAt,
-        pro_environment: env,
-        pro_status: status,
-        ...(opts.paymentMethod ? { pro_payment_method: opts.paymentMethod } : {}),
+        is_pro: state.isPro,
+        ...(state.plan ? { pro_plan: state.plan } : {}),
+        pro_auto_renew: state.autoRenew,
+        pro_since: iso(txn.originalPurchaseDate ?? txn.purchaseDate ?? Date.now()),
+        pro_expires_at: state.isPro && state.autoRenew ? null : state.expiresAt,
+        pro_environment: state.environment,
+        pro_status: state.status,
+        pro_payment_method: PAYMENT_METHOD,
       })
       .eq("user_id", userId);
   }
 
-  return { userId, isPro, plan, status, expiresAt };
+  return { ...state, userId };
 }
 
-/** No subscription at all in this environment — drop the entitlement. */
-export async function clearEntitlement(userId: string, env: StripeEnv): Promise<void> {
+/** Find the app user behind an App Store transaction. */
+export async function resolveUserId(txn: AppleTransaction): Promise<string | null> {
+  // The app sets appAccountToken to the Supabase user id when starting checkout.
+  const token = txn.appAccountToken;
+  if (token && /^[0-9a-f-]{36}$/i.test(token)) return token;
   const db = adminClient();
-  const { data: current } = await db
-    .from("user_settings")
-    .select("pro_environment,is_pro")
-    .eq("user_id", userId)
+  const { data } = await db
+    .from("subscriptions")
+    .select("user_id")
+    .eq("provider_txn_id", txn.originalTransactionId)
     .maybeSingle();
-  // Never clear an entitlement that belongs to the other environment.
-  if (current && current.pro_environment !== env && current.is_pro) return;
+  return data?.user_id ?? null;
+}
+
+/** Re-check a stored subscription and lapse the entitlement once it expires. */
+export async function reconcileStoredEntitlement(userId: string): Promise<EntitlementState | null> {
+  const db = adminClient();
+  const { data: row } = await db
+    .from("subscriptions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("provider", "apple")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!row) {
+    await clearEntitlement(userId);
+    return null;
+  }
+
+  const expiresMs = row.current_period_end ? new Date(row.current_period_end).getTime() : null;
+  const active = row.status !== "revoked" && (!expiresMs || expiresMs > Date.now());
+  const autoRenew = active && !row.cancel_at_period_end;
+  const status = row.status === "revoked" ? "revoked" : active ? (autoRenew ? "active" : "canceled") : "expired";
+
+  if (!active && row.status !== status) {
+    await db.from("subscriptions").update({ status, updated_at: new Date().toISOString() }).eq("id", row.id);
+  }
+
   await db
+    .from("user_settings")
+    .update({
+      is_pro: active,
+      pro_plan: row.price_id || "monthly",
+      pro_auto_renew: autoRenew,
+      pro_expires_at: active && autoRenew ? null : row.current_period_end,
+      pro_environment: row.environment,
+      pro_status: status,
+      pro_payment_method: active ? PAYMENT_METHOD : "",
+    })
+    .eq("user_id", userId);
+
+  return {
+    isPro: active,
+    plan: row.price_id || null,
+    status,
+    expiresAt: row.current_period_end,
+    autoRenew,
+    environment: row.environment,
+  };
+}
+
+/** No App Store subscription at all — drop the entitlement. */
+export async function clearEntitlement(userId: string): Promise<void> {
+  await adminClient()
     .from("user_settings")
     .update({
       is_pro: false,
