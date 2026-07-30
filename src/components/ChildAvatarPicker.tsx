@@ -16,33 +16,8 @@ export function ChildAvatar({ avatar, name, className = "" }: { avatar: string |
   return <span className={`grid place-items-center rounded-full bg-sage-200 ${className}`}>{avatar || "🌱"}</span>;
 }
 
-/** Compress an image file to a small square data URL so it can be stored inline. */
-async function fileToSquareDataUrl(file: File, size = 256): Promise<string> {
-  const dataUrl: string = await new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(String(r.result));
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
-  try {
-    const img = await new Promise<HTMLImageElement>((res, rej) => {
-      const i = new Image();
-      i.onload = () => res(i);
-      i.onerror = rej;
-      i.src = dataUrl;
-    });
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return dataUrl;
-    const side = Math.min(img.width, img.height);
-    ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
-    return canvas.toDataURL("image/jpeg", 0.82);
-  } catch {
-    return dataUrl;
-  }
-}
+export { fileToSquareDataUrl };
+
 
 export function ChildAvatarPicker({
   value,
