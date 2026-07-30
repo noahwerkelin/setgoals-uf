@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n";
 import { useSettings, emptyChild, MAX_CHILDREN, type ChildProfile } from "@/lib/settings";
 import { issueChildCode, deleteChild, grantScreenTime } from "@/lib/children.functions";
 import { ProUpgradeDialog } from "@/components/Pro";
+import { ChildAvatarPicker, ChildAvatar, CHILD_EMOJIS } from "@/components/ChildAvatarPicker";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -45,7 +46,7 @@ const INITIAL_APPS: { key: string; state: AppState }[] = [
   { key: "cat.utilities", state: "approved" },
 ];
 
-const AVATAR_OPTIONS = ["🌱", "🌳", "🐻", "🦊", "🐼", "🦁", "🐸", "🦄", "⭐️", "🚀"];
+const AVATAR_OPTIONS = CHILD_EMOJIS;
 
 type ScreenTimeEdit = { stepsPer30: number; dailyCapHours: number };
 
@@ -371,9 +372,7 @@ function Page() {
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="grid size-11 place-items-center rounded-full bg-sage-200 text-xl">
-                      {k.avatar}
-                    </span>
+                    <ChildAvatar avatar={k.avatar} name={k.name} className="size-11 text-xl" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate">{k.name}</p>
                       <p className="text-xs text-sage-600">{ageFromBirthday(k.birthday, t)}</p>
@@ -891,20 +890,7 @@ function ChildEditDialog({
             <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-sage-600">
               {t("parent.child.avatar")}
             </label>
-            <div className="flex flex-wrap gap-2">
-              {AVATAR_OPTIONS.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => setDraft({ ...draft, avatar: a })}
-                  className={`grid h-10 w-10 place-items-center rounded-xl text-xl ring-1 transition-colors ${
-                    draft.avatar === a ? "bg-sage-600 ring-sage-700" : "bg-sage-50 ring-black/5"
-                  }`}
-                >
-                  {a}
-                </button>
-              ))}
-            </div>
+            <ChildAvatarPicker value={draft.avatar} onChange={(v) => setDraft({ ...draft, avatar: v })} />
           </div>
 
           <div>
