@@ -38,7 +38,14 @@ export type StreakState = {
   best: number;
 };
 
-export type SubPlan = "monthly" | "yearly";
+export type SubPlan = "monthly" | "yearly" | "family_monthly" | "family_yearly";
+
+/** Maximum number of child profiles per account (also enforced in the DB). */
+export const MAX_CHILDREN = 5;
+
+export function isFamilyPlan(plan: SubPlan): boolean {
+  return plan === "family_monthly" || plan === "family_yearly";
+}
 export type ThemeColor = "sage" | "rose" | "blue" | "pink" | "lavender" | "amber" | "slate";
 
 export const THEME_COLORS: { id: ThemeColor; swatch: string }[] = [
