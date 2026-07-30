@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/parent")({
   head: () => ({
@@ -56,6 +57,7 @@ function Page() {
   const [editingChildST, setEditingChildST] = useState<ChildProfile | null>(null);
   const [editingMyST, setEditingMyST] = useState(false);
   const [tab, setTab] = useState<"personal" | "children">("personal");
+  const [childStats, setChildStats] = useState<Record<string, { steps: number; usedMin: number }>>({});
 
   const isIndividual = settings.role === "individual";
   const isChild = settings.role === "child";
@@ -70,6 +72,42 @@ function Page() {
     window.addEventListener("hashchange", applyHash);
     return () => window.removeEventListener("hashchange", applyHash);
   }, [canManageChildren]);
+
+  // Live child activity for today (RLS lets a parent read their linked child's rows).
+  const linkedIds = settings.children.map((c) => c.authUserId).filter((v): v is string => !!v);
+  const linkedKey = linkedIds.join(",");
+  useEffect(() => {
+    if (!linkedIds.length) {
+      setChildStats({});
+      return;
+    }
+    let cancelled = false;
+    const today = new Date();
+    const day = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const load = async () => {
+      const [act, bal] = await Promise.all([
+        supabase.from("activity_steps").select("user_id, steps").eq("day", day).in("user_id", linkedIds),
+        supabase.from("earned_balances").select("user_id, consumed_min").eq("day", day).in("user_id", linkedIds),
+      ]);
+      if (cancelled) return;
+      const map: Record<string, { steps: number; usedMin: number }> = {};
+      for (const id of linkedIds) map[id] = { steps: 0, usedMin: 0 };
+      for (const r of act.data ?? []) map[r.user_id] = { ...map[r.user_id], steps: (map[r.user_id]?.steps ?? 0) + (r.steps ?? 0) };
+      for (const r of bal.data ?? []) map[r.user_id] = { ...map[r.user_id], usedMin: r.consumed_min ?? 0 };
+      setChildStats(map);
+    };
+    void load();
+    const channel = supabase
+      .channel("parent-child-activity")
+      .on("postgres_changes", { event: "*", schema: "public", table: "activity_steps" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "earned_balances" }, () => void load())
+      .subscribe();
+    return () => {
+      cancelled = true;
+      void supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedKey]);
 
   const setState = (key: string, state: AppState) => {
     setApps((a) => a.map((x) => (x.key === key ? { ...x, state } : x)));
@@ -279,7 +317,9 @@ function Page() {
             )}
 
             {settings.children.map((k, i) => {
-              const steps = mockSteps(k.id);
+              const stats = (k.authUserId && childStats[k.authUserId]) || { steps: 0, usedMin: 0 };
+              const usedH = Math.floor(stats.usedMin / 60);
+              const usedM = stats.usedMin % 60;
               return (
                 <article
                   key={k.id}
@@ -311,9 +351,12 @@ function Page() {
                   </div>
 
                   <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                    <Stat label={t("parent.steps")} value={steps.toLocaleString()} />
+                    <Stat label={t("parent.steps")} value={stats.steps.toLocaleString()} />
                     <Stat label={t("parent.child.daily_goal")} value={k.dailyGoal.toLocaleString()} />
-                    <Stat label={t("parent.goal")} value={`${Math.round((steps / k.dailyGoal) * 100)}%`} />
+                    <Stat
+                      label={t("parent.used_screentime")}
+                      value={usedH > 0 ? `${usedH}${t("settings.hours")} ${usedM}m` : `${usedM}m`}
+                    />
                   </div>
 
                   <div className="mt-4 rounded-2xl bg-sage-50 p-4 ring-1 ring-sage-200">
@@ -458,12 +501,6 @@ function ageFromBirthday(b: string, t: (k: string, vars?: Record<string, string 
   return t("parent.age", { n: age });
 }
 
-function mockSteps(id: string) {
-  let h = 0;
-  const seed = id + new Date().toDateString();
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  return 3000 + Math.abs(h % 7000);
-}
 
 function ScreenTimeDialog({
   open, onOpenChange, title, initial, onSave,
