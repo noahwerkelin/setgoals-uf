@@ -29,7 +29,15 @@ export const CHILD_LOCKED_KEYS = [
   "dailyCapHours",
   "dailyGoal",
   "role",
+  // The parent picks the child's profile picture; it syncs down automatically.
+  "avatar",
 ] as const;
+
+/** Child avatars are emoji chosen by the parent; own-account avatars are uploaded images. */
+export function isImageAvatar(a: string | null | undefined): boolean {
+  return !!a && (a.startsWith("data:") || a.startsWith("http") || a.startsWith("/"));
+}
+
 
 
 export type StreakState = {
