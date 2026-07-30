@@ -20,7 +20,35 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useT } from "@/lib/i18n";
-import { useSettings, type SubPlan } from "@/lib/settings";
+import { useSettings, isFamilyPlan, type SubPlan } from "@/lib/settings";
+
+const ALL_PLANS: SubPlan[] = ["monthly", "yearly", "family_monthly", "family_yearly"];
+
+function PlanGrid({ plan, onSelect }: { plan: SubPlan; onSelect: (p: SubPlan) => void }) {
+  const { t } = useT();
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {ALL_PLANS.map((p) => {
+        const active = plan === p;
+        return (
+          <button
+            key={p}
+            onClick={() => onSelect(p)}
+            className={`rounded-2xl p-3 text-left ring-1 transition-colors ${
+              active ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/10"
+            }`}
+          >
+            <p className="text-xs uppercase tracking-wide opacity-80">{t(`pro.plan.${p}`)}</p>
+            <p className="text-sm font-semibold">{t(`pro.price.${p}`)}</p>
+            {p.endsWith("yearly") && (
+              <p className={`text-[11px] ${active ? "text-white/80" : "text-sage-600"}`}>{t("pro.save_badge")}</p>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 import { toast } from "sonner";
 import { useState } from "react";
 
