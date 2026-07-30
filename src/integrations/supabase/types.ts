@@ -350,9 +350,10 @@ export type Database = {
           id: string
           price_id: string
           product_id: string
+          provider: string
+          provider_account_id: string | null
+          provider_txn_id: string
           status: string
-          stripe_customer_id: string
-          stripe_subscription_id: string
           updated_at: string | null
           user_id: string
         }
@@ -365,9 +366,10 @@ export type Database = {
           id?: string
           price_id?: string
           product_id?: string
+          provider?: string
+          provider_account_id?: string | null
+          provider_txn_id: string
           status?: string
-          stripe_customer_id: string
-          stripe_subscription_id: string
           updated_at?: string | null
           user_id: string
         }
@@ -380,9 +382,10 @@ export type Database = {
           id?: string
           price_id?: string
           product_id?: string
+          provider?: string
+          provider_account_id?: string | null
+          provider_txn_id?: string
           status?: string
-          stripe_customer_id?: string
-          stripe_subscription_id?: string
           updated_at?: string | null
           user_id?: string
         }
