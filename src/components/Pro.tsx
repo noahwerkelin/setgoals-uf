@@ -23,12 +23,14 @@ import { useT } from "@/lib/i18n";
 import { useSettings, isFamilyPlan, type SubPlan } from "@/lib/settings";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  startSubscription,
-  cancelSubscription,
-  resumeSubscription,
-  changeSubscriptionPlan,
-  updatePaymentMethod,
-} from "@/lib/subscription.functions";
+  cancelStripeSubscription,
+  resumeStripeSubscription,
+  changeStripePlan,
+  createPortalSession,
+} from "@/utils/payments.functions";
+import { getStripeEnvironment, PLAN_PRICE_IDS } from "@/lib/stripe";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 const ALL_PLANS: SubPlan[] = ["monthly", "yearly", "family_monthly", "family_yearly"];
 
