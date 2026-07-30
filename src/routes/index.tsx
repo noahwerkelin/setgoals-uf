@@ -383,13 +383,59 @@ function Quote() {
   );
 }
 
+type FamilyRow = {
+  member_id: string;
+  name: string | null;
+  avatar: string | null;
+  steps: number;
+  relation: string;
+  is_self: boolean;
+};
+
 function FamilyCard() {
   const { t } = useT();
-  const rows = [
-    { name: "Maja", steps: 8420 },
-    { name: "Lukas", steps: 7240 },
-    { name: "Dad", steps: 6105 },
-  ];
+  const { settings } = useSettings();
+  const [rows, setRows] = useState<FamilyRow[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data, error } = await supabase.rpc("family_today");
+      if (cancelled) return;
+      setRows(error ? [] : ((data as FamilyRow[]) ?? []));
+    };
+    void load();
+    const channel = supabase
+      .channel("home-family-activity")
+      .on("postgres_changes", { event: "*", schema: "public", table: "activity_steps" }, () => void load())
+      .subscribe();
+    return () => {
+      cancelled = true;
+      void supabase.removeChannel(channel);
+    };
+  }, [settings.children.length, settings.role]);
+
+  const isChild = settings.role === "child";
+  const members = (rows ?? []).filter((r) => isChild || r.relation === "child" || r.is_self);
+  const hasChildren = (rows ?? []).some((r) => r.relation === "child");
+
+  if (!isChild && rows && !hasChildren) {
+    return (
+      <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise" style={{ animationDelay: "270ms" }}>
+        <h2 className="text-sm font-semibold">{t("home.family")}</h2>
+        <p className="mt-2 text-xs text-sage-600">{t("home.family.empty")}</p>
+        <Link
+          to="/parent"
+          hash="children"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-sage-600 px-4 py-3 text-sm font-semibold text-white"
+        >
+          <Plus className="size-4" />
+          {t("home.family.add_child")}
+        </Link>
+      </section>
+    );
+  }
+
   return (
     <section className="rounded-3xl bg-card p-5 ring-1 ring-black/5 animate-rise" style={{ animationDelay: "270ms" }}>
       <div className="mb-4 flex items-center justify-between">
@@ -397,18 +443,29 @@ function FamilyCard() {
         <span className="text-[10px] font-medium uppercase tracking-widest text-sage-600">{t("home.today")}</span>
       </div>
       <div className="space-y-4">
-        {rows.map((r) => (
-          <div key={r.name} className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="size-8 rounded-full bg-sage-100 ring-1 ring-black/5 grid place-items-center text-[10px] font-semibold uppercase text-sage-700">
-                {r.name.slice(0, 2)}
-              </span>
-              <span className="text-sm font-medium">{r.name}</span>
+        {rows === null && <p className="text-xs text-sage-600">{t("common.loading")}</p>}
+        {rows !== null && members.length === 0 && <p className="text-xs text-sage-600">{t("home.family.empty")}</p>}
+        {members.map((r) => {
+          const name = r.name || "—";
+          return (
+            <div key={r.member_id} className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="size-8 rounded-full bg-sage-100 ring-1 ring-black/5 grid place-items-center text-[10px] font-semibold uppercase text-sage-700">
+                  {r.avatar || name.slice(0, 2)}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{r.is_self ? t("home.family.you") : name}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-sage-600">
+                    {t(r.relation === "parent" ? "home.family.parent" : "home.family.child")}
+                  </p>
+                </div>
+              </div>
+              <span className="text-sm font-medium tabular-nums">{Number(r.steps ?? 0).toLocaleString()}</span>
             </div>
-            <span className="text-sm font-medium tabular-nums">{r.steps.toLocaleString()}</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
 }
+
