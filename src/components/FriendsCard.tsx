@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
 import { useFriends, type Friend } from "@/lib/friends";
 import { searchUsersByUsername } from "@/lib/friends.functions";
+import type { PublicUser } from "@/lib/friends.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -55,7 +56,7 @@ export function FriendsCard() {
         <ul className="mt-4 space-y-2">
           {visible.map((f) => (
             <li
-              key={f.id}
+              key={f.friend_id}
               className="flex items-center gap-3 rounded-2xl bg-sage-50/60 p-2.5 pl-3"
             >
               <span className="grid size-9 place-items-center rounded-full bg-sage-200 text-xs font-semibold uppercase text-sage-700">
@@ -67,7 +68,7 @@ export function FriendsCard() {
               </div>
               <button
                 type="button"
-                onClick={() => removeFriend(f.id)}
+                onClick={() => removeFriend(f.friend_id)}
                 aria-label={t("friends.remove")}
                 className="grid size-8 place-items-center rounded-full text-sage-600 hover:bg-sage-100"
               >
@@ -101,7 +102,7 @@ function AddFriendDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   existing: Friend[];
-  onAdd: (f: Friend) => void;
+  onAdd: (f: PublicUser) => void;
 }) {
   const { t } = useT();
   const [q, setQ] = useState("");
@@ -113,7 +114,7 @@ function AddFriendDialog({
     queryFn: () => search({ data: { query } }),
   });
   const taken = new Set(existing.map((f) => f.username.toLowerCase()));
-  const results: Friend[] = found.filter((u) => !taken.has(u.username.toLowerCase()));
+  const results: PublicUser[] = found.filter((u) => !taken.has(u.username.toLowerCase()));
 
   return (
     <Dialog

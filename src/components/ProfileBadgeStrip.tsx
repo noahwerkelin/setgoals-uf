@@ -1,12 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { Award, Lock } from "lucide-react";
-import { BADGES, tierStyle, useEarnedBadges } from "@/components/Badges";
+import { BADGES, tierStyle } from "@/components/Badges";
+import { useEarnedBadges } from "@/lib/badges";
 import { useT } from "@/lib/i18n";
 
 export function ProfileBadgeStrip() {
   const { t } = useT();
-  const earned = useEarnedBadges();
-  const earnedList = BADGES.filter((b) => earned[b.id]);
+  const { data: earnedRows } = useEarnedBadges();
+  const earned = new Set((earnedRows ?? []).map((b) => b.badge_id));
+  const earnedList = BADGES.filter((b) => earned.has(b.id));
   const total = BADGES.length;
 
   return (

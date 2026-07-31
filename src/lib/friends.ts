@@ -1,55 +1,72 @@
-// Friends list (stored per device) backed by real accounts and real step data.
-import { useCallback, useEffect, useState } from "react";
+// Friends list backed by the database. Each friendship is a symmetric row
+// normalized so user_id < friend_id; both users can see and delete the row.
+import { useCallback, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getFriendships, addFriendship, removeFriendship } from "@/lib/friends.functions";
 
 export type Friend = {
   id: string;
+  friend_id: string;
   username: string;
   name: string;
 };
 
-const KEY = "sg.friends.v3";
-
-function read(): Friend[] {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    const v = JSON.parse(raw);
-    if (Array.isArray(v)) return (v as Friend[]).filter((f) => f && f.id && f.username);
-  } catch {}
-  return [];
-}
-
-function write(list: Friend[]) {
-  try { localStorage.setItem(KEY, JSON.stringify(list)); } catch {}
-  try { window.dispatchEvent(new CustomEvent("sg:friends-changed")); } catch {}
-}
+const FRIENDS_QUERY_KEY = ["friendships"];
 
 export function useFriends() {
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const getFriends = useServerFn(getFriendships);
+  const addFriendshipFn = useServerFn(addFriendship);
+  const removeFriendshipFn = useServerFn(removeFriendship);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setFriends(read());
-    const sync = () => setFriends(read());
-    window.addEventListener("sg:friends-changed", sync);
-    return () => window.removeEventListener("sg:friends-changed", sync);
-  }, []);
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: FRIENDS_QUERY_KEY,
+    queryFn: () => getFriends({ data: undefined }),
+  });
 
-  const addFriend = useCallback((user: Friend) => {
-    const list = read();
-    if (list.some((f) => f.id === user.id || f.username.toLowerCase() === user.username.toLowerCase())) return false;
-    const next = [...list, { id: user.id, username: user.username, name: user.name }];
-    write(next);
-    setFriends(next);
-    return true;
-  }, []);
+  const addMut = useMutation({
+    mutationFn: async (user: { id: string; username: string; name?: string }) => {
+      const res = await addFriendshipFn({ data: { friend_id: user.id } });
+      if ("error" in res) throw new Error(res.error);
+      return user;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: FRIENDS_QUERY_KEY }),
+  });
 
-  const removeFriend = useCallback((id: string) => {
-    const next = read().filter((f) => f.id !== id);
-    write(next);
-    setFriends(next);
-  }, []);
+  const removeMut = useMutation({
+    mutationFn: async (friendshipId: string) => {
+      const res = await removeFriendshipFn({ data: { friendship_id: friendshipId } });
+      if ("error" in res) throw new Error(res.error);
+      return friendshipId;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: FRIENDS_QUERY_KEY }),
+  });
 
-  return { friends, addFriend, removeFriend };
+  const addFriend = useCallback(
+    (user: { id: string; username: string }) => {
+      if (rows.some((f) => f.id === user.id || f.username.toLowerCase() === user.username.toLowerCase())) {
+        return false;
+      }
+      addMut.mutate({ id: user.id, username: user.username, name: "" });
+      return true;
+    },
+    [rows, addMut],
+  );
+
+  const removeFriend = useCallback(
+    (friendshipId: string) => {
+      removeMut.mutate(friendshipId);
+    },
+    [removeMut],
+  );
+
+  return {
+    friends: rows,
+    isLoading,
+    addFriend,
+    removeFriend,
+  };
 }
 
 /** Rank among friends using their real step totals for the day. */
@@ -62,3 +79,4 @@ export function friendsRankToday(
   const ahead = scores.filter((s) => s > myStepsToday).length;
   return { rank: ahead + 1, total };
 }
+

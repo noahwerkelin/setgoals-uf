@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const Input = z.object({
-  period: z.enum(["daily", "weekly", "monthly", "alltime"]),
+  scope: z.enum(["local", "national", "friends"]),
 });
 
 export type LeaderboardRow = {
@@ -23,7 +23,7 @@ export const getLeaderboard = createServerFn({ method: "POST" })
     // Caller is already verified as an authenticated user by the middleware.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin.rpc("leaderboard", {
-      _period: data.period,
+      _scope: data.scope,
     });
     if (error) throw error;
     return (rows ?? []) as LeaderboardRow[];

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { CheckCircle2, Circle, Flame, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Circle, Flame, Globe, MapPin, Sparkles, Users } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badges, recordLeaderboardRank } from "@/components/Badges";
+import { Badges } from "@/components/Badges";
+import { useLeaderboardBadgeCheck } from "@/lib/badges";
 import { useT, type Lang } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 import { useAuth } from "@/lib/auth";
@@ -20,6 +21,7 @@ import { getLeaderboard, type LeaderboardRow as LbRow } from "@/lib/leaderboard.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTodaySteps, useWeekSteps } from "@/lib/steps";
 import { useDayKey } from "@/lib/day";
+import { useUserLocation } from "@/lib/location";
 import {
   todaysDailyChallenges,
   thisWeeksWeeklyChallenges,
@@ -28,8 +30,8 @@ import {
   type Challenge,
 } from "@/lib/challenges-catalog";
 
-type LbPeriod = "daily" | "weekly" | "monthly" | "alltime";
-const LB_PERIODS: LbPeriod[] = ["daily", "weekly", "monthly", "alltime"];
+type LbScope = "local" | "national" | "friends";
+const LB_SCOPES: LbScope[] = ["local", "national", "friends"];
 
 type LeaderboardRow = {
   user_id: string;
@@ -39,6 +41,7 @@ type LeaderboardRow = {
   total_steps: number;
   rank: number;
 };
+
 
 
 type ChallengesTab = "goals" | "badges" | "lb";
@@ -241,22 +244,46 @@ function ChallengeDetailDialog({
 
 
 function Leaderboard() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [period, setPeriod] = useState<LbPeriod>("daily");
-  // Rolls over at local midnight so daily standings reset with the new day.
+  const [scope, setScope] = useState<LbScope>("local");
   const dayKey = useDayKey();
+  const { location, loading: locating } = useUserLocation();
+
+  const todayLabel = useMemo(() => {
+    const d = new Date();
+    try {
+      return d.toLocaleDateString(lang === "sv" ? "sv-SE" : "en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return dayKey;
+    }
+  }, [dayKey, lang]);
+
+  // Sync detected location to the profile so leaderboards can filter accurately.
+  useEffect(() => {
+    if (!user || locating || !location) return;
+    supabase
+      .from("profiles")
+      .update({ country_code: location.countryCode, region: location.region })
+      .eq("id", user.id)
+      .then(({ error }) => {
+        if (error) console.warn("Failed to update leaderboard location", error.message);
+      });
+  }, [user, location, locating]);
+
 
   const fetchLb = useServerFn(getLeaderboard);
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["leaderboard", period, dayKey],
+    queryKey: ["leaderboard", scope, dayKey],
     enabled: !!user,
-    queryFn: async (): Promise<LbRow[]> =>
-      fetchLb({ data: { period } }) as Promise<LbRow[]>,
+    queryFn: async (): Promise<LbRow[]> => fetchLb({ data: { scope } }) as Promise<LbRow[]>,
   });
 
-  // realtime — refresh leaderboard when any activity_steps changes
   useEffect(() => {
     if (!user) return;
     const ch = supabase
@@ -272,39 +299,54 @@ function Leaderboard() {
 
   const youRow = rows.find((r) => r.user_id === user?.id);
   const youRank = youRow?.rank ?? 0;
-  const top = rows.slice(0, 50);
+  const top = rows.slice(0, 10);
 
-  useEffect(() => {
-    if (period !== "daily" || youRank <= 0) return;
-    recordLeaderboardRank("national", youRank, {
-      steps: youRow?.total_steps ?? 0,
-      participants: rows.length,
-    });
-  }, [period, youRank, youRow?.total_steps, rows.length]);
+  useLeaderboardBadgeCheck(scope === "friends" ? "local" : scope, youRank, {
+    steps: youRow?.total_steps ?? 0,
+    participants: rows.length,
+  });
+
+  const scopeIcons = {
+    local: <MapPin className="size-3.5" />,
+    national: <Globe className="size-3.5" />,
+    friends: <Users className="size-3.5" />,
+  };
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-4 gap-1 rounded-2xl bg-card p-1 ring-1 ring-black/5">
-        {LB_PERIODS.map((p) => (
+      <div className="grid grid-cols-3 gap-1 rounded-2xl bg-card p-1 ring-1 ring-black/5">
+        {LB_SCOPES.map((s) => (
           <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`rounded-xl py-2 text-[11px] font-semibold capitalize transition-colors ${
-              period === p ? "bg-sage-600 text-primary-foreground" : "text-sage-700"
+            key={s}
+            onClick={() => setScope(s)}
+            className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-semibold capitalize transition-colors ${
+              scope === s ? "bg-sage-600 text-primary-foreground" : "text-sage-700"
             }`}
           >
-            {t(`lb.${p}`)}
+            {scopeIcons[s]}
+            {t(`lb.tab.${s.charAt(0).toUpperCase() + s.slice(1)}`)}
           </button>
         ))}
       </div>
 
-      {isLoading ? (
+      <div className="flex items-center justify-between text-xs text-sage-600">
+        {scope === "friends" ? (
+          <span>{t("lb.friends_count", { n: Math.max(0, rows.length - 1) })}</span>
+        ) : scope === "local" ? (
+          <span>{t("lb.region_label", { region: location.region })}</span>
+        ) : (
+          <span>{t("lb.country_label", { country: location.country })}</span>
+        )}
+        <span>{t("lb.today_label", { date: todayLabel })}</span>
+      </div>
+
+      {isLoading || locating ? (
         <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
-          {t("lb.loading")}
+          {locating ? t("lb.locating") : t("lb.loading")}
         </p>
       ) : top.length === 0 ? (
         <p className="rounded-2xl bg-card p-6 text-center text-sm text-sage-600 ring-1 ring-black/5">
-          {t("lb.empty")}
+          {scope === "friends" ? t("lb.no_friends") : t("lb.empty")}
         </p>
       ) : (
         <ol className="space-y-2">
@@ -331,7 +373,7 @@ function Leaderboard() {
         </ol>
       )}
 
-      {youRank > 50 && youRow && (
+      {youRank > 10 && youRow && (
         <div className="flex items-center gap-4 rounded-2xl bg-sage-600 p-4 text-primary-foreground ring-1 ring-sage-700/40">
           <span className="grid size-8 place-items-center rounded-full bg-white/15 text-xs font-semibold tabular-nums">
             {youRow.rank}
@@ -341,11 +383,10 @@ function Leaderboard() {
         </div>
       )}
 
-      <p className="px-1 text-center text-xs text-sage-600">
-        Live updates · Verified step data only
-      </p>
+      <p className="px-1 text-center text-xs text-sage-600">{t("lb.refresh")}</p>
     </div>
   );
 }
+
 
 

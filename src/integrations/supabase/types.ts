@@ -188,6 +188,30 @@ export type Database = {
         }
         Relationships: []
       }
+      friendships: {
+        Row: {
+          created_at: string
+          friend_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       parent_child_relationships: {
         Row: {
           child_profile_id: string
@@ -224,10 +248,12 @@ export type Database = {
         Row: {
           avatar_url: string | null
           birthday: string | null
+          country_code: string
           created_at: string
           display_name: string
           email: string | null
           id: string
+          region: string
           role: Database["public"]["Enums"]["user_role_kind"]
           updated_at: string
           username: string
@@ -235,10 +261,12 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           birthday?: string | null
+          country_code?: string
           created_at?: string
           display_name?: string
           email?: string | null
           id: string
+          region?: string
           role?: Database["public"]["Enums"]["user_role_kind"]
           updated_at?: string
           username: string
@@ -246,10 +274,12 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           birthday?: string | null
+          country_code?: string
           created_at?: string
           display_name?: string
           email?: string | null
           id?: string
+          region?: string
           role?: Database["public"]["Enums"]["user_role_kind"]
           updated_at?: string
           username?: string
@@ -391,6 +421,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          created_at: string
+          earned_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -507,7 +564,7 @@ export type Database = {
       is_parent_of: { Args: { _child_user_id: string }; Returns: boolean }
       is_privileged_caller: { Args: never; Returns: boolean }
       leaderboard: {
-        Args: { _period: string }
+        Args: { _scope: string }
         Returns: {
           avatar_url: string
           display_name: string
