@@ -337,7 +337,7 @@ function Leaderboard() {
         ) : (
           <span>{t("lb.country_label", { country: location.country })}</span>
         )}
-        <span>{t("lb.today_label", { date: dayKey })}</span>
+        <span>{t("lb.today_label", { date: todayLabel })}</span>
       </div>
 
       {isLoading || locating ? (
