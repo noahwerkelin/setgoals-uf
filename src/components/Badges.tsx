@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Award, Footprints, Sunrise, Moon, Route as RouteIcon, Map as MapIcon,
   Compass, Mountain, Flame, Calendar, Infinity as InfinityIcon, MapPin,
@@ -7,7 +7,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { currentStreak, useSettings } from "@/lib/settings";
+import {
+  useEarnedBadges,
+  useStreakBadges,
+  useProBadge,
+  useUnlockerBadge,
+} from "@/lib/badges";
 import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
 
@@ -84,190 +89,22 @@ const TIER_STYLE: Record<BadgeTier, { ring: string; bg: string; fg: string; chip
 
 export function tierStyle(tier: BadgeTier) { return TIER_STYLE[tier]; }
 
-// v2: earlier builds could unlock leaderboard badges from placeholder standings.
-// Bumping the key clears those so every badge must be earned for real.
-const STORE_KEY = "sg.badges.v2";
-const LEGACY_STORE_KEYS = ["sg.badges"];
-const TOTALS_KEY = "sg.totals";
-const HOURLY_KEY = "sg.hourly";
-
-type EarnedMap = Record<string, string>;
-type Totals = { lastDate: string | null; totalSteps: number; totalKm: number };
-type HourlyState = {
-  date: string | null;
-  lastSteps: number;
-  earlyBirdSteps: number; // steps accrued while local hour in [0,8)
-  nightOwlSteps: number;  // steps accrued while local hour in [21,24)
-};
-
-function loadEarned(): EarnedMap {
-  try {
-    for (const k of LEGACY_STORE_KEYS) localStorage.removeItem(k);
-    const raw = localStorage.getItem(STORE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
-}
-function saveEarned(m: EarnedMap) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(m)); } catch {}
-}
-function loadTotals(): Totals {
-  try { const raw = localStorage.getItem(TOTALS_KEY); return raw ? JSON.parse(raw) : { lastDate: null, totalSteps: 0, totalKm: 0 }; }
-  catch { return { lastDate: null, totalSteps: 0, totalKm: 0 }; }
-}
-function saveTotals(t: Totals) { try { localStorage.setItem(TOTALS_KEY, JSON.stringify(t)); } catch {} }
-
-function loadHourly(): HourlyState {
-  try {
-    const raw = localStorage.getItem(HOURLY_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return { date: null, lastSteps: 0, earlyBirdSteps: 0, nightOwlSteps: 0 };
-}
-function saveHourly(h: HourlyState) { try { localStorage.setItem(HOURLY_KEY, JSON.stringify(h)); } catch {} }
-
-function notifyChange() {
-  window.dispatchEvent(new CustomEvent("sg:badges-changed"));
-}
-
-function awardMany(ids: string[]): boolean {
-  const m = loadEarned();
-  let changed = false;
-  for (const id of ids) {
-    if (!m[id]) { m[id] = new Date().toISOString(); changed = true; }
-  }
-  if (changed) { saveEarned(m); notifyChange(); }
-  return changed;
-}
-
-/** Award a single badge by id. Returns true if newly awarded. */
-export function awardBadge(id: string): boolean {
-  return awardMany([id]);
-}
-
-const EARLY_BIRD_THRESHOLD = 2000;
-const NIGHT_OWL_THRESHOLD = 2000;
-
-/**
- * Attribute step deltas seen throughout the day to time-of-day buckets so
- * the early bird (00:00-08:00) and night owl (21:00-23:59) badges reflect
- * *when* the user actually walked, not just the current wall-clock hour.
- */
-function updateHourlyBuckets(steps: number, hour: number): HourlyState {
-  const today = new Date();
-  const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  let h = loadHourly();
-  if (h.date !== iso) {
-    h = { date: iso, lastSteps: 0, earlyBirdSteps: 0, nightOwlSteps: 0 };
-  }
-  // If the reported steps drop (data source reset), rebase without crediting.
-  if (steps < h.lastSteps) {
-    h.lastSteps = steps;
-    saveHourly(h);
-    return h;
-  }
-  const delta = steps - h.lastSteps;
-  if (delta > 0) {
-    if (hour >= 0 && hour < 8) h.earlyBirdSteps += delta;
-    else if (hour >= 21 && hour <= 23) h.nightOwlSteps += delta;
-    h.lastSteps = steps;
-    saveHourly(h);
-  }
-  return h;
-}
-
-/** Record today's activity. Accumulates totals once per day and awards step/distance badges. */
-export function recordDailyActivity(steps: number, km: number, hour: number) {
-  if (!Number.isFinite(steps) || steps <= 0) return;
-  const today = new Date();
-  const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  const t = loadTotals();
-  if (t.lastDate !== iso) {
-    t.totalSteps += steps;
-    t.totalKm += km;
-    t.lastDate = iso;
-    saveTotals(t);
-  }
-  const h = updateHourlyBuckets(steps, hour);
-  const ids: string[] = [];
-  if (steps >= 1000) ids.push("first_steps");
-  if (steps >= 5000) ids.push("daily_walker");
-  if (h.earlyBirdSteps >= EARLY_BIRD_THRESHOLD) ids.push("early_bird");
-  if (h.nightOwlSteps >= NIGHT_OWL_THRESHOLD) ids.push("night_owl");
-  if (km >= 10) ids.push("ten_k_club");
-  if (t.totalKm >= 10) ids.push("explorer");
-  if (t.totalKm >= 100) ids.push("adventurer");
-  if (t.totalKm >= 500) ids.push("pathfinder");
-  awardMany(ids);
-}
-
-
-/**
- * Record a leaderboard rank (1-based). Only real standings count: the user must
- * have actually walked today, and the cohort must be large enough for the rank
- * to mean anything (no badges for being "#1" in a board of two people).
- */
-export function recordLeaderboardRank(
-  scope: "local" | "national",
-  rank: number,
-  opts: { steps: number; participants: number },
-) {
-  const { steps, participants } = opts;
-  if (!Number.isFinite(rank) || rank < 1) return;
-  if (steps <= 0) return;
-  const ids: string[] = [];
-  if (scope === "local") {
-    if (rank <= 10 && participants >= 10) ids.push("local_elite");
-    if (rank === 1 && participants >= 10) ids.push("local_legend");
-  } else {
-    if (rank <= 100 && participants >= 100) ids.push("national_contender");
-    if (rank <= 10 && participants >= 100) ids.push("national_elite");
-    if (rank === 1 && participants >= 100) ids.push("national_champion");
-  }
-  awardMany(ids);
-}
-
-export function useEarnedBadges() {
-  const [earned, setEarned] = useState<EarnedMap>({});
-  useEffect(() => {
-    setEarned(loadEarned());
-    const onChange = () => setEarned(loadEarned());
-    window.addEventListener("sg:badges-changed", onChange);
-    window.addEventListener("storage", onChange);
-    return () => {
-      window.removeEventListener("sg:badges-changed", onChange);
-      window.removeEventListener("storage", onChange);
-    };
-  }, []);
-  return earned;
-}
+export { useEarnedBadges };
 
 export function Badges() {
   const { t } = useT();
-  const { settings } = useSettings();
-  const earned = useEarnedBadges();
+  const { data: earnedRows } = useEarnedBadges();
+  const earned = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (earnedRows) {
+      for (const b of earnedRows) map[b.badge_id] = b.earned_at;
+    }
+    return map;
+  }, [earnedRows]);
 
-  // Auto-award streak badges
-  useEffect(() => {
-    const best = Math.max(settings.streak.best, currentStreak(settings.streak));
-    const ids: string[] = [];
-    if (best >= 7) ids.push("consistency_king");
-    if (best >= 30) ids.push("impressive");
-    if (best >= 100) ids.push("unstoppable");
-    if (ids.length) awardMany(ids);
-  }, [settings.streak]);
-
-  // Auto-award premium "Earned Elite" when subscribed to Pro
-  useEffect(() => {
-    if (settings.isPro) awardMany(["earned_elite"]);
-  }, [settings.isPro]);
-
-  // Auto-award "Unlocker" when every other badge has been earned
-  useEffect(() => {
-    const others = BADGES.filter((b) => b.id !== "unlocker");
-    const allEarned = others.every((b) => earned[b.id]);
-    if (allEarned && !earned["unlocker"]) awardMany(["unlocker"]);
-  }, [earned]);
-
+  useStreakBadges();
+  useProBadge();
+  useUnlockerBadge();
 
   const groups = useMemo(() => {
     const map = new Map<string, BadgeDef[]>();

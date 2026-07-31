@@ -30,7 +30,7 @@ import { ProUpgradeDialog } from "@/components/Pro";
 import { THEME_COLORS, type ThemeColor } from "@/lib/settings";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock, Palette } from "lucide-react";
-import { awardBadge } from "@/components/Badges";
+import { useAwardBadge } from "@/lib/badges";
 import { isUsernameAvailable } from "@/lib/username.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { releaseEntitlement } from "@/utils/payments.functions";
@@ -71,6 +71,7 @@ function Page() {
 
   const isChild = settings.role === "child";
   const releaseProFn = useServerFn(releaseEntitlement);
+  const awardBadge = useAwardBadge();
 
   const providerOf = (k: "hk" | "gf"): HealthProvider => (k === "hk" ? "healthkit" : "googlefit");
 
@@ -490,7 +491,7 @@ function Page() {
                 const body = encodeURIComponent(reportText);
                 window.open(`mailto:support@setgoals.app?subject=Problem%20report&body=${body}`, "_blank");
                 toast.success(t("report.thanks"));
-                awardBadge("problem_solver");
+                awardBadge.mutate("problem_solver");
                 setReportText("");
                 setReportOpen(false);
               }}

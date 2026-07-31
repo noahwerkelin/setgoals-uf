@@ -9,7 +9,8 @@ import { useT } from "@/lib/i18n";
 import { initialsFromName } from "@/lib/avatar";
 import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
 import { useTodaySteps, useHistorySteps } from "@/lib/steps";
-import { BADGES, recordDailyActivity, tierStyle, useEarnedBadges } from "@/components/Badges";
+import { BADGES, tierStyle } from "@/components/Badges";
+import { useEarnedBadges, useDailyBadgeCheck } from "@/lib/badges";
 import { loadProST, computeRolloverMin } from "@/lib/screentime";
 import { useBonusMin } from "@/lib/bonus";
 import { useDayKey } from "@/lib/day";
@@ -70,9 +71,9 @@ function Home() {
   useEffect(() => {
     if (today) {
       recordSteps(stepsToday, goal);
-      recordDailyActivity(stepsToday, distanceKm, new Date().getHours());
     }
-  }, [today, stepsToday, distanceKm, recordSteps, goal]);
+  }, [today, stepsToday, recordSteps, goal]);
+  useDailyBadgeCheck(stepsToday, distanceKm, new Date().getHours());
   const now = new Date();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { hour, md } = getLocalParts(tz);
@@ -225,18 +226,18 @@ function StatTile({
 
 function RecentWins() {
   const { t } = useT();
-  const earned = useEarnedBadges();
+  const { data: earnedRows = [] } = useEarnedBadges();
   const items = useMemo(() => {
-    return Object.entries(earned)
-      .map(([id, when]) => {
-        const def = BADGES.find((b) => b.id === id);
+    return earnedRows
+      .map((b) => {
+        const def = BADGES.find((x) => x.id === b.badge_id);
         if (!def) return null;
-        return { id, def, when: new Date(when).getTime() };
+        return { id: b.badge_id, def, when: new Date(b.earned_at).getTime() };
       })
       .filter((x): x is { id: string; def: typeof BADGES[number]; when: number } => !!x)
       .sort((a, b) => b.when - a.when)
       .slice(0, 6);
-  }, [earned]);
+  }, [earnedRows]);
 
   return (
     <section className="space-y-3 animate-rise" style={{ animationDelay: "240ms" }}>
