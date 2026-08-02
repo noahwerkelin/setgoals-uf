@@ -23,7 +23,7 @@ import { ChildAvatar } from "@/components/ChildAvatarPicker";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SetGoals" },
+      { title: "SetGoals — Today" },
       { name: "description", content: "Your daily steps, earned screen time, and goals." },
     ],
   }),
