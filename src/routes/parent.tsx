@@ -23,6 +23,9 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { ChildTasksSection } from "@/components/TasksParent";
+import { TaskNotificationsCard } from "@/components/TaskNotifications";
 
 export const Route = createFileRoute("/parent")({
   head: () => ({
@@ -54,6 +57,7 @@ type ScreenTimeEdit = { stepsPer30: number; dailyCapHours: number };
 function Page() {
   const { t } = useT();
   const { settings, update, refresh } = useSettings();
+  const { user } = useAuth();
   const [apps, setApps] = useState(INITIAL_APPS);
   const [proOpen, setProOpen] = useState(false);
   const [editing, setEditing] = useState<ChildProfile | null>(null);
@@ -442,6 +446,13 @@ function Page() {
                       {k.authUserId ? t("parent.gift.cta") : t("parent.gift.needs_join")}
                     </button>
                   </div>
+
+                  <ChildTasksSection
+                    childId={k.id}
+                    childName={k.name}
+                    parentId={user?.id ?? ""}
+                    canAssign={!!k.authUserId && !!user}
+                  />
 
                   {k.invitationStatus === "connected" ? (
                     <div className="mt-4 flex items-center gap-2 rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200">

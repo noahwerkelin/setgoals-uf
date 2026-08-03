@@ -18,6 +18,8 @@ import { useFriends, friendsRankToday } from "@/lib/friends";
 import { getFriendsSteps } from "@/lib/friends.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { ChildAvatar } from "@/components/ChildAvatarPicker";
+import { MyTasksCard } from "@/components/TasksChild";
+import { TaskNotificationsCard } from "@/components/TaskNotifications";
 
 
 export const Route = createFileRoute("/")({
@@ -188,6 +190,10 @@ function Home() {
 
 
         <FamilyCard />
+
+        <MyTasksCard />
+
+        <TaskNotificationsCard />
 
         <LeaderboardTile stepsToday={stepsToday} />
 
