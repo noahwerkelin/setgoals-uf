@@ -23,6 +23,9 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { ChildTasksSection } from "@/components/TasksParent";
+import { TaskNotificationsCard } from "@/components/TaskNotifications";
 
 export const Route = createFileRoute("/parent")({
   head: () => ({
@@ -54,6 +57,7 @@ type ScreenTimeEdit = { stepsPer30: number; dailyCapHours: number };
 function Page() {
   const { t } = useT();
   const { settings, update, refresh } = useSettings();
+  const { user } = useAuth();
   const [apps, setApps] = useState(INITIAL_APPS);
   const [proOpen, setProOpen] = useState(false);
   const [editing, setEditing] = useState<ChildProfile | null>(null);
@@ -355,6 +359,8 @@ function Page() {
           <section className="space-y-3">
             <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("parent.children")}</h2>
 
+            <TaskNotificationsCard />
+
             {settings.children.length === 0 && (
               <p className="rounded-3xl bg-card p-5 text-center text-xs text-sage-600 ring-1 ring-black/5">
                 {t("parent.child.empty")}
@@ -442,6 +448,13 @@ function Page() {
                       {k.authUserId ? t("parent.gift.cta") : t("parent.gift.needs_join")}
                     </button>
                   </div>
+
+                  <ChildTasksSection
+                    childId={k.id}
+                    childName={k.name}
+                    parentId={user?.id ?? ""}
+                    canAssign={!!k.authUserId && !!user}
+                  />
 
                   {k.invitationStatus === "connected" ? (
                     <div className="mt-4 flex items-center gap-2 rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200">
