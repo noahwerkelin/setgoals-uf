@@ -421,6 +421,124 @@ export type Database = {
         }
         Relationships: []
       }
+      task_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          task_id: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          task_id?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          task_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          approved_at: string | null
+          child_id: string
+          child_user_id: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          parent_id: string
+          priority: string
+          proof_image_url: string | null
+          proof_note: string | null
+          rejection_reason: string | null
+          repeat_interval_days: number | null
+          repeat_schedule: string
+          reward_minutes: number
+          status: string
+          submitted_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          child_id: string
+          child_user_id?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          parent_id: string
+          priority?: string
+          proof_image_url?: string | null
+          proof_note?: string | null
+          rejection_reason?: string | null
+          repeat_interval_days?: number | null
+          repeat_schedule?: string
+          reward_minutes?: number
+          status?: string
+          submitted_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          child_id?: string
+          child_user_id?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          parent_id?: string
+          priority?: string
+          proof_image_url?: string | null
+          proof_note?: string | null
+          rejection_reason?: string | null
+          repeat_interval_days?: number | null
+          repeat_schedule?: string
+          reward_minutes?: number
+          status?: string
+          submitted_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_id: string
