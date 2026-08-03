@@ -144,7 +144,7 @@ function SubmitDialog({ task, onClose }: { task: Task | null; onClose: () => voi
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            {t("common.cancel")}
+            {t("settings.cancel")}
           </Button>
           <Button onClick={send} disabled={busy}>
             {t("tasks.child.send")}

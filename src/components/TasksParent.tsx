@@ -342,7 +342,7 @@ function TaskEditDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            {t("common.cancel")}
+            {t("settings.cancel")}
           </Button>
           <Button onClick={save} disabled={busy || !title.trim()}>
             {t("tasks.save")}
