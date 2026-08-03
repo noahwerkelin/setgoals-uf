@@ -359,6 +359,8 @@ function Page() {
           <section className="space-y-3">
             <h2 className="px-1 text-[11px] font-semibold uppercase tracking-widest text-sage-600">{t("parent.children")}</h2>
 
+            <TaskNotificationsCard />
+
             {settings.children.length === 0 && (
               <p className="rounded-3xl bg-card p-5 text-center text-xs text-sage-600 ring-1 ring-black/5">
                 {t("parent.child.empty")}
