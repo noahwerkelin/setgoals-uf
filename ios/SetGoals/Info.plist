@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>SetGoals</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>processing</string>
+	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>SetGoals reads your steps, distance and active energy to calculate your daily goal progress and earned screen time.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>SetGoals does not write health data, but the permission sheet requires this entry.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your region is used to place you on the local and national leaderboards.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pick a profile picture for yourself or your child.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo as proof when completing a task.</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+</dict>
+</plist>
