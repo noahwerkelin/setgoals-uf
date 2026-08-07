@@ -8,10 +8,11 @@ enum L {
     }
 
     static func t(_ key: String, _ vars: [String: String] = [:]) -> String {
-        var s = (dict[lang]?[key] ?? dict["en"]?[key] ?? key)
+        var s = dict[lang]?[key] ?? extra[lang]?[key] ?? dict["en"]?[key] ?? extra["en"]?[key] ?? key
         for (k, v) in vars { s = s.replacingOccurrences(of: "{\(k)}", with: v) }
         return s
     }
+
 
     static func greeting() -> String {
         let h = Calendar.current.component(.hour, from: Date())
