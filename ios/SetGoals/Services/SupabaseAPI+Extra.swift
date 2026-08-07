@@ -1,0 +1,126 @@
+import Foundation
+import Supabase
+
+// MARK: - Extra row models used by the remaining ported screens
+
+struct ChildRow: Codable, Identifiable {
+    let id: UUID
+    var name: String
+    var username: String?
+    var avatar: String?
+    var daily_goal: Int
+    var steps_per_30: Int
+    var daily_cap_hours: Int
+    var auth_user_id: UUID?
+    var code: String
+    var invitation_status: String
+}
+
+struct TaskRow: Codable, Identifiable {
+    let id: UUID
+    var title: String
+    var description: String?
+    var reward_minutes: Int
+    var status: String          // open | submitted | approved | rejected
+    var due_date: String?
+    var child_id: UUID
+    var child_user_id: UUID?
+}
+
+struct UserBadgeRow: Codable {
+    var badge_id: String
+    var earned_at: String
+}
+
+struct RestrictionRow: Codable, Identifiable {
+    let id: UUID
+    var kind: String
+    var identifier: String
+    var label: String
+    var active: Bool
+}
+
+extension SupabaseAPI {
+    /// Last `days` days of activity for the signed-in user, oldest first,
+    /// with missing days filled with zeroes (mirrors `useHistorySteps`).
+    static func historyFilled(days: Int) async -> [(day: String, steps: Int, distance: Double)] {
+        let rows = (try? await history(days: days)) ?? []
+        var byDay: [String: ActivityStepsRow] = [:]
+        for r in rows { byDay[r.day] = r }
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.timeZone = .current
+        var out: [(String, Int, Double)] = []
+        for i in stride(from: days - 1, through: 0, by: -1) {
+            let d = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
+            let key = f.string(from: d)
+            let r = byDay[key]
+            out.append((key, r?.steps ?? 0, r?.distance_km ?? 0))
+        }
+        return out
+    }
+
+    static func weekSteps() async -> [(day: String, steps: Int)] {
+        await historyFilled(days: 7).map { ($0.day, $0.steps) }
+    }
+
+    static func children() async throws -> [ChildRow] {
+        guard let uid = await currentUserID() else { return [] }
+        return try await supabase.from("children").select()
+            .eq("parent_id", value: uid).order("created_at", ascending: true)
+            .execute().value
+    }
+
+    static func stepsFor(userIDs: [UUID]) async throws -> [UUID: Int] {
+        guard !userIDs.isEmpty else { return [:] }
+        struct Row: Codable { let user_id: UUID; let steps: Int }
+        let rows: [Row] = try await supabase.from("activity_steps")
+            .select("user_id,steps").in("user_id", values: userIDs)
+            .eq("day", value: todayKey).execute().value
+        return Dictionary(uniqueKeysWithValues: rows.map { ($0.user_id, $0.steps) })
+    }
+
+    static func tasks() async throws -> [TaskRow] {
+        try await supabase.from("tasks").select()
+            .order("created_at", ascending: false).execute().value
+    }
+
+    static func earnedBadges() async throws -> Set<String> {
+        guard let uid = await currentUserID() else { return [] }
+        let rows: [UserBadgeRow] = try await supabase.from("user_badges")
+            .select("badge_id,earned_at").eq("user_id", value: uid).execute().value
+        return Set(rows.map(\.badge_id))
+    }
+
+    static func awardBadge(_ id: String) async {
+        guard let uid = await currentUserID() else { return }
+        try? await supabase.from("user_badges")
+            .upsert(["user_id": AnyJSON.string(uid.uuidString), "badge_id": .string(id)],
+                    onConflict: "user_id,badge_id")
+            .execute()
+    }
+
+    static func restrictions() async throws -> [RestrictionRow] {
+        guard let uid = await currentUserID() else { return [] }
+        return try await supabase.from("restriction_settings").select()
+            .eq("user_id", value: uid).execute().value
+    }
+
+    static func setRestriction(id: UUID, active: Bool) async throws {
+        try await supabase.from("restriction_settings")
+            .update(["active": active]).eq("id", value: id).execute()
+    }
+
+    static func giftScreenTime(childUserID: UUID, minutes: Int) async throws {
+        guard let uid = await currentUserID() else { return }
+        try await supabase.from("screentime_grants").insert([
+            "parent_id": AnyJSON.string(uid.uuidString),
+            "child_user_id": .string(childUserID.uuidString),
+            "day": .string(todayKey),
+            "minutes": .integer(minutes),
+        ]).execute()
+    }
+
+    static func updateProfile(_ patch: [String: AnyJSON]) async throws {
+        guard let uid = await currentUserID() else { return }
+        try await supabase.from("profiles").update(patch).eq("id", value: uid).execute()
+    }
+}

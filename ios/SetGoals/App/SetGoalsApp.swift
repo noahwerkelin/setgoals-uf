@@ -45,10 +45,11 @@ struct RootView: View {
             switch tab {
             case .home: HomeView(tab: $tab)
             case .profile: ProfileView(tab: $tab)
-            case .map: PlaceholderView(tab: $tab, title: L.t("nav.map"))
-            case .challenges: PlaceholderView(tab: $tab, title: L.t("nav.goals"))
-            case .coach: PlaceholderView(tab: $tab, title: L.t("nav.coach"))
+            case .map: ActivityMapView(tab: $tab)
+            case .challenges: ChallengesView(tab: $tab)
+            case .coach: CoachView(tab: $tab)
             }
+
         }
     }
 }

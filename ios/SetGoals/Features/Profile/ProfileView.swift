@@ -86,12 +86,20 @@ struct ProfileView: View {
         .rise(delay: 0.12)
     }
 
+    @State private var showSettings = false
+    @State private var showParent = false
+    @State private var showStats = false
+
     private var manageSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L.t("profile.manage")).eyebrow(theme.p.s600)
             CardSurface(padding: 8) {
                 VStack(spacing: 0) {
-                    row("gearshape", L.t("profile.settings")) {}
+                    row("gearshape", L.t("profile.settings")) { showSettings = true }
+                    Divider().overlay(theme.p.s100)
+                    row("chart.bar", L.t("stats.title")) { showStats = true }
+                    Divider().overlay(theme.p.s100)
+                    row("figure.2.and.child.holdinghands", L.t("parent.title")) { showParent = true }
                     Divider().overlay(theme.p.s100)
                     row("trophy", L.t("profile.badges")) { tab = .challenges }
                     Divider().overlay(theme.p.s100)
@@ -102,7 +110,11 @@ struct ProfileView: View {
             }
         }
         .rise(delay: 0.18)
+        .fullScreenCover(isPresented: $showSettings) { SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings) }
+        .fullScreenCover(isPresented: $showParent) { ParentView(tab: $tab).environmentObject(theme).environmentObject(settings) }
+        .fullScreenCover(isPresented: $showStats) { StatsView(tab: $tab).environmentObject(theme).environmentObject(settings) }
     }
+
 
     private func row(_ icon: String, _ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
