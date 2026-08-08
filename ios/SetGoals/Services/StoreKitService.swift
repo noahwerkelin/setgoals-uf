@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import StoreKit
 
 /// Native replacement for the web `src/lib/storekit.ts` shim.
