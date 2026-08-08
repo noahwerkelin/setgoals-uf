@@ -124,3 +124,79 @@ extension SupabaseAPI {
         try await supabase.from("profiles").update(patch).eq("id", value: uid).execute()
     }
 }
+
+// MARK: - Friends (port of `src/lib/friends.functions.ts`)
+
+struct PublicUser: Codable, Identifiable, Hashable {
+    let id: UUID
+    var username: String
+    var name: String
+}
+
+struct FriendRow: Identifiable, Hashable {
+    /// friend's user id
+    let id: UUID
+    /// friendship row id — used for deletion
+    let friendshipID: UUID
+    var username: String
+    var name: String
+}
+
+extension SupabaseAPI {
+    private struct ProfileLite: Codable { let id: UUID; let username: String?; let display_name: String? }
+    private struct FriendshipRow: Codable { let id: UUID; let user_id: UUID; let friend_id: UUID }
+
+    /// Confirmed friends of the signed-in user (symmetric rows).
+    static func friends() async throws -> [FriendRow] {
+        guard let uid = await currentUserID() else { return [] }
+        let rows: [FriendshipRow] = try await supabase.from("friendships")
+            .select("id,user_id,friend_id")
+            .or("user_id.eq.\(uid.uuidString),friend_id.eq.\(uid.uuidString)")
+            .execute().value
+        guard !rows.isEmpty else { return [] }
+        let ids = rows.map { $0.user_id == uid ? $0.friend_id : $0.user_id }
+        let profiles: [ProfileLite] = try await supabase.from("profiles")
+            .select("id,username,display_name").in("id", values: ids).execute().value
+        let byID = Dictionary(uniqueKeysWithValues: profiles.map { ($0.id, $0) })
+        return rows.map { r in
+            let fid = r.user_id == uid ? r.friend_id : r.user_id
+            let p = byID[fid]
+            return FriendRow(id: fid, friendshipID: r.id,
+                             username: p?.username ?? "",
+                             name: (p?.display_name?.isEmpty == false ? p!.display_name! : (p?.username ?? "")))
+        }
+    }
+
+    /// Search real accounts by username (min 2 chars, max 8 results).
+    static func searchUsers(_ query: String) async throws -> [PublicUser] {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+            .replacingOccurrences(of: "%", with: "").replacingOccurrences(of: "_", with: "")
+        guard q.count >= 2, let uid = await currentUserID() else { return [] }
+        let rows: [ProfileLite] = try await supabase.from("profiles")
+            .select("id,username,display_name")
+            .ilike("username", pattern: "%\(q)%")
+            .neq("id", value: uid)
+            .limit(8).execute().value
+        return rows.map {
+            PublicUser(id: $0.id, username: $0.username ?? "",
+                       name: ($0.display_name?.isEmpty == false ? $0.display_name! : ($0.username ?? "")))
+        }
+    }
+
+    static func addFriend(_ friendID: UUID) async throws {
+        guard let uid = await currentUserID(), uid != friendID else { return }
+        try await supabase.from("friendships").insert([
+            "user_id": AnyJSON.string(uid.uuidString),
+            "friend_id": .string(friendID.uuidString),
+        ]).execute()
+    }
+
+    static func removeFriend(friendshipID: UUID) async throws {
+        try await supabase.from("friendships").delete().eq("id", value: friendshipID).execute()
+    }
+
+    /// Today's step totals for a set of friends.
+    static func friendsStepsToday(_ ids: [UUID]) async -> [UUID: Int] {
+        ((try? await stepsFor(userIDs: ids)) ?? [:])
+    }
+}
