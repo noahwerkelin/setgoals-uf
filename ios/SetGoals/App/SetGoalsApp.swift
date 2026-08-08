@@ -46,7 +46,7 @@ struct RootView: View {
             case .home: HomeView(tab: $tab)
             case .profile: ProfileView(tab: $tab)
             case .map: ActivityMapView(tab: $tab)
-            case .challenges: ChallengesView(tab: $tab)
+            case .challenges: ChallengesView(tab: $tab, initialTab: NavIntent.shared.challengesTab)
             case .coach: CoachView(tab: $tab)
             }
 
