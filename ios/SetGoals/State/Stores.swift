@@ -31,7 +31,8 @@ final class SettingsStore: ObservableObject {
     @Published var lastGoalMetDate: String? = nil
 
 
-    var hasCap: Bool { dailyCapHours > 0 }
+    /// The web sentinel for "no cap" is 24 h (see `parent.no_cap`).
+    var hasCap: Bool { dailyCapHours > 0 && dailyCapHours < 24 }
     var capMin: Int { hasCap ? dailyCapHours * 60 : Int.max / 4 }
 
     /// `earnedMinFromSteps` — identical rounding to the web helper.
@@ -54,12 +55,18 @@ final class SettingsStore: ObservableObject {
         return (String(format: "%.1f", km), "km")
     }
 
+    var goalMetToday: Bool {
+        lastGoalMetDate == SupabaseAPI.todayKey
+    }
+
     func load() async {
+        email = (try? await supabase.auth.user().email) ?? email
         guard let p = try? await SupabaseAPI.profile(), let p else { return }
         displayName = p.display_name
         username = p.username
         avatar = p.avatar_url
         role = p.role
+        linkedChild = p.role == "child"
         if let s = try? await SupabaseAPI.settings(), let s {
             dailyGoal = s.daily_goal
             stepsPer30 = s.steps_per_30
@@ -67,12 +74,21 @@ final class SettingsStore: ObservableObject {
             units = s.units
             isPro = s.is_pro
             proPlan = s.pro_plan
+            proExpiresAt = s.pro_expires_at
+            anonymousLeaderboard = s.anonymous_leaderboard
+            healthkitConnected = s.healthkit_connected
             themeColor = ThemeColor(rawValue: s.theme_color) ?? .sage
         }
         if let b = try? await SupabaseAPI.todayBalance(), let b {
             bonusMin = b.bonus_min
         }
+        if let st = try? await SupabaseAPI.streak(), let st {
+            streakCount = st.count
+            streakBest = st.best
+            lastGoalMetDate = st.last_goal_met_date
+        }
     }
+
 }
 
 @MainActor
