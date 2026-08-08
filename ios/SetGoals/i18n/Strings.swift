@@ -3,8 +3,12 @@ import Foundation
 /// Port of `src/lib/i18n.tsx`. Only the keys referenced by the ported
 /// screens are included; add the rest as more screens are ported.
 enum L {
+    /// Manual override picked in Settings (`app.lang`), else the device locale.
     static var lang: String {
-        Locale.preferredLanguages.first?.hasPrefix("sv") == true ? "sv" : "en"
+        if let saved = UserDefaults.standard.string(forKey: "app.lang"), saved == "sv" || saved == "en" {
+            return saved
+        }
+        return Locale.preferredLanguages.first?.hasPrefix("sv") == true ? "sv" : "en"
     }
 
     static func t(_ key: String, _ vars: [String: String] = [:]) -> String {
