@@ -1,12 +1,18 @@
 import SwiftUI
 import PhotosUI
+import Supabase
 
 /// Cross-screen navigation intent — mirrors the web's
 /// `<Link to="/challenges" search={{ tab: "badges" }} />` deep link.
-@MainActor
-final class NavIntent: ObservableObject {
+final class NavIntent {
     static let shared = NavIntent()
-    @Published var challengesTab: ChallengesView.Tab = .goals
+    var challengesTab: ChallengesView.Tab = .goals
+
+    /// Reads the pending tab once, then falls back to the default.
+    func consumeChallengesTab() -> ChallengesView.Tab {
+        defer { challengesTab = .goals }
+        return challengesTab
+    }
 }
 
 /// 1:1 port of `src/routes/profile.tsx`.
