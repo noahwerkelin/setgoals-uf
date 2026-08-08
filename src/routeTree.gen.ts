@@ -22,6 +22,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
+import { Route as ApiPublicNearbyActivitiesRouteImport } from './routes/api/public/nearby-activities'
 import { Route as ApiPublicPaymentsAppleNotificationsRouteImport } from './routes/api/public/payments/apple-notifications'
 
 const IndexRoute = IndexRouteImport.update({
@@ -89,6 +90,12 @@ const ApiPublicIngestStepsRoute = ApiPublicIngestStepsRouteImport.update({
   path: '/api/public/ingest-steps',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicNearbyActivitiesRoute =
+  ApiPublicNearbyActivitiesRouteImport.update({
+    id: '/api/public/nearby-activities',
+    path: '/api/public/nearby-activities',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsAppleNotificationsRoute =
   ApiPublicPaymentsAppleNotificationsRouteImport.update({
     id: '/api/public/payments/apple-notifications',
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
+  '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRoutesByTo {
@@ -126,6 +134,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
+  '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRoutesById {
@@ -143,6 +152,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
+  '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRouteTypes {
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/api/public/ingest-steps'
+    | '/api/public/nearby-activities'
     | '/api/public/payments/apple-notifications'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/api/public/ingest-steps'
+    | '/api/public/nearby-activities'
     | '/api/public/payments/apple-notifications'
   id:
     | '__root__'
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/api/public/ingest-steps'
+    | '/api/public/nearby-activities'
     | '/api/public/payments/apple-notifications'
   fileRoutesById: FileRoutesById
 }
@@ -210,6 +223,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
   ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
+  ApiPublicNearbyActivitiesRoute: typeof ApiPublicNearbyActivitiesRoute
   ApiPublicPaymentsAppleNotificationsRoute: typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 
@@ -306,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestStepsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/nearby-activities': {
+      id: '/api/public/nearby-activities'
+      path: '/api/public/nearby-activities'
+      fullPath: '/api/public/nearby-activities'
+      preLoaderRoute: typeof ApiPublicNearbyActivitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/apple-notifications': {
       id: '/api/public/payments/apple-notifications'
       path: '/api/public/payments/apple-notifications'
@@ -330,19 +351,10 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
   ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
+  ApiPublicNearbyActivitiesRoute: ApiPublicNearbyActivitiesRoute,
   ApiPublicPaymentsAppleNotificationsRoute:
     ApiPublicPaymentsAppleNotificationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
