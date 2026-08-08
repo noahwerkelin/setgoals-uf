@@ -342,8 +342,8 @@ struct ActivityMapView: View {
         loading = true
         defer { loading = false }
         camera = .region(MKCoordinateRegion(center: c, latitudinalMeters: 6000, longitudinalMeters: 6000))
-        activities = (try? await ActivitiesService.nearby(lat: c.latitude, lng: c.longitude)) ?? []
-            .sorted { $0.distanceM < $1.distanceM }
+        let found = (try? await ActivitiesService.nearby(lat: c.latitude, lng: c.longitude)) ?? []
+        activities = found.sorted { $0.distanceM < $1.distanceM }
     }
 
     private func openDirections(_ a: NearbyActivity) {
@@ -407,7 +407,7 @@ private struct PinShape: InsettableShape {
                     startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
         path.addCurve(to: p(20, 47), control1: p(36, 30), control2: p(20, 47))
         path.closeSubpath()
-        return path.strokedPath(.init(lineWidth: 0)).isEmpty ? path : path
+        return inset == 0 ? path : path.strokedPath(.init(lineWidth: 0))
     }
 }
 
