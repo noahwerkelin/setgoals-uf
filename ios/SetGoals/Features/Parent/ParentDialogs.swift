@@ -175,7 +175,7 @@ struct ChildEditDialog: View {
             HStack(spacing: 12) {
                 AvatarBubble(avatar: avatar, name: name, size: 56)
                 PhotosPicker(selection: $photoItem, matching: .images) {
-                    Text(uploading ? L.t("parent.child.uploading") : L.t("parent.child.photo"))
+                    Text(uploading ? L.t("parent.child.uploading") : L.t("parent.child.upload_photo"))
                         .font(F.sans(11, .semibold)).foregroundStyle(theme.primaryForeground)
                         .padding(.horizontal, 14).padding(.vertical, 8)
                         .background(theme.p.s700, in: Capsule())
