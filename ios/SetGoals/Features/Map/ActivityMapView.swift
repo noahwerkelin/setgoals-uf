@@ -396,6 +396,7 @@ private struct PinShape: InsettableShape {
     }
 
     func path(in rect: CGRect) -> Path {
+        let rect = rect.insetBy(dx: inset, dy: inset)
         let sx = rect.width / 40, sy = rect.height / 48
         func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
             CGPoint(x: rect.minX + x * sx, y: rect.minY + y * sy)
@@ -407,7 +408,7 @@ private struct PinShape: InsettableShape {
                     startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
         path.addCurve(to: p(20, 47), control1: p(36, 30), control2: p(20, 47))
         path.closeSubpath()
-        return inset == 0 ? path : path.strokedPath(.init(lineWidth: 0))
+        return path
     }
 }
 
