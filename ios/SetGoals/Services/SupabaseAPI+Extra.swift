@@ -8,6 +8,7 @@ struct ChildRow: Codable, Identifiable {
     var name: String
     var username: String?
     var avatar: String?
+    var birthday: String?
     var daily_goal: Int
     var steps_per_30: Int
     var daily_cap_hours: Int
@@ -21,10 +22,19 @@ struct TaskRow: Codable, Identifiable {
     var title: String
     var description: String?
     var reward_minutes: Int
-    var status: String          // open | submitted | approved | rejected
+    var status: String          // pending | submitted | approved | rejected | expired
     var due_date: String?
     var child_id: UUID
     var child_user_id: UUID?
+    var parent_id: UUID?
+    var repeat_schedule: String?
+    var repeat_interval_days: Int?
+    var priority: String?
+    var proof_note: String?
+    var proof_image_url: String?
+    var rejection_reason: String?
+    var approved_at: String?
+    var updated_at: String?
 }
 
 struct UserBadgeRow: Codable {
