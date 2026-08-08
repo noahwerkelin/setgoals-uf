@@ -8,16 +8,28 @@ final class SettingsStore: ObservableObject {
 
     @Published var displayName: String = ""
     @Published var username: String = ""
+    @Published var email: String = ""
     @Published var avatar: String? = nil          // emoji, or a data/https URL
     @Published var role: String = "individual"    // individual | child
+    @Published var linkedChild: Bool = false      // picture is parent-managed
     @Published var dailyGoal: Int = 8000
     @Published var stepsPer30: Int = 1000
-    @Published var dailyCapHours: Int = 3         // 0 == no cap
+    @Published var dailyCapHours: Int = 3         // 24 == no cap
     @Published var units: String = "metric"
     @Published var isPro: Bool = false
     @Published var proPlan: String = "monthly"
+    @Published var proExpiresAt: String? = nil
     @Published var themeColor: ThemeColor = .sage
     @Published var bonusMin: Int = 0
+    @Published var anonymousLeaderboard: Bool = false
+    @Published var shareLocation: String = "while_using"   // off | while_using | always
+    @Published var pushOn: Bool = true
+    @Published var healthkitConnected: Bool = false
+    @Published var googlefitConnected: Bool = false
+    @Published var streakCount: Int = 0
+    @Published var streakBest: Int = 0
+    @Published var lastGoalMetDate: String? = nil
+
 
     var hasCap: Bool { dailyCapHours > 0 }
     var capMin: Int { hasCap ? dailyCapHours * 60 : Int.max / 4 }
