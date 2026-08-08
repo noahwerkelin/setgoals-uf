@@ -35,7 +35,11 @@ struct UserSettingsRow: Codable {
     var is_pro: Bool
     var pro_plan: String
     var pro_expires_at: String?
+    var pro_since: String?
     var healthkit_connected: Bool
+    var googlefit_connected: Bool
+    var push_on: Bool
+    var share_location: String
 }
 
 struct ActivityStepsRow: Codable {

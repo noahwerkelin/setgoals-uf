@@ -200,3 +200,21 @@ extension SupabaseAPI {
         ((try? await stepsFor(userIDs: ids)) ?? [:])
     }
 }
+
+// MARK: - PRO Family status for child accounts
+
+struct ParentFamilyStatus: Codable {
+    let active: Bool
+    let cancelling: Bool
+    let ends_at: String?
+    let environment: String?
+    let status: String?
+}
+
+extension SupabaseAPI {
+    static func parentFamilyStatus() async throws -> ParentFamilyStatus? {
+        let rows: [ParentFamilyStatus] = try await supabase.rpc("parent_family_pro_status")
+            .execute().value
+        return rows.first
+    }
+}
