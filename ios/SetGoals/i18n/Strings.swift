@@ -15,9 +15,13 @@ enum L {
         var s = pages[lang]?[key]
             ?? dict[lang]?[key]
             ?? extra[lang]?[key]
+            ?? parentStrings[lang]?[key]
+            ?? taskStrings[lang]?[key]
             ?? pages["en"]?[key]
             ?? dict["en"]?[key]
             ?? extra["en"]?[key]
+            ?? parentStrings["en"]?[key]
+            ?? taskStrings["en"]?[key]
             ?? key
         for (k, v) in vars { s = s.replacingOccurrences(of: "{\(k)}", with: v) }
         return s
