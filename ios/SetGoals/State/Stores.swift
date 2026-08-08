@@ -29,6 +29,11 @@ final class SettingsStore: ObservableObject {
     @Published var streakCount: Int = 0
     @Published var streakBest: Int = 0
     @Published var lastGoalMetDate: String? = nil
+    @Published var proSince: String? = nil
+    /// Mirrors `parent_family_pro_status()` for child accounts.
+    @Published var parentFamilyActive: Bool = false
+    @Published var parentFamilyCancelling: Bool = false
+    @Published var parentFamilyEndsAt: String? = nil
 
 
     /// The web sentinel for "no cap" is 24 h (see `parent.no_cap`).
@@ -77,7 +82,17 @@ final class SettingsStore: ObservableObject {
             proExpiresAt = s.pro_expires_at
             anonymousLeaderboard = s.anonymous_leaderboard
             healthkitConnected = s.healthkit_connected
+            googlefitConnected = s.googlefit_connected
+            pushOn = s.push_on
+            shareLocation = s.share_location
+            proSince = s.pro_since
             themeColor = ThemeColor(rawValue: s.theme_color) ?? .sage
+        }
+        if role == "child", let fam = try? await SupabaseAPI.parentFamilyStatus(), let fam {
+            parentFamilyActive = fam.active
+            parentFamilyCancelling = fam.cancelling
+            parentFamilyEndsAt = fam.ends_at
+            isPro = isPro || fam.active
         }
         if let b = try? await SupabaseAPI.todayBalance(), let b {
             bonusMin = b.bonus_min

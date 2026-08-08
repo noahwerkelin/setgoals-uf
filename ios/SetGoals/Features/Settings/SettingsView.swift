@@ -1,314 +1,419 @@
 import SwiftUI
+import Supabase
 
-/// Port of `src/routes/settings.tsx` — account, screen-time rules,
-/// categories, appearance (PRO themes), PRO management and support.
+/// 1:1 port of `src/routes/settings.tsx`.
+/// Sections, order, copy and interaction match the web page exactly:
+/// PRO card → theme → earning rules → integrations → privacy →
+/// account & language → support → version footer.
 struct SettingsView: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
-    @Environment(\.dismiss) private var dismiss
     @Binding var tab: AppTab
 
-    @State private var goal: Double = 8000
-    @State private var per30: Double = 1000
-    @State private var cap: Double = 3
-    @State private var restrictions: [RestrictionRow] = []
-    @State private var showNickname = false
-    @State private var showEmail = false
-    @State private var showPassword = false
-    @State private var showReport = false
-    @State private var showDelete = false
-    @State private var saving = false
+    @AppStorage("app.lang") private var lang: String = L.lang
+
+    @State private var stepsOpen = false
+    @State private var capOpen = false
+    @State private var goalOpen = false
+    @State private var themeOpen = false
+    @State private var proOpen = false
+    @State private var connectKind: String?
+    @State private var nicknameOpen = false
+    @State private var usernameOpen = false
+    @State private var emailOpen = false
+    @State private var passwordOpen = false
+    @State private var reportOpen = false
+    @State private var deleteOpen = false
+
+    private var isChild: Bool { settings.role == "child" }
 
     var body: some View {
         AppShell(tab: $tab) {
-            PageHeader(eyebrow: L.t("settings.eyebrow"), title: L.t("settings.title")) { EmptyView() }
+            PageHeader(title: L.t("settings.title")) { EmptyView() }
             VStack(spacing: 24) {
-                accountSection
-                screenTimeSection
-                categoriesSection
-                appearanceSection
-                proSection
-                supportSection
+                proCard
+                themeGroup
+                if !isChild { earningGroup }
+                integrationsGroup
+                privacyGroup
+                accountGroup
+                supportGroup
+                Text("SetGoals · v1.0.0")
+                    .font(F.text11).foregroundStyle(theme.p.s600)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 16)
             }
             .padding(.horizontal, 24)
         }
-        .task {
-            goal = Double(settings.dailyGoal)
-            per30 = Double(settings.stepsPer30)
-            cap = Double(settings.dailyCapHours)
-            restrictions = (try? await SupabaseAPI.restrictions()) ?? []
+        .id(lang)
+        .sheet(isPresented: $proOpen) { ProUpgradeDialog() }
+        .sheet(isPresented: $themeOpen) { ThemePickerDialog() }
+        .sheet(isPresented: $goalOpen) {
+            SliderDialog(title: L.t("settings.daily_goal"), initial: settings.dailyGoal,
+                         min: 2000, max: 25000, step: 500, unit: L.t("settings.steps")) { v in
+                settings.dailyGoal = v
+                Task { try? await SupabaseAPI.updateSettings(["daily_goal": .integer(v)]) }
+            }
         }
-        .sheet(isPresented: $showNickname) { EditFieldSheet(title: L.t("settings.nickname"), initial: settings.displayName) { v in
-            try? await SupabaseAPI.updateProfile(["display_name": .string(v)]); settings.displayName = v
-        } }
-        .sheet(isPresented: $showEmail) { EditFieldSheet(title: L.t("settings.email"), initial: "") { v in
-            try? await supabase.auth.update(user: UserAttributes(email: v))
-        } }
-        .sheet(isPresented: $showPassword) { EditFieldSheet(title: L.t("settings.password"), initial: "", secure: true) { v in
-            try? await supabase.auth.update(user: UserAttributes(password: v))
-        } }
-        .sheet(isPresented: $showReport) { ReportProblemSheet() }
-        .sheet(isPresented: $showDelete) { DeleteAccountSheet() }
-    }
-
-    // MARK: Account
-
-    private var accountSection: some View {
-        group(L.t("settings.account")) {
-            SettingsRow(icon: "person", title: L.t("settings.nickname"), subtitle: settings.displayName) { showNickname = true }
-            divider
-            SettingsRow(icon: "at", title: L.t("settings.username"), subtitle: "@\(settings.username)") { }
-            divider
-            SettingsRow(icon: "envelope", title: L.t("settings.email")) { showEmail = true }
-            divider
-            SettingsRow(icon: "key", title: L.t("settings.password")) { showPassword = true }
+        .sheet(isPresented: $stepsOpen) {
+            SliderDialog(title: L.t("settings.steps_per_30"), initial: settings.stepsPer30,
+                         min: 200, max: 3000, step: 100) { v in
+                settings.stepsPer30 = v
+                Task { try? await SupabaseAPI.updateSettings(["steps_per_30": .integer(v)]) }
+            }
         }
-    }
-
-    // MARK: Screen time
-
-    private var screenTimeSection: some View {
-        group(settings.role == "individual" ? L.t("settings.screentime") : L.t("settings.screentime")) {
-            VStack(alignment: .leading, spacing: 20) {
-                SliderRow(title: L.t("settings.daily_goal"), valueLabel: Int(goal).formatted(),
-                          value: $goal, range: 2000...25000, step: 500)
-                SliderRow(title: L.t("settings.steps_per_30"), valueLabel: Int(per30).formatted(),
-                          value: $per30, range: 250...5000, step: 250)
-                SliderRow(title: L.t("settings.cap"),
-                          valueLabel: cap == 0 ? "∞" : "\(Int(cap)) h",
-                          value: $cap, range: 0...12, step: 1)
-                Text(currentRuleText).font(F.xs).foregroundStyle(theme.p.s600)
-                PrimaryButton(title: saving ? L.t("common.saving") : L.t("common.save"), busy: saving) {
-                    Task { await save() }
+        .sheet(isPresented: $capOpen) {
+            SliderDialog(title: L.t("settings.daily_cap"), initial: settings.dailyCapHours,
+                         min: 1, max: 8, step: 1, unit: L.t("settings.hours"),
+                         unlimited: (24, L.t("parent.no_cap"))) { v in
+                settings.dailyCapHours = v
+                Task { try? await SupabaseAPI.updateSettings(["daily_cap_hours": .integer(v)]) }
+            }
+        }
+        .sheet(item: Binding(get: { connectKind.map(IdentifiedString.init) },
+                             set: { connectKind = $0?.value })) { k in
+            HealthConnectDialog(kind: k.value) {
+                if k.value == "hk" {
+                    settings.healthkitConnected = true
+                    Task { try? await SupabaseAPI.updateSettings(["healthkit_connected": .bool(true)]) }
+                } else {
+                    settings.googlefitConnected = true
+                    Task { try? await SupabaseAPI.updateSettings(["googlefit_connected": .bool(true)]) }
                 }
             }
-            .padding(12)
+        }
+        .sheet(isPresented: $nicknameOpen) {
+            NicknameDialog(current: settings.displayName) { v in
+                settings.displayName = v
+                Task { try? await SupabaseAPI.updateProfile(["display_name": .string(v)]) }
+            }
+        }
+        .sheet(isPresented: $usernameOpen) {
+            UsernameDialog(current: settings.username) { v in
+                settings.username = v
+                Task { try? await SupabaseAPI.updateProfile(["username": .string(v)]) }
+            }
+        }
+        .sheet(isPresented: $emailOpen) {
+            EmailDialog(current: settings.email) { v in
+                do {
+                    try await supabase.auth.update(user: UserAttributes(email: v))
+                    settings.email = v
+                    return nil
+                } catch { return error.localizedDescription }
+            }
+        }
+        .sheet(isPresented: $passwordOpen) {
+            PasswordDialog { v in
+                do {
+                    try await supabase.auth.update(user: UserAttributes(password: v))
+                    return nil
+                } catch { return error.localizedDescription }
+            }
+        }
+        .sheet(isPresented: $reportOpen) { ReportProblemDialog() }
+        .sheet(isPresented: $deleteOpen) { DeleteAccountDialog() }
+    }
+
+    // MARK: - PRO card
+
+    @ViewBuilder private var proCard: some View {
+        if !isChild {
+            Button { proOpen = true } label: { proCardBody(filled: settings.isPro) }
+        } else {
+            proCardBody(filled: false)
         }
     }
 
-    private var currentRuleText: String {
-        let capText = cap == 0 ? L.t("settings.no_cap") : L.t("settings.max_h", ["h": "\(Int(cap))"])
-        return L.t("settings.rule_line", [
-            "steps": Int(per30).formatted(), "cap": capText,
-        ])
+    private func proCardBody(filled: Bool) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 20))
+                .foregroundStyle(filled ? .white : theme.p.s700)
+                .frame(width: 40, height: 40)
+                .background(filled ? Color.white.opacity(0.15) : theme.p.s100,
+                            in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L.t("pro.title")).font(F.sans(14, .semibold))
+                    .foregroundStyle(filled ? .white : theme.p.s950)
+                Text(proSubtitle)
+                    .font(F.xs)
+                    .foregroundStyle(filled ? Color.white.opacity(0.8) : theme.p.s600)
+                    .multilineTextAlignment(.leading)
+            }
+            Spacer()
+            if !isChild {
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(filled ? .white : theme.p.s700)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(filled ? theme.p.s600 : theme.card,
+                    in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
+            .strokeBorder(filled ? theme.p.s700.opacity(0.4) : theme.ringBorder, lineWidth: 1))
+        .rise()
     }
 
-    private func save() async {
-        saving = true
-        try? await SupabaseAPI.updateSettings([
-            "daily_goal": .integer(Int(goal)),
-            "steps_per_30": .integer(Int(per30)),
-            "daily_cap_hours": .integer(Int(cap)),
-        ])
-        settings.dailyGoal = Int(goal)
-        settings.stepsPer30 = Int(per30)
-        settings.dailyCapHours = Int(cap)
-        saving = false
+    private var proSubtitle: String {
+        if isChild {
+            if settings.parentFamilyCancelling, let ends = settings.parentFamilyEndsAt {
+                return L.t("pro.child_ending", ["date": Formatters.date(ends)])
+            }
+            return settings.isPro ? L.t("pro.child_active") : L.t("pro.child_desc")
+        }
+        if settings.isPro {
+            if let ends = settings.proExpiresAt {
+                return L.t("pro.status.ends_on_short", ["date": Formatters.date(ends)])
+            }
+            return L.t("pro.active")
+        }
+        return L.t("pro.subtitle")
     }
 
-    // MARK: Categories (Apple ScreenTime categories)
+    // MARK: - Theme
 
-    private var categoriesSection: some View {
-        group(L.t("settings.categories")) {
-            VStack(spacing: 0) {
-                ForEach(Array(restrictions.enumerated()), id: \.element.id) { i, r in
-                    if i > 0 { divider }
-                    HStack {
-                        Text(r.label).font(F.sm).foregroundStyle(theme.p.s900)
-                        Spacer()
-                        PermissionPills(alwaysAllow: Binding(
-                            get: { !r.active },
-                            set: { newValue in
-                                restrictions[i].active = !newValue
-                                Task { try? await SupabaseAPI.setRestriction(id: r.id, active: !newValue) }
-                            }))
+    private var themeGroup: some View {
+        group(L.t("theme.title")) {
+            Button { if settings.isPro { themeOpen = true } else { proOpen = true } } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "paintpalette")
+                        .font(.system(size: 18)).foregroundStyle(theme.p.s700)
+                        .frame(width: 40, height: 40)
+                        .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L.t("theme.\(settings.isPro ? settings.themeColor.rawValue : "sage")"))
+                            .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s950)
+                        Text(settings.isPro ? L.t("theme.desc")
+                             : (isChild ? L.t("pro.child_desc") : L.t("pro.unlock")))
+                            .font(F.xs).foregroundStyle(theme.p.s600)
+                            .lineLimit(2)
                     }
-                    .padding(.horizontal, 12).padding(.vertical, 12)
-                }
-                if restrictions.isEmpty {
-                    Text(L.t("settings.no_categories")).font(F.sm)
-                        .foregroundStyle(theme.p.s600).padding(12)
-                }
-            }
-        }
-    }
-
-    // MARK: Appearance
-
-    private var appearanceSection: some View {
-        group(L.t("settings.appearance")) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 10) {
-                    ForEach(ThemeColor.allCases) { c in
-                        Button {
-                            guard settings.isPro else { return }
-                            settings.themeColor = c
-                            theme.color = c
-                            Task { try? await SupabaseAPI.updateSettings(["theme_color": .string(c.rawValue)]) }
-                        } label: {
-                            ZStack {
-                                Circle().fill(SagePalette.table[c]!.s600)
-                                if theme.color == c {
-                                    Circle().strokeBorder(.white, lineWidth: 3)
-                                }
-                            }
-                            .frame(width: 34, height: 34)
-                            .overlay(Circle().strokeBorder(theme.ringBorder, lineWidth: 1))
-                            .opacity(settings.isPro ? 1 : 0.4)
+                    Spacer(minLength: 8)
+                    HStack(spacing: 4) {
+                        ForEach(Array(ThemeColor.allCases.prefix(5))) { c in
+                            Circle().fill(SagePalette.table[c]!.s600)
+                                .frame(width: 14, height: 14)
+                                .overlay(Circle().strokeBorder(.black.opacity(0.1), lineWidth: 1))
                         }
                     }
+                    Image(systemName: settings.isPro ? "chevron.right" : "lock")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(theme.p.s600)
                 }
-                if !settings.isPro {
-                    Text(settings.role == "child" ? L.t("pro.child_desc") : L.t("settings.theme_locked"))
-                        .font(F.xs).foregroundStyle(theme.p.s600)
-                }
+                .padding(16)
             }
-            .padding(12)
         }
     }
 
-    // MARK: PRO
+    // MARK: - Earning rules
 
-    private var proSection: some View {
-        group("SetGoals PRO") {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text(settings.isPro ? L.t("pro.active") : L.t("pro.inactive"))
-                        .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
-                    Spacer()
-                    Text(settings.proPlan).font(F.xs).foregroundStyle(theme.p.s600)
-                }
-                Text(settings.isPro ? L.t("pro.manage_desc") : L.t("pro.upsell"))
-                    .font(F.sm).foregroundStyle(theme.p.s600)
-            }
-            .padding(12)
-        }
-    }
-
-    // MARK: Support
-
-    private var supportSection: some View {
-        group(L.t("settings.support")) {
-            SettingsRow(icon: "exclamationmark.bubble", title: L.t("settings.report")) { showReport = true }
+    private var earningGroup: some View {
+        group(L.t("settings.earning")) {
+            row(L.t("settings.daily_goal"),
+                meta: "\(settings.dailyGoal.formatted()) \(L.t("settings.steps"))") { goalOpen = true }
             divider
-            SettingsRow(icon: "trash", title: L.t("settings.delete_account"), destructive: true) { showDelete = true }
+            row(L.t("settings.steps_per_30"), meta: settings.stepsPer30.formatted()) { stepsOpen = true }
+            divider
+            row(L.t("settings.daily_cap"),
+                meta: settings.dailyCapHours >= 24
+                    ? L.t("parent.no_cap")
+                    : "\(settings.dailyCapHours)\(L.t("settings.hours"))") { capOpen = true }
         }
     }
 
-    // MARK: Helpers
+    // MARK: - Integrations
 
-    private var divider: some View { Divider().overlay(theme.p.s100) }
+    private var integrationsGroup: some View {
+        group(L.t("settings.integrations")) {
+            integrationRow(icon: "iphone", label: L.t("settings.healthkit"),
+                           connected: settings.healthkitConnected) {
+                if settings.healthkitConnected {
+                    settings.healthkitConnected = false
+                    Task { try? await SupabaseAPI.updateSettings(["healthkit_connected": .bool(false)]) }
+                } else { connectKind = "hk" }
+            }
+            divider
+            integrationRow(icon: "figure.walk", label: L.t("settings.googlefit"),
+                           connected: settings.googlefitConnected) {
+                if settings.googlefitConnected {
+                    settings.googlefitConnected = false
+                    Task { try? await SupabaseAPI.updateSettings(["googlefit_connected": .bool(false)]) }
+                } else { connectKind = "gf" }
+            }
+            divider
+            toggleRow(L.t("settings.push"), isOn: Binding(
+                get: { settings.pushOn },
+                set: { v in
+                    settings.pushOn = v
+                    Task { try? await SupabaseAPI.updateSettings(["push_on": .bool(v)]) }
+                }))
+        }
+    }
+
+    // MARK: - Privacy
+
+    private var privacyGroup: some View {
+        group(L.t("settings.privacy")) {
+            toggleRow(L.t("settings.anon_lb"), isOn: Binding(
+                get: { settings.anonymousLeaderboard },
+                set: { v in
+                    settings.anonymousLeaderboard = v
+                    Task { try? await SupabaseAPI.updateSettings(["anonymous_leaderboard": .bool(v)]) }
+                }))
+            divider
+            selectRow(L.t("settings.share_loc"),
+                      value: settings.shareLocation,
+                      options: [("off", L.t("settings.off")),
+                                ("while_using", L.t("settings.while_using")),
+                                ("always", L.t("settings.on"))]) { v in
+                settings.shareLocation = v
+                Task { try? await SupabaseAPI.updateSettings(["share_location": .string(v)]) }
+            }
+        }
+    }
+
+    // MARK: - Account & language
+
+    private var accountGroup: some View {
+        group(L.t("settings.account")) {
+            selectRow(L.t("settings.language"), value: lang,
+                      options: [("en", "English"), ("sv", "Svenska")]) { v in lang = v }
+            divider
+            selectRow(L.t("units.label"), value: settings.units,
+                      options: [("metric", L.t("units.metric")), ("imperial", L.t("units.imperial"))]) { v in
+                settings.units = v
+                Task { try? await SupabaseAPI.updateSettings(["units": .string(v)]) }
+            }
+            divider
+            row(L.t("settings.nickname"), meta: settings.displayName) { nicknameOpen = true }
+            divider
+            row(L.t("settings.username"), meta: "@\(settings.username)") { usernameOpen = true }
+            if !isChild {
+                divider
+                row(L.t("settings.email"), meta: settings.email) { emailOpen = true }
+                divider
+                row(L.t("settings.password"), meta: "••••••••") { passwordOpen = true }
+            }
+            divider
+            row(L.t("settings.signout")) { Task { await AuthStore.shared.signOut() } }
+        }
+    }
+
+    // MARK: - Support
+
+    private var supportGroup: some View {
+        group(L.t("settings.support")) {
+            row(L.t("settings.report_problem")) { reportOpen = true }
+            if !isChild {
+                divider
+                row(L.t("settings.delete_account"), danger: true) { deleteOpen = true }
+            }
+        }
+    }
+
+    // MARK: - Building blocks (Group / Row / ToggleRow / SelectRow / IntegrationRow)
+
+    private var divider: some View {
+        Rectangle().fill(theme.p.s100).frame(height: 1)
+    }
 
     private func group<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title).eyebrow(theme.p.s600)
-            CardSurface(padding: 8) { VStack(spacing: 0) { content() } }
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(F.sans(11, .semibold)).textCase(.uppercase).tracking(1.4)
+                .foregroundStyle(theme.p.s600).padding(.horizontal, 4)
+            VStack(spacing: 0) { content() }
+                .frame(maxWidth: .infinity)
+                .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
+                    .strokeBorder(theme.ringBorder, lineWidth: 1))
         }
         .rise()
     }
-}
 
-struct EditFieldSheet: View {
-    @EnvironmentObject var theme: Theme
-    @Environment(\.dismiss) private var dismiss
-    let title: String
-    @State var initial: String
-    var secure = false
-    let onSave: (String) async -> Void
-    @State private var busy = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(title).font(F.sans(18, .semibold)).foregroundStyle(theme.p.s950)
-            if secure {
-                SecureField(title, text: $initial).fieldStyle()
-            } else {
-                TextField(title, text: $initial).fieldStyle().autocorrectionDisabled()
-            }
-            PrimaryButton(title: L.t("common.save"), busy: busy) {
-                busy = true
-                Task { await onSave(initial); busy = false; dismiss() }
-            }
-            Spacer()
-        }
-        .padding(24)
-        .background(theme.background)
-        .presentationDetents([.height(260)])
-        .presentationCornerRadius(28)
-    }
-}
-
-struct ReportProblemSheet: View {
-    @EnvironmentObject var theme: Theme
-    @Environment(\.dismiss) private var dismiss
-    @State private var text = ""
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(L.t("settings.report")).font(F.sans(18, .semibold)).foregroundStyle(theme.p.s950)
-            Text(L.t("report.desc")).font(F.sm).foregroundStyle(theme.p.s600)
-            TextEditor(text: $text)
-                .font(F.sm).frame(height: 120).scrollContentBackground(.hidden)
-                .padding(8)
-                .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-                    .strokeBorder(theme.ringBorder, lineWidth: 1))
-            PrimaryButton(title: L.t("report.send")) {
-                let subject = "SetGoals — \(L.t("settings.report"))"
-                let body = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                if let url = URL(string: "mailto:support@setgoals.app?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body)") {
-                    UIApplication.shared.open(url)
-                }
-                Task { await SupabaseAPI.awardBadge("reporter") }
-                dismiss()
-            }
-            Spacer()
-        }
-        .padding(24)
-        .background(theme.background)
-        .presentationDetents([.height(400)])
-        .presentationCornerRadius(28)
-    }
-}
-
-struct DeleteAccountSheet: View {
-    @EnvironmentObject var theme: Theme
-    @Environment(\.dismiss) private var dismiss
-    @State private var password = ""
-    @State private var busy = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(L.t("settings.delete_account")).font(F.sans(18, .semibold))
-                .foregroundStyle(theme.destructive)
-            Text(L.t("delete.desc")).font(F.sm).foregroundStyle(theme.p.s600)
-            SecureField(L.t("settings.password"), text: $password).fieldStyle()
-            Button {
-                busy = true
-                Task {
-                    if let email = try? await supabase.auth.user().email {
-                        try? await supabase.auth.signIn(email: email, password: password)
-                        if let uid = await SupabaseAPI.currentUserID() {
-                            try? await supabase.from("account_deletion_requests")
-                                .insert(["user_id": AnyJSON.string(uid.uuidString)]).execute()
-                        }
-                        await AuthStore.shared.signOut()
+    private func row(_ label: String, meta: String? = nil, danger: Bool = false,
+                     action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(label).font(F.sans(14, .medium))
+                    .foregroundStyle(danger ? theme.destructive : theme.p.s950)
+                Spacer(minLength: 12)
+                HStack(spacing: 4) {
+                    if let meta {
+                        Text(meta).font(F.sans(12, .medium)).lineLimit(1).truncationMode(.middle)
                     }
-                    busy = false
-                    dismiss()
+                    Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundStyle(danger ? theme.destructive : theme.p.s600)
+            }
+            .padding(16)
+            .contentShape(Rectangle())
+        }
+    }
+
+    private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {
+        HStack {
+            Text(label).font(F.sans(14, .medium)).foregroundStyle(theme.p.s950)
+            Spacer()
+            Toggle("", isOn: isOn).labelsHidden().tint(theme.primary)
+        }
+        .padding(16)
+    }
+
+    private func selectRow(_ label: String, value: String,
+                           options: [(String, String)],
+                           onChange: @escaping (String) -> Void) -> some View {
+        HStack(spacing: 12) {
+            Text(label).font(F.sans(14, .medium)).foregroundStyle(theme.p.s950)
+            Spacer()
+            Menu {
+                ForEach(options, id: \.0) { opt in
+                    Button { onChange(opt.0) } label: {
+                        if opt.0 == value { Label(opt.1, systemImage: "checkmark") } else { Text(opt.1) }
+                    }
                 }
             } label: {
-                Text(L.t("delete.confirm"))
-                    .font(F.sans(14, .semibold)).frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .foregroundStyle(.white)
-                    .background(theme.destructive, in: Capsule())
+                HStack(spacing: 6) {
+                    Text(options.first { $0.0 == value }?.1 ?? value)
+                        .font(F.sans(12, .medium))
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 9, weight: .semibold))
+                }
+                .foregroundStyle(theme.p.s700)
+                .padding(.horizontal, 12).frame(height: 32)
+                .frame(minWidth: 120)
+                .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.sm, style: .continuous))
             }
-            .disabled(busy || password.isEmpty)
-            Spacer()
         }
-        .padding(24)
-        .background(theme.background)
-        .presentationDetents([.height(320)])
-        .presentationCornerRadius(28)
+        .padding(16)
     }
+
+    private func integrationRow(icon: String, label: String, connected: Bool,
+                                action: @escaping () -> Void) -> some View {
+        HStack {
+            HStack(spacing: 12) {
+                Image(systemName: icon).font(.system(size: 15))
+                    .foregroundStyle(theme.p.s700)
+                    .frame(width: 32, height: 32)
+                    .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.lg, style: .continuous))
+                Text(label).font(F.sans(14, .medium)).foregroundStyle(theme.p.s950)
+            }
+            Spacer()
+            Button(action: action) {
+                Text(connected ? L.t("settings.connected") : L.t("settings.connect"))
+                    .font(F.sans(12, .semibold))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .foregroundStyle(connected ? theme.p.s700 : theme.primaryForeground)
+                    .background(connected ? theme.p.s100 : theme.primary, in: Capsule())
+            }
+        }
+        .padding(16)
+    }
+}
+
+/// Wraps a `String` so it can drive `.sheet(item:)`.
+struct IdentifiedString: Identifiable {
+    let value: String
+    var id: String { value }
+    init(_ value: String) { self.value = value }
 }
