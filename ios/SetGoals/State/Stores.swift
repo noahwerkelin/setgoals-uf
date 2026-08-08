@@ -8,18 +8,31 @@ final class SettingsStore: ObservableObject {
 
     @Published var displayName: String = ""
     @Published var username: String = ""
+    @Published var email: String = ""
     @Published var avatar: String? = nil          // emoji, or a data/https URL
     @Published var role: String = "individual"    // individual | child
+    @Published var linkedChild: Bool = false      // picture is parent-managed
     @Published var dailyGoal: Int = 8000
     @Published var stepsPer30: Int = 1000
-    @Published var dailyCapHours: Int = 3         // 0 == no cap
+    @Published var dailyCapHours: Int = 3         // 24 == no cap
     @Published var units: String = "metric"
     @Published var isPro: Bool = false
     @Published var proPlan: String = "monthly"
+    @Published var proExpiresAt: String? = nil
     @Published var themeColor: ThemeColor = .sage
     @Published var bonusMin: Int = 0
+    @Published var anonymousLeaderboard: Bool = false
+    @Published var shareLocation: String = "while_using"   // off | while_using | always
+    @Published var pushOn: Bool = true
+    @Published var healthkitConnected: Bool = false
+    @Published var googlefitConnected: Bool = false
+    @Published var streakCount: Int = 0
+    @Published var streakBest: Int = 0
+    @Published var lastGoalMetDate: String? = nil
 
-    var hasCap: Bool { dailyCapHours > 0 }
+
+    /// The web sentinel for "no cap" is 24 h (see `parent.no_cap`).
+    var hasCap: Bool { dailyCapHours > 0 && dailyCapHours < 24 }
     var capMin: Int { hasCap ? dailyCapHours * 60 : Int.max / 4 }
 
     /// `earnedMinFromSteps` — identical rounding to the web helper.
@@ -42,12 +55,18 @@ final class SettingsStore: ObservableObject {
         return (String(format: "%.1f", km), "km")
     }
 
+    var goalMetToday: Bool {
+        lastGoalMetDate == SupabaseAPI.todayKey
+    }
+
     func load() async {
+        email = (try? await supabase.auth.user().email) ?? email
         guard let p = try? await SupabaseAPI.profile(), let p else { return }
         displayName = p.display_name
         username = p.username
         avatar = p.avatar_url
         role = p.role
+        linkedChild = p.role == "child"
         if let s = try? await SupabaseAPI.settings(), let s {
             dailyGoal = s.daily_goal
             stepsPer30 = s.steps_per_30
@@ -55,12 +74,21 @@ final class SettingsStore: ObservableObject {
             units = s.units
             isPro = s.is_pro
             proPlan = s.pro_plan
+            proExpiresAt = s.pro_expires_at
+            anonymousLeaderboard = s.anonymous_leaderboard
+            healthkitConnected = s.healthkit_connected
             themeColor = ThemeColor(rawValue: s.theme_color) ?? .sage
         }
         if let b = try? await SupabaseAPI.todayBalance(), let b {
             bonusMin = b.bonus_min
         }
+        if let st = try? await SupabaseAPI.streak(), let st {
+            streakCount = st.count
+            streakBest = st.best
+            lastGoalMetDate = st.last_goal_met_date
+        }
     }
+
 }
 
 @MainActor
