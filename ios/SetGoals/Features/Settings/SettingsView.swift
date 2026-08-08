@@ -1,4 +1,5 @@
 import SwiftUI
+import Supabase
 
 /// 1:1 port of `src/routes/settings.tsx`.
 /// Sections, order, copy and interaction match the web page exactly:

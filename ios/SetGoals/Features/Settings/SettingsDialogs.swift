@@ -1,4 +1,6 @@
 import SwiftUI
+import UIKit
+import Supabase
 
 /// Port of the shadcn `Dialog` used across the web app:
 /// centered card, `rounded-3xl`, title + description + body + footer.
