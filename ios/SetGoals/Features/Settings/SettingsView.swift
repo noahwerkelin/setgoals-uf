@@ -175,7 +175,7 @@ struct SettingsView: View {
 
     private var themeGroup: some View {
         group(L.t("theme.title")) {
-            Button { settings.isPro ? (themeOpen = true) : (proOpen = true) } label: {
+            Button { if settings.isPro { themeOpen = true } else { proOpen = true } } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "paintpalette")
                         .font(.system(size: 18)).foregroundStyle(theme.p.s700)
