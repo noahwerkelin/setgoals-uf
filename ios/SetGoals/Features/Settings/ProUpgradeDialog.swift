@@ -168,10 +168,10 @@ struct ManageSubscriptionDialog: View {
                         row(L.t("pro.plan"), L.t("pro.plan.\(settings.proPlan)"))
                         row(L.t("pro.price"), L.t("pro.price.\(settings.proPlan)"))
                         if let since = settings.proSince {
-                            row(L.t("pro.since"), Formatters.date(since))
+                            row(L.t("pro.member_since"), Formatters.date(since))
                         }
                         if let ends = settings.proExpiresAt {
-                            row(L.t("pro.status.ends_on"), Formatters.date(ends))
+                            row(L.t("pro.next_billing"), Formatters.date(ends))
                         }
                     }
                 }
