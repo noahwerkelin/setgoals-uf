@@ -167,11 +167,13 @@ struct BadgesGrid: View {
                         .foregroundStyle(theme.p.s600)
                         .padding(.horizontal, 4)
                     LazyVGrid(columns: cols, spacing: 12) {
-                        ForEach(items) { b in
+                        ForEach(Array(items.enumerated()), id: \.element.id) { i, b in
                             Button { selected = b } label: { cell(b) }
                                 .buttonStyle(.plain)
+                                .rise(delay: Double(i) * 0.04)
                         }
                     }
+
                 }
             }
         }
