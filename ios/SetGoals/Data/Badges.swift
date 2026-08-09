@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// 1:1 port of `src/components/Badges.tsx` — the same 22 badges, groups,
 /// tier gradients, glow shadows and chips.
@@ -287,7 +288,7 @@ struct BadgeDetailSheet: View {
         .padding(24)
         .frame(maxWidth: .infinity)
         .background(theme.background)
-        .presentationDetents([.height(earned ? 440 : 380)])
+        .presentationDetents([.height(earned ? 520 : 380)])
         .presentationCornerRadius(28)
     }
 
