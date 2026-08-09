@@ -152,49 +152,148 @@ struct ChallengeDetailSheet: View {
     }
 }
 
-/// Port of `src/routes/leaderboards.tsx` + the leaderboard tab.
+/// Port of the `Leaderboard` component in `src/routes/challenges.tsx`.
 struct LeaderboardsSection: View {
     @EnvironmentObject var theme: Theme
     @State private var scope = "local"
     @State private var rows: [LeaderboardEntry] = []
     @State private var loading = true
+    @State private var me: UUID?
+    @State private var region = "—"
+    @State private var country = "—"
+
+    private let scopes: [(String, String, String)] = [
+        ("local", "mappin.and.ellipse", "lb.local"),
+        ("national", "globe", "lb.national"),
+        ("friends", "person.2", "lb.friends"),
+    ]
+
+    private var youRow: LeaderboardEntry? { rows.first { $0.user_id == me } }
+    private var top: [LeaderboardEntry] { Array(rows.prefix(10)) }
+
+    private var todayLabel: String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: L.lang == "sv" ? "sv_SE" : "en_US")
+        f.setLocalizedDateFormatFromTemplate("EEE MMM d")
+        return f.string(from: Date())
+    }
 
     var body: some View {
-        VStack(spacing: 16) {
-            SegmentedTabs(selection: $scope, items: [
-                ("local", L.t("lb.local")), ("national", L.t("lb.national")), ("friends", L.t("lb.friends")),
-            ])
+        VStack(spacing: 20) {
+            scopeTabs
+
+            HStack {
+                switch scope {
+                case "friends": Text(L.t("lb.friends_count", ["n": "\(max(0, rows.count - 1))"]))
+                case "local": Text(L.t("lb.region_label", ["region": region]))
+                default: Text(L.t("lb.country_label", ["country": country]))
+                }
+                Spacer()
+                Text(L.t("lb.today_label", ["date": todayLabel]))
+            }
+            .font(F.xs).foregroundStyle(theme.p.s600)
+
             if loading {
-                ProgressView().tint(theme.p.s600).padding(.vertical, 32)
-            } else if rows.isEmpty {
-                CardSurface { Text(L.t("lb.empty")).font(F.sm).foregroundStyle(theme.p.s600) }
+                emptyCard(L.t("lb.loading"))
+            } else if top.isEmpty {
+                emptyCard(scope == "friends" ? L.t("lb.no_friends") : L.t("lb.empty"))
             } else {
-                CardSurface(padding: 8) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(rows.prefix(10).enumerated()), id: \.element.id) { i, r in
-                            if i > 0 { Divider().overlay(theme.p.s100) }
-                            HStack(spacing: 12) {
-                                Text("\(r.rank)").font(F.sans(13, .semibold)).tabularNums()
-                                    .frame(width: 22).foregroundStyle(theme.p.s600)
-                                AvatarBubble(avatar: r.avatar_url, name: r.display_name, size: 32)
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(r.display_name).font(F.sans(14, .medium)).foregroundStyle(theme.p.s900)
-                                    Text("@\(r.username)").font(F.text11).foregroundStyle(theme.p.s600)
-                                }
-                                Spacer()
-                                Text(r.total_steps.formatted()).font(F.sans(14, .semibold)).tabularNums()
-                                    .foregroundStyle(theme.p.s700)
-                            }
-                            .padding(.horizontal, 12).padding(.vertical, 12)
-                        }
+                VStack(spacing: 8) {
+                    ForEach(Array(top.enumerated()), id: \.element.id) { i, r in
+                        row(r, isYou: r.user_id == me).rise(delay: Double(i) * 0.02)
                     }
                 }
             }
+
+            if let you = youRow, you.rank > 10 {
+                row(you, isYou: true)
+            }
+
+            Text(L.t("lb.refresh"))
+                .font(F.xs).foregroundStyle(theme.p.s600)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 4)
         }
         .task(id: scope) {
             loading = true
+            me = await SupabaseAPI.currentUserID()
+            if let p = try? await SupabaseAPI.profile(), let p {
+                region = p.region.isEmpty ? "—" : p.region
+                country = p.country_code.isEmpty ? "—" : p.country_code
+            }
             rows = (try? await SupabaseAPI.leaderboard(scope: scope)) ?? []
             loading = false
         }
     }
+
+    /// `grid grid-cols-3 gap-1 rounded-2xl bg-card p-1 ring-1 ring-black/5`
+    private var scopeTabs: some View {
+        HStack(spacing: 4) {
+            ForEach(scopes, id: \.0) { value, icon, key in
+                let active = scope == value
+                Button { withAnimation(.easeOut(duration: 0.2)) { scope = value } } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: icon).font(.system(size: 12, weight: .semibold))
+                        Text(L.t(key)).font(F.sans(11, .semibold))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .foregroundStyle(active ? theme.primaryForeground : theme.p.s700)
+                    .background(
+                        Group {
+                            if active {
+                                RoundedRectangle(cornerRadius: R.xl, style: .continuous).fill(theme.p.s600)
+                            }
+                        }
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
+                .strokeBorder(theme.ringBorder, lineWidth: 1)
+        )
+    }
+
+    private func emptyCard(_ text: String) -> some View {
+        Text(text)
+            .font(F.sm).foregroundStyle(theme.p.s600)
+            .frame(maxWidth: .infinity)
+            .padding(24)
+            .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
+                    .strokeBorder(theme.ringBorder, lineWidth: 1)
+            )
+    }
+
+    private func row(_ r: LeaderboardEntry, isYou: Bool) -> some View {
+        HStack(spacing: 16) {
+            Text("\(r.rank)")
+                .font(F.sans(12, .semibold)).tabularNums()
+                .foregroundStyle(isYou ? theme.primaryForeground : theme.p.s700)
+                .frame(width: 32, height: 32)
+                .background(isYou ? Color.white.opacity(0.15) : theme.p.s100, in: Circle())
+            Text(isYou ? L.t("lb.you") : r.display_name)
+                .font(F.sans(14, .medium)).lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundStyle(isYou ? theme.primaryForeground : theme.foreground)
+            Text(r.total_steps.formatted())
+                .font(F.sans(14, .semibold)).tabularNums()
+                .foregroundStyle(isYou ? theme.primaryForeground : theme.foreground)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
+                .fill(isYou ? theme.p.s600 : theme.card)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
+                .strokeBorder(isYou ? theme.p.s700.opacity(0.4) : theme.ringBorder, lineWidth: 1)
+        )
+    }
 }
+
