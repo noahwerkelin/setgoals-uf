@@ -244,19 +244,44 @@ struct BadgeDetailSheet: View {
                 .font(F.xs).foregroundStyle(theme.p.s600)
                 .multilineTextAlignment(.center)
             if earned {
-                ShareLink(item: L.t("badges.share_text", [
+                let shareText = L.t("badges.share_text", [
                     "tier": L.t("badges.tier.\(badge.tier.rawValue)"), "name": badge.name,
-                ])) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "square.and.arrow.up").font(.system(size: 13))
-                        Text(L.t("badges.share")).font(F.sans(12, .semibold))
+                ]) + " https://setgoals.app"
+                VStack(spacing: 12) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.and.arrow.up").font(.system(size: 11, weight: .semibold))
+                        Text(L.t("badges.share")).font(F.sans(10, .bold))
+                            .textCase(.uppercase).tracking(1.2)
+                        Spacer()
                     }
-                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                    .foregroundStyle(theme.p.s700)
-                    .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.sm, style: .continuous))
+                    .foregroundStyle(theme.p.s600)
+
+                    ShareLink(item: shareText) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "square.and.arrow.up").font(.system(size: 13))
+                            Text(L.t("badges.share")).font(F.sans(12, .semibold))
+                        }
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .foregroundStyle(theme.primaryForeground)
+                        .background(theme.p.s600, in: RoundedRectangle(cornerRadius: R.xl, style: .continuous))
+                    }
+
+                    Button {
+                        UIPasteboard.general.string = shareText
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "doc.on.doc").font(.system(size: 12))
+                            Text(L.t("badges.share_copy")).font(F.sans(12, .semibold))
+                        }
+                        .frame(maxWidth: .infinity).padding(.vertical, 10)
+                        .foregroundStyle(theme.p.s700)
+                        .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.xl, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(.top, 4)
             }
+
             Spacer(minLength: 0)
         }
         .padding(24)
