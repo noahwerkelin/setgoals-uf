@@ -10,7 +10,7 @@ extension L {
             "challenges.streak": "Streak", "challenges.streak_days": "{n} days",
             "challenges.streak_sub": "Hit your step goal to keep it alive.",
             "challenges.today": "Today", "challenges.week": "This week", "challenges.progress": "Progress",
-            "badges.share": "Share badge", "badges.share_text": "I just unlocked \"{b}\" on SetGoals!",
+            "badges.share": "Share badge",
             "badges.empty": "No badges yet — start walking.",
             "profile.view_all": "View all",
             "lb.local": "Local", "lb.national": "National", "lb.friends": "Friends",
@@ -23,7 +23,6 @@ extension L {
             "lb.country_label": "Country · {country}",
             "lb.friends_count": "{n} friends",
             "lb.no_friends": "Add friends to see them here.",
-            "badges.share_copy": "Copy link",
 
             "coach.eyebrow": "Your coach", "coach.title": "AI Coach",
             "coach.seed": "What would you like to work on today?",
@@ -86,7 +85,7 @@ extension L {
             "challenges.streak": "Svit", "challenges.streak_days": "{n} dagar",
             "challenges.streak_sub": "Nå ditt stegmål för att hålla den vid liv.",
             "challenges.today": "Idag", "challenges.week": "Denna vecka", "challenges.progress": "Framsteg",
-            "badges.share": "Dela märke", "badges.share_text": "Jag låste precis upp \"{b}\" i SetGoals!",
+            "badges.share": "Dela märke",
             "badges.empty": "Inga märken än — börja gå.",
             "profile.view_all": "Visa alla",
             "lb.local": "Lokalt", "lb.national": "Nationellt", "lb.friends": "Vänner",
@@ -99,7 +98,6 @@ extension L {
             "lb.country_label": "Land · {country}",
             "lb.friends_count": "{n} vänner",
             "lb.no_friends": "Lägg till vänner för att se dem här.",
-            "badges.share_copy": "Kopiera länk",
 
             "coach.eyebrow": "Din coach", "coach.title": "AI-coach",
             "coach.seed": "Vad vill du jobba med idag?",
