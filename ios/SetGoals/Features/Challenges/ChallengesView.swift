@@ -163,9 +163,9 @@ struct LeaderboardsSection: View {
     @State private var country = "—"
 
     private let scopes: [(String, String, String)] = [
-        ("local", "mappin.and.ellipse", "lb.tab.Local"),
-        ("national", "globe", "lb.tab.National"),
-        ("friends", "person.2", "lb.tab.Friends"),
+        ("local", "mappin.and.ellipse", "lb.local"),
+        ("national", "globe", "lb.national"),
+        ("friends", "person.2", "lb.friends"),
     ]
 
     private var youRow: LeaderboardEntry? { rows.first { $0.user_id == me } }
