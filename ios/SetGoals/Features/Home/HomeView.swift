@@ -12,7 +12,7 @@ struct HomeView: View {
     @State private var family: [FamilyMember] = []
     @State private var friendsRank: Int = 0
     @State private var friendsTotal: Int = 0
-    @State private var earnedBadges: Set<String> = []
+    @State private var earnedBadges: [String] = []
     @State private var yesterdaySteps = 0
 
     private var goal: Int { settings.dailyGoal > 0 ? settings.dailyGoal : 8000 }
@@ -40,7 +40,10 @@ struct HomeView: View {
                 quoteCard
                 RecentWins(earned: earnedBadges) { tab = .challenges }
                 FamilyCard(rows: family) { tab = .profile }
+                MyTasksCard()
+                TaskNotificationsCard()
                 LeaderboardTile(rank: friendsRank, total: friendsTotal) { tab = .challenges }
+
             }
             .padding(.horizontal, 24)
         }
@@ -54,7 +57,7 @@ struct HomeView: View {
         await settings.load()
         await health.requestAuthorization()
         family = (try? await SupabaseAPI.familyToday()) ?? []
-        earnedBadges = (try? await SupabaseAPI.earnedBadges()) ?? []
+        earnedBadges = await SupabaseAPI.earnedBadgesOrdered()
         let hist = await SupabaseAPI.historyFilled(days: 2)
         yesterdaySteps = hist.count >= 2 ? hist[hist.count - 2].steps : 0
         let friends = (try? await SupabaseAPI.leaderboard(scope: "friends")) ?? []
@@ -257,13 +260,17 @@ struct AvatarBubble: View {
 /// `RecentWins` — last six unlocked badges, or an empty-state nudge.
 struct RecentWins: View {
     @EnvironmentObject var theme: Theme
-    let earned: Set<String>
+    /// Badge ids ordered by `earned_at`, most recent first.
+    let earned: [String]
     var onOpen: () -> Void
 
-    private var items: [BadgeDef] { Array(BADGES.filter { earned.contains($0.id) }.prefix(6)) }
+    private var items: [BadgeDef] {
+        earned.compactMap { id in BADGES.first { $0.id == id } }.prefix(6).map { $0 }
+    }
     private let cols = [GridItem(.flexible(), spacing: 12),
                         GridItem(.flexible(), spacing: 12),
                         GridItem(.flexible(), spacing: 12)]
+
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
