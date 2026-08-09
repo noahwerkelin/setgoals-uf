@@ -77,7 +77,8 @@ struct RiseModifier: ViewModifier {
     }
 }
 
-/// Home stat tile — icon + label + value/unit.
+/// Home stat tile — `rounded-3xl bg-card p-5 ring-1 ring-black/5`
+/// with a size-7 rounded-lg sage-100 icon chip, xs label and xl value.
 struct StatTile: View {
     @EnvironmentObject var theme: Theme
     let systemImage: String
@@ -89,16 +90,22 @@ struct StatTile: View {
         CardSurface(radius: R.xl3, padding: 20) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
-                    Image(systemName: systemImage)
-                        .font(.system(size: 16, weight: .regular))
-                        .foregroundStyle(theme.p.s700)
-                    Text(label).eyebrow(theme.p.s600)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: R.lg, style: .continuous).fill(theme.p.s100)
+                        Image(systemName: systemImage)
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(theme.p.s700)
+                    }
+                    .frame(width: 28, height: 28)
+                    Text(label).font(F.sans(12, .medium)).foregroundStyle(theme.p.s600)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(value).font(F.sans(24, .semibold)).tabularNums()
-                    Text(unit).font(F.sans(12, .medium)).foregroundStyle(theme.p.s600)
+                    Text(value).font(F.sans(20, .medium)).tabularNums()
+                        .foregroundStyle(theme.foreground)
+                    Text(unit).font(F.sans(12, .regular)).foregroundStyle(theme.p.s600.opacity(0.6))
                 }
             }
         }
     }
 }
+

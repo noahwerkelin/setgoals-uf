@@ -100,6 +100,16 @@ extension SupabaseAPI {
         return Set(rows.map(\.badge_id))
     }
 
+    /// Badge ids ordered by `earned_at`, most recent first (mirrors `RecentWins`).
+    static func earnedBadgesOrdered() async -> [String] {
+        guard let uid = await currentUserID() else { return [] }
+        let rows: [UserBadgeRow] = (try? await supabase.from("user_badges")
+            .select("badge_id,earned_at").eq("user_id", value: uid)
+            .order("earned_at", ascending: false).execute().value) ?? []
+        return rows.map(\.badge_id)
+    }
+
+
     static func awardBadge(_ id: String) async {
         guard let uid = await currentUserID() else { return }
         try? await supabase.from("user_badges")
