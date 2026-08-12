@@ -264,11 +264,9 @@ export function useLeaderboardBadgeCheck(
   }, [scope, rank, opts.steps, opts.participants, awardIds]);
 }
 
-export function useDailyBadgeCheck(steps: number, km: number, hour: number) {
-  const { awardIds } = useAutoBadgeAwards();
-  useEffect(() => {
-    const ids = computeDailyBadges(steps, km, hour);
-    if (ids.length) awardIds(ids);
-  }, [steps, km, hour, awardIds]);
+/** Kept for callers that pass today's numbers — the sync hook owns the rules. */
+export function useDailyBadgeCheck() {
+  useActivityBadgeSync();
 }
+
 
