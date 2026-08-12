@@ -75,7 +75,7 @@ function Home() {
       recordSteps(stepsToday, goal);
     }
   }, [today, stepsToday, recordSteps, goal]);
-  useDailyBadgeCheck(stepsToday, distanceKm, new Date().getHours());
+  useDailyBadgeCheck();
   const now = new Date();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { hour, md } = getLocalParts(tz);
