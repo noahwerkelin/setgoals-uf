@@ -3,6 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getUserBadges, awardBadge as awardBadgeFn } from "@/lib/badges.functions";
 import { useSettings, currentStreak } from "@/lib/settings";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useTodaySteps } from "@/lib/steps";
+
 
 export type EarnedMap = Record<string, string>;
 
