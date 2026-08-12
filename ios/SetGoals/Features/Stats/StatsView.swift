@@ -47,6 +47,9 @@ struct StatsView: View {
             .padding(.horizontal, 24)
         }
         .task {
+            // Pull the freshest HealthKit totals in first so the charts show
+            // the same numbers as the rest of the app.
+            await HealthKitService.shared.refreshToday()
             history = await SupabaseAPI.historyFilled(days: 180)
             week = history.suffix(7).map { ($0.day, $0.steps) }
         }
