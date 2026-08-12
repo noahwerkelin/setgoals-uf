@@ -92,7 +92,7 @@ struct OnboardingView: View {
                          title: L.t("onb.perm.health"),
                          desc: L.t("onb.perm.health_desc"),
                          state: health,
-                         note: health == .unavailable ? L.t("health.needs_ios_app") : nil) {
+                         note: nil) {
                     Task {
                         health = .busy
                         await HealthKitService.shared.requestAuthorization()
