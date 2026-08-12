@@ -11,13 +11,11 @@ import { useTodaySteps } from "@/lib/steps";
 export type EarnedMap = Record<string, string>;
 
 const BADGE_QUERY_KEY = ["user-badges"];
-const TOTALS_KEY = "sg.totals";
 const HOURLY_KEY = "sg.hourly";
 
 export const EARLY_BIRD_THRESHOLD = 2000;
 export const NIGHT_OWL_THRESHOLD = 2000;
 
-type Totals = { lastDate: string | null; totalSteps: number; totalKm: number };
 type HourlyState = {
   date: string | null;
   lastSteps: number;
@@ -25,19 +23,6 @@ type HourlyState = {
   nightOwlSteps: number;
 };
 
-function loadTotals(): Totals {
-  try {
-    const raw = localStorage.getItem(TOTALS_KEY);
-    return raw ? JSON.parse(raw) : { lastDate: null, totalSteps: 0, totalKm: 0 };
-  } catch {
-    return { lastDate: null, totalSteps: 0, totalKm: 0 };
-  }
-}
-function saveTotals(t: Totals) {
-  try {
-    localStorage.setItem(TOTALS_KEY, JSON.stringify(t));
-  } catch {}
-}
 
 function loadHourly(): HourlyState {
   try {
