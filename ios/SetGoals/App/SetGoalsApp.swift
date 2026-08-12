@@ -6,14 +6,21 @@ struct SetGoalsApp: App {
     @StateObject private var settings = SettingsStore.shared
     @StateObject private var auth = AuthStore.shared
     @State private var showSplash = true
+    @AppStorage("app.onboarded") private var onboarded = false
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                RootView()
+                if !onboarded {
+                    OnboardingView { onboarded = true }
+                        .environmentObject(theme)
+                        .transition(.opacity)
+                } else {
+                    RootView()
                     .environmentObject(theme)
                     .environmentObject(settings)
                     .environmentObject(auth)
+                }
                 if showSplash {
                     SplashView()
                         .environmentObject(theme)
@@ -24,6 +31,9 @@ struct SetGoalsApp: App {
             .task {
                 await auth.bootstrap()
                 ScreenTimeService.shared.scheduleDailyMonitoring()
+                if HealthKitService.shared.isAvailable {
+                    await HealthKitService.shared.requestAuthorization()
+                }
                 try? await Task.sleep(for: .seconds(2.5))
                 withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
             }

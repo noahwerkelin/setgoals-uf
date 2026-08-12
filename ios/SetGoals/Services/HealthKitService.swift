@@ -61,6 +61,9 @@ final class HealthKitService: ObservableObject {
         try? await SupabaseAPI.upsertToday(
             steps: steps, distanceKm: distanceKm, calories: calories, exerciseMinutes: exerciseMinutes
         )
+
+        // Keep badges in step with the movement that was just recorded.
+        await BadgeSync.run()
     }
 
     private func sum(_ id: HKQuantityTypeIdentifier, unit: HKUnit, from: Date, to: Date) async -> Double {
