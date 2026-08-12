@@ -31,7 +31,7 @@ struct SetGoalsApp: App {
             .task {
                 await auth.bootstrap()
                 ScreenTimeService.shared.scheduleDailyMonitoring()
-                if HealthKitService.shared.isAvailable {
+                if onboarded, HealthKitService.shared.isAvailable {
                     await HealthKitService.shared.requestAuthorization()
                 }
                 try? await Task.sleep(for: .seconds(2.5))
