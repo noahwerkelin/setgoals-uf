@@ -109,33 +109,60 @@ export function useAwardBadges() {
 }
 
 /**
- * Record today's activity. Returns the ids of badges that should be awarded
- * based on the local device's hourly buckets and totals. The caller is
- * responsible for actually awarding them via useAwardBadges().
+ * Every day of logged activity the account has, summed. This is the real
+ * movement data behind the distance badges — no local guesses.
  */
-export function computeDailyBadges(steps: number, km: number, hour: number): string[] {
-  if (!Number.isFinite(steps) || steps <= 0) return [];
-  const today = new Date();
-  const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  const t = loadTotals();
-  if (t.lastDate !== iso) {
-    t.totalSteps += steps;
-    t.totalKm += km;
-    t.lastDate = iso;
-    saveTotals(t);
-  }
-  const h = updateHourlyBuckets(steps, hour);
-  const ids: string[] = [];
-  if (steps >= 1000) ids.push("first_steps");
-  if (steps >= 5000) ids.push("daily_walker");
-  if (h.earlyBirdSteps >= EARLY_BIRD_THRESHOLD) ids.push("early_bird");
-  if (h.nightOwlSteps >= NIGHT_OWL_THRESHOLD) ids.push("night_owl");
-  if (km >= 10) ids.push("ten_k_club");
-  if (t.totalKm >= 10) ids.push("explorer");
-  if (t.totalKm >= 100) ids.push("adventurer");
-  if (t.totalKm >= 500) ids.push("pathfinder");
-  return ids;
+export function useLifetimeTotals() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["lifetime-totals", user?.id],
+    enabled: !!user,
+    staleTime: 60_000,
+    queryFn: async (): Promise<{ steps: number; km: number }> => {
+      const { data } = await supabase
+        .from("activity_steps")
+        .select("steps, distance_km")
+        .eq("user_id", user!.id);
+      return (data ?? []).reduce(
+        (acc, r) => ({ steps: acc.steps + (r.steps ?? 0), km: acc.km + Number(r.distance_km ?? 0) }),
+        { steps: 0, km: 0 },
+      );
+    },
+  });
 }
+
+/**
+ * Awards the activity badges from the user's real recorded movement:
+ * today's totals from `activity_steps` and the all-time distance sum.
+ * Early Bird / Night Owl still come from the device's hourly buckets,
+ * which is the only place the time-of-day split is known.
+ */
+export function useActivityBadgeSync() {
+  const { data: today } = useTodaySteps();
+  const { data: totals } = useLifetimeTotals();
+  const { awardIds } = useAutoBadgeAwards();
+
+  const steps = today?.steps ?? 0;
+  const km = Number(today?.distance_km ?? 0);
+  const totalKm = totals?.km ?? 0;
+
+  useEffect(() => {
+    const ids: string[] = [];
+    if (steps > 0) {
+      const h = updateHourlyBuckets(steps, new Date().getHours());
+      if (steps >= 1000) ids.push("first_steps");
+      if (steps >= 5000) ids.push("daily_walker");
+      if (km >= 10) ids.push("ten_k_club");
+      if (h.earlyBirdSteps >= EARLY_BIRD_THRESHOLD) ids.push("early_bird");
+      if (h.nightOwlSteps >= NIGHT_OWL_THRESHOLD) ids.push("night_owl");
+    }
+    if (totalKm >= 10) ids.push("explorer");
+    if (totalKm >= 100) ids.push("adventurer");
+    if (totalKm >= 500) ids.push("pathfinder");
+    if (ids.length) awardIds(ids);
+  }, [steps, km, totalKm, awardIds]);
+}
+
 
 export function recordLeaderboardBadges(
   scope: "local" | "national",
