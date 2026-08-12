@@ -35,6 +35,9 @@ struct ChallengesView: View {
         }
         .task {
             sub = initialTab
+            // Sync movement first so badges reflect real activity.
+            await HealthKitService.shared.refreshToday()
+            await BadgeSync.run()
             week = await SupabaseAPI.weekSteps()
             earnedBadges = (try? await SupabaseAPI.earnedBadges()) ?? []
             streak = try? await SupabaseAPI.streak()
@@ -223,6 +226,10 @@ struct LeaderboardsSection: View {
             }
             rows = (try? await SupabaseAPI.leaderboard(scope: scope)) ?? []
             loading = false
+            if scope != "friends", let me, let i = rows.firstIndex(where: { $0.user_id == me }) {
+                await BadgeSync.leaderboard(scope: scope, rank: i + 1,
+                                            steps: rows[i].steps, participants: rows.count)
+            }
         }
     }
 
