@@ -227,8 +227,8 @@ struct LeaderboardsSection: View {
             rows = (try? await SupabaseAPI.leaderboard(scope: scope)) ?? []
             loading = false
             if scope != "friends", let me, let i = rows.firstIndex(where: { $0.user_id == me }) {
-                await BadgeSync.leaderboard(scope: scope, rank: i + 1,
-                                            steps: rows[i].steps, participants: rows.count)
+                await BadgeSync.leaderboard(scope: scope, rank: rows[i].rank,
+                                            steps: rows[i].total_steps, participants: rows.count)
             }
         }
     }
