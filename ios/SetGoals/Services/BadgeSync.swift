@@ -36,7 +36,7 @@ enum BadgeSync {
         if totalKm >= 500 { ids.append("pathfinder") }
 
         // Streak badges use the same best-streak value the web app tracks.
-        let best = max(SettingsStore.shared.streakBest, SettingsStore.shared.streakCurrent)
+        let best = max(SettingsStore.shared.streakBest, SettingsStore.shared.streakCount)
         if best >= 7 { ids.append("consistency_king") }
         if best >= 30 { ids.append("impressive") }
         if best >= 100 { ids.append("unstoppable") }
