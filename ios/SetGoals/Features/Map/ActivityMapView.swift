@@ -124,21 +124,33 @@ struct ActivityMapView: View {
     private var mapCard: some View {
         ZStack(alignment: .bottomLeading) {
             if let c = locator.center {
-                Map(position: $camera) {
-                    Annotation(L.t("map.you_here"), coordinate: c) { youDot }
+                // Web parity: plain tiles, no labels under the pins and no
+                // MapKit chrome — only the markers and the position chip.
+                Map(position: $camera, interactionModes: [.pan, .zoom]) {
+                    Annotation(L.t("map.you_here"), coordinate: c, anchor: .center) { youDot }
+                        .annotationTitles(.hidden)
                     ForEach(visible) { a in
-                        Annotation(a.name, coordinate: a.coord) {
+                        Annotation(a.name, coordinate: a.coord, anchor: .bottom) {
                             SagePin(kind: a.kind, size: 40)
-                                .onTapGesture { expandedID = a.id }
+                                .onTapGesture {
+                                    withAnimation(.easeOut(duration: 0.2)) { expandedID = a.id }
+                                }
                         }
+                        .annotationTitles(.hidden)
                     }
                 }
-                .mapStyle(.standard(elevation: .flat))
+                .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+                .mapControlVisibility(.hidden)
 
-                Text("\(String(format: "%.3f", c.latitude)), \(String(format: "%.3f", c.longitude))")
-                    .font(F.xs)
+                HStack(spacing: 6) {
+                    Image(systemName: "mappin").font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(theme.p.s600)
+                    Text("\(String(format: "%.3f", c.latitude)), \(String(format: "%.3f", c.longitude))")
+                }
+                    .font(F.sans(12, .medium))
                     .foregroundStyle(theme.p.s900)
                     .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(theme.card.opacity(0.9), in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
                         .strokeBorder(theme.ringBorder, lineWidth: 1))
