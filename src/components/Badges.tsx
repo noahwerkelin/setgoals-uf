@@ -12,6 +12,7 @@ import {
   useStreakBadges,
   useProBadge,
   useUnlockerBadge,
+  useActivityBadgeSync,
 } from "@/lib/badges";
 import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -102,6 +103,7 @@ export function Badges() {
     return map;
   }, [earnedRows]);
 
+  useActivityBadgeSync();
   useStreakBadges();
   useProBadge();
   useUnlockerBadge();
