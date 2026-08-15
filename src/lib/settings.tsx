@@ -252,14 +252,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       supabase.from("streaks").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("children").select("*").eq("parent_id", user.id),
       supabase.from("children").select("*").eq("auth_user_id", user.id).maybeSingle(),
-      supabase.rpc("parent_family_pro_status"),
+      getParentFamilyProStatus().catch(() => null),
     ]);
     const p = profileRes.data;
     const s = settingsRes.data;
     const st = streakRes.data;
     const kids = (childrenRes.data ?? []) as ChildRow[];
     const linked = linkedRes.data ? mapChild(linkedRes.data as ChildRow) : null;
-    const fam = (familyProRes.data as FamilyProRow[] | null)?.[0];
+    const fam = (familyProRes as FamilyProRow | null) ?? undefined;
     const familyEnvOk = envMatches(fam?.environment);
     const family = {
       active: (fam?.active ?? false) && familyEnvOk,
