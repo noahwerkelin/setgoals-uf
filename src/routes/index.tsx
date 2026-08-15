@@ -16,6 +16,7 @@ import { useBonusMin } from "@/lib/bonus";
 import { useDayKey } from "@/lib/day";
 import { useFriends, friendsRankToday } from "@/lib/friends";
 import { getFriendsSteps } from "@/lib/friends.functions";
+import { getFamilyToday } from "@/lib/family.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { ChildAvatar } from "@/components/ChildAvatarPicker";
 import { MyTasksCard } from "@/components/TasksChild";
@@ -410,13 +411,18 @@ function FamilyCard() {
   const { t } = useT();
   const { settings } = useSettings();
   const [rows, setRows] = useState<FamilyRow[] | null>(null);
+  const fetchFamilyToday = useServerFn(getFamilyToday);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data, error } = await supabase.rpc("family_today");
-      if (cancelled) return;
-      setRows(error ? [] : ((data as FamilyRow[]) ?? []));
+      try {
+        const data = await fetchFamilyToday();
+        if (cancelled) return;
+        setRows((data as FamilyRow[]) ?? []);
+      } catch {
+        if (!cancelled) setRows([]);
+      }
     };
     void load();
     const channel = supabase

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
+import { getParentFamilyProStatus } from "./family.functions";
 
 export type Units = "metric" | "imperial";
 export type Role = "individual" | "child";
