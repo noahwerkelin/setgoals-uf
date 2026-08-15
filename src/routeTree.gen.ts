@@ -23,7 +23,6 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
 import { Route as ApiPublicNearbyActivitiesRouteImport } from './routes/api/public/nearby-activities'
-import { Route as ApiPublicTestActivitiesRouteImport } from './routes/api/public/test-activities'
 import { Route as ApiPublicPaymentsAppleNotificationsRouteImport } from './routes/api/public/payments/apple-notifications'
 
 const IndexRoute = IndexRouteImport.update({
@@ -97,11 +96,6 @@ const ApiPublicNearbyActivitiesRoute =
     path: '/api/public/nearby-activities',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicTestActivitiesRoute = ApiPublicTestActivitiesRouteImport.update({
-  id: '/api/public/test-activities',
-  path: '/api/public/test-activities',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicPaymentsAppleNotificationsRoute =
   ApiPublicPaymentsAppleNotificationsRouteImport.update({
     id: '/api/public/payments/apple-notifications',
@@ -124,7 +118,6 @@ export interface FileRoutesByFullPath {
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
-  '/api/public/test-activities': typeof ApiPublicTestActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRoutesByTo {
@@ -142,7 +135,6 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
-  '/api/public/test-activities': typeof ApiPublicTestActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRoutesById {
@@ -161,7 +153,6 @@ export interface FileRoutesById {
   '/stats': typeof StatsRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
-  '/api/public/test-activities': typeof ApiPublicTestActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRouteTypes {
@@ -181,7 +172,6 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
-    | '/api/public/test-activities'
     | '/api/public/payments/apple-notifications'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -199,7 +189,6 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
-    | '/api/public/test-activities'
     | '/api/public/payments/apple-notifications'
   id:
     | '__root__'
@@ -217,7 +206,6 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
-    | '/api/public/test-activities'
     | '/api/public/payments/apple-notifications'
   fileRoutesById: FileRoutesById
 }
@@ -236,7 +224,6 @@ export interface RootRouteChildren {
   StatsRoute: typeof StatsRoute
   ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
   ApiPublicNearbyActivitiesRoute: typeof ApiPublicNearbyActivitiesRoute
-  ApiPublicTestActivitiesRoute: typeof ApiPublicTestActivitiesRoute
   ApiPublicPaymentsAppleNotificationsRoute: typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 
@@ -340,13 +327,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNearbyActivitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/test-activities': {
-      id: '/api/public/test-activities'
-      path: '/api/public/test-activities'
-      fullPath: '/api/public/test-activities'
-      preLoaderRoute: typeof ApiPublicTestActivitiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/payments/apple-notifications': {
       id: '/api/public/payments/apple-notifications'
       path: '/api/public/payments/apple-notifications'
@@ -372,7 +352,6 @@ const rootRouteChildren: RootRouteChildren = {
   StatsRoute: StatsRoute,
   ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
   ApiPublicNearbyActivitiesRoute: ApiPublicNearbyActivitiesRoute,
-  ApiPublicTestActivitiesRoute: ApiPublicTestActivitiesRoute,
   ApiPublicPaymentsAppleNotificationsRoute:
     ApiPublicPaymentsAppleNotificationsRoute,
 }
