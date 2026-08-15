@@ -16,6 +16,8 @@ export const Route = createFileRoute("/api/public/ingest-steps")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        console.log("🔥 ingest-steps POST HIT");
+
         const secret = process.env.INGEST_HMAC_SECRET;
         if (!secret) return new Response("Server not configured", { status: 500 });
 
@@ -48,10 +50,12 @@ export const Route = createFileRoute("/api/public/ingest-steps")({
           },
           { onConflict: "user_id,day,source" },
         );
+
         if (error) {
           console.error("ingest-steps upsert", error);
           return new Response("DB error", { status: 500 });
         }
+
         return Response.json({ ok: true });
       },
     },
