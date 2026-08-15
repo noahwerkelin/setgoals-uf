@@ -662,7 +662,7 @@ export type Database = {
     }
     Functions: {
       family_today: {
-        Args: never
+        Args: { _uid: string }
         Returns: {
           avatar: string
           is_self: boolean
@@ -694,7 +694,7 @@ export type Database = {
       }
       parent_family_pro: { Args: never; Returns: boolean }
       parent_family_pro_status: {
-        Args: never
+        Args: { _uid: string }
         Returns: {
           active: boolean
           cancelling: boolean
