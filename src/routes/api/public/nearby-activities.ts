@@ -11,6 +11,8 @@ export const Route = createFileRoute("/api/public/nearby-activities")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        console.log("🔥 nearby-activities POST HIT");
+
         const token = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
         if (!token) return new Response("Unauthorized", { status: 401 });
 
@@ -21,19 +23,21 @@ export const Route = createFileRoute("/api/public/nearby-activities")({
         const supabase = createClient(url, key, {
           auth: { persistSession: false, autoRefreshToken: false },
         });
+
         const { data: userData, error } = await supabase.auth.getUser(token);
-        if (error || !userData?.user) return new Response("Unauthorized", { status: 401 });
+        if (error || !userData?.user) {
+          return new Response("Unauthorized", { status: 401 });
+        }
 
         let input;
         try {
           input = NearbyInput.parse(await request.json());
         } catch (e) {
-          return new Response("Bad request: " + (e instanceof Error ? e.message : "invalid"), {
-            status: 400,
-          });
+          return new Response("Bad request: " + (e instanceof Error ? e.message : "invalid"), { status: 400 });
         }
 
         const result = await searchNearbyActivities(input);
+
         return new Response(JSON.stringify(result), {
           headers: { "content-type": "application/json" },
         });
