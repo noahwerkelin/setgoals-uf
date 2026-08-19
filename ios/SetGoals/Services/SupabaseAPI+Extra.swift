@@ -68,9 +68,30 @@ extension SupabaseAPI {
         return out
     }
 
+    /// Full per-day totals (steps, distance, calories, exercise) — the native
+    /// equivalent of the web `DayTotals` used by challenges and statistics.
+    static func historyTotals(days: Int) async -> [DayTotals] {
+        let rows = (try? await history(days: days)) ?? []
+        var byDay: [String: ActivityStepsRow] = [:]
+        for r in rows { byDay[r.day] = r }
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.timeZone = .current
+        var out: [DayTotals] = []
+        for i in stride(from: days - 1, through: 0, by: -1) {
+            let d = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
+            let key = f.string(from: d)
+            let r = byDay[key]
+            out.append(DayTotals(day: key, steps: r?.steps ?? 0, distanceKm: r?.distance_km ?? 0,
+                                 calories: r?.calories ?? 0, exerciseMinutes: r?.exercise_minutes ?? 0))
+        }
+        return out
+    }
+
+    static func weekTotals() async -> [DayTotals] { await historyTotals(days: 7) }
+
     static func weekSteps() async -> [(day: String, steps: Int)] {
         await historyFilled(days: 7).map { ($0.day, $0.steps) }
     }
+
 
     static func children() async throws -> [ChildRow] {
         guard let uid = await currentUserID() else { return [] }
