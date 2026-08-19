@@ -50,6 +50,16 @@ struct RestrictionRow: Codable, Identifiable {
     var active: Bool
 }
 
+/// Port of the web `DayTotals` shape (`src/lib/steps.ts`).
+struct DayTotals: Identifiable, Hashable {
+    let day: String
+    let steps: Int
+    let distanceKm: Double
+    let calories: Int
+    let exerciseMinutes: Int
+    var id: String { day }
+}
+
 extension SupabaseAPI {
     /// Last `days` days of activity for the signed-in user, oldest first,
     /// with missing days filled with zeroes (mirrors `useHistorySteps`).
