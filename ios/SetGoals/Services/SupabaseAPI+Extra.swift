@@ -95,7 +95,6 @@ extension SupabaseAPI {
     static func historyTotalsResult(days: Int) async throws -> [DayTotals] {
         let rows = try await history(days: days)
         let byDay = rowsByDay(rows)
-        var out: [(String, Int, Double)] = []
         var totals: [DayTotals] = []
         for offset in stride(from: max(1, days) - 1, through: 0, by: -1) {
             guard let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date()) else { continue }
