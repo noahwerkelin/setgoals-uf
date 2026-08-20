@@ -159,15 +159,15 @@ struct ChallengeDetailSheet: View {
             // Reward + reset — same two tiles as the web dialog.
             HStack(spacing: 12) {
                 infoTile(icon: "gift.fill",
-                         label: L.t("challenges.reward"),
-                         value: L.t("challenges.reward_min", ["n": "\(challenge.rewardMin)"]))
+                         label: L.t("challenges.detail.reward"),
+                         value: "+\(challenge.rewardMin)m")
                 infoTile(icon: "arrow.clockwise",
-                         label: L.t("challenges.resets"),
+                         label: L.t("challenges.detail.resets"),
                          value: challenge.scope == "daily"
-                            ? L.t("challenges.resets_daily") : L.t("challenges.resets_weekly"))
+                            ? L.t("challenges.detail.resets_daily") : L.t("challenges.detail.resets_weekly"))
             }
 
-            Text(progress.done ? L.t("challenges.reward_earned") : L.t("challenges.reward_hint"))
+            Text(progress.done ? L.t("challenges.detail.done") : L.t("challenges.detail.hint"))
                 .font(F.xs)
                 .foregroundStyle(progress.done ? theme.p.s700 : theme.p.s600)
                 .frame(maxWidth: .infinity, alignment: .leading)
