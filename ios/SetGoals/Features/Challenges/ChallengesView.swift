@@ -125,8 +125,18 @@ struct ChallengeDetailSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(challenge.title).font(F.sans(20, .semibold)).foregroundStyle(theme.p.s950)
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: progress.done ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(progress.done ? theme.p.s600 : theme.p.s300)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(challenge.title).font(F.sans(20, .semibold)).foregroundStyle(theme.p.s950)
+                    Text(challenge.scope == "daily" ? L.t("challenges.today") : L.t("challenges.week"))
+                        .eyebrow(theme.p.s600)
+                }
+            }
             Text(challenge.detail).font(F.sm).foregroundStyle(theme.p.s700)
+
             CardSurface {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
@@ -145,13 +155,48 @@ struct ChallengeDetailSheet: View {
                     .frame(height: 8)
                 }
             }
-            Spacer()
+
+            // Reward + reset — same two tiles as the web dialog.
+            HStack(spacing: 12) {
+                infoTile(icon: "gift.fill",
+                         label: L.t("challenges.reward"),
+                         value: L.t("challenges.reward_min", ["n": "\(challenge.rewardMin)"]))
+                infoTile(icon: "arrow.clockwise",
+                         label: L.t("challenges.resets"),
+                         value: challenge.scope == "daily"
+                            ? L.t("challenges.resets_daily") : L.t("challenges.resets_weekly"))
+            }
+
+            Text(progress.done ? L.t("challenges.reward_earned") : L.t("challenges.reward_hint"))
+                .font(F.xs)
+                .foregroundStyle(progress.done ? theme.p.s700 : theme.p.s600)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+
+            Spacer(minLength: 0)
         }
         .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(theme.background)
-        .presentationDetents([.height(320)])
+        .presentationDetents([.height(470)])
         .presentationCornerRadius(28)
+    }
+
+    private func infoTile(icon: String, label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: icon).font(.system(size: 12, weight: .semibold))
+                Text(label).eyebrow(theme.p.s600)
+            }
+            .foregroundStyle(theme.p.s600)
+            Text(value).font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
+            .strokeBorder(theme.ringBorder, lineWidth: 1))
     }
 }
 
