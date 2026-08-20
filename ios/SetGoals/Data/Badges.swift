@@ -116,7 +116,9 @@ struct BadgeMedal: View {
                 .foregroundStyle(earned ? s.fg : theme.p.s500.opacity(0.7))
         }
         .frame(width: size, height: size)
-        .shadow(color: earned ? s.glow : .clear, radius: 12, y: 8)
+        // Web uses `0 8px 24px -12px` — the negative spread keeps the glow tight
+        // and tucked under the medal, so use a small radius with a soft alpha.
+        .shadow(color: earned ? s.glow.opacity(0.45) : .clear, radius: size * 0.09, y: size * 0.06)
     }
 }
 
