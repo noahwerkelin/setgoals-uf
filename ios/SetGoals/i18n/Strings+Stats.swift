@@ -24,6 +24,7 @@ extension L {
             "challenges.detail.resets_daily": "End of day",
             "challenges.detail.resets_weekly": "End of week",
             "challenges.detail.done": "Challenge complete!",
+            "challenges.detail.hint": "Finish this challenge to bank the reward minutes.",
             "challenges.unit.steps": "steps",
             "challenges.unit.days": "days",
             "challenges.unit.complete": "Complete",
