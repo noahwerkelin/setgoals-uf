@@ -11,7 +11,7 @@ struct ChallengesView: View {
     var initialTab: Tab = .goals
 
     @State private var sub: Tab = .goals
-    @State private var week: [(day: String, steps: Int)] = []
+    @State private var week: [DayTotals] = []
     @State private var earnedBadges: Set<String> = []
     @State private var streak: StreakRow?
     @State private var detail: Challenge?
