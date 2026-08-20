@@ -9,6 +9,7 @@ struct CoachView: View {
     @State private var msgs: [CoachMessage] = []
     @State private var text = ""
     @State private var busy = false
+    @State private var proOpen = false
 
     var body: some View {
         AppShell(tab: $tab) {
