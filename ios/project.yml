@@ -20,6 +20,10 @@ targets:
       path: SetGoals/Info.plist
       properties:
         CFBundleDisplayName: SetGoals
+        CFBundleURLTypes:
+          - CFBundleURLName: app.setgoals.auth
+            CFBundleURLSchemes:
+              - app.setgoals
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
@@ -33,6 +37,8 @@ targets:
     entitlements:
       path: SetGoals/SetGoals.entitlements
       properties:
+        com.apple.developer.applesignin:
+          - Default
         com.apple.developer.family-controls: true
         com.apple.developer.healthkit: true
         com.apple.security.application-groups:
