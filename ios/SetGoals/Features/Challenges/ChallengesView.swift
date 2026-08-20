@@ -38,7 +38,7 @@ struct ChallengesView: View {
             // Sync movement first so badges reflect real activity.
             await HealthKitService.shared.refreshToday()
             await BadgeSync.run()
-            week = await SupabaseAPI.weekSteps()
+            week = await SupabaseAPI.weekTotals()
             earnedBadges = (try? await SupabaseAPI.earnedBadges()) ?? []
             streak = try? await SupabaseAPI.streak()
         }
