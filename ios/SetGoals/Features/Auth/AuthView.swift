@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 
 /// Port of `src/routes/auth.tsx` — sign in / sign up / forgot / join with code.
@@ -247,6 +248,9 @@ private struct JoinForm: View {
 
 private struct SocialButtons: View {
     @EnvironmentObject var theme: Theme
+    @State private var busy = false
+    @State private var error: String?
+
     var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 12) {
@@ -256,19 +260,42 @@ private struct SocialButtons: View {
             }
             .padding(.vertical, 24)
 
-            Button { Task { try? await supabase.auth.signInWithOAuth(provider: .google) } } label: {
+            Button { run { try await OAuthService.shared.signInWithGoogle() } } label: {
                 Text(L.t("auth.google"))
                     .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
                     .frame(maxWidth: .infinity).padding(.vertical, 12)
                     .background(theme.card, in: Capsule())
                     .overlay(Capsule().strokeBorder(theme.ringBorder, lineWidth: 1))
             }
-            Button { Task { try? await supabase.auth.signInWithOAuth(provider: .apple) } } label: {
+            .disabled(busy)
+            Button { run { try await OAuthService.shared.signInWithApple() } } label: {
                 Text(L.t("auth.apple"))
                     .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s50)
                     .frame(maxWidth: .infinity).padding(.vertical, 12)
                     .background(theme.p.s950, in: Capsule())
             }
+            .disabled(busy)
+
+            if let error {
+                Text(error).font(F.sans(12, .medium)).foregroundStyle(.red)
+                    .padding(.top, 8)
+            }
+        }
+    }
+
+    private func run(_ op: @escaping () async throws -> Void) {
+        guard !busy else { return }
+        busy = true
+        error = nil
+        Task { @MainActor in
+            do { try await op() }
+            catch is CancellationError {}
+            catch let err as ASWebAuthenticationSessionError where err.code == .canceledLogin {}
+            catch let err as NSError where err.domain == ASAuthorizationError.errorDomain
+                && err.code == ASAuthorizationError.canceled.rawValue {}
+            catch { self.error = error.localizedDescription }
+            busy = false
         }
     }
 }
+
