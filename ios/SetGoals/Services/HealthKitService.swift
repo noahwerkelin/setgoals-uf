@@ -15,6 +15,7 @@ final class HealthKitService: ObservableObject {
     @Published var distanceKm: Double = 0
     @Published var calories: Int = 0
     @Published var exerciseMinutes: Int = 0
+    @Published private(set) var syncError: String?
     /// Hourly step buckets — powers the Early Bird (00:00-08:00) and
     /// Night Owl (21:00-23:59) badges, same rule as the web version.
     @Published var hourlySteps: [Int] = Array(repeating: 0, count: 24)
@@ -37,10 +38,12 @@ final class HealthKitService: ObservableObject {
         do {
             try await store.requestAuthorization(toShare: [], read: readTypes)
             authorized = true
+            syncError = nil
             await refreshToday()
             startObserving()
         } catch {
             authorized = false
+            syncError = error.localizedDescription
         }
     }
 
@@ -58,9 +61,14 @@ final class HealthKitService: ObservableObject {
         exerciseMinutes = Int(await e)
         hourlySteps = await hourlyBuckets(from: start, to: end)
 
-        try? await SupabaseAPI.upsertToday(
-            steps: steps, distanceKm: distanceKm, calories: calories, exerciseMinutes: exerciseMinutes
-        )
+        do {
+            try await SupabaseAPI.upsertToday(
+                steps: steps, distanceKm: distanceKm, calories: calories, exerciseMinutes: exerciseMinutes
+            )
+            syncError = nil
+        } catch {
+            syncError = error.localizedDescription
+        }
 
         // Keep badges in step with the movement that was just recorded.
         await BadgeSync.run()

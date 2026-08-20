@@ -61,39 +61,56 @@ struct DayTotals: Identifiable, Hashable {
 }
 
 extension SupabaseAPI {
+    private static func dayKey(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = .current
+        return formatter.string(from: date)
+    }
+
+    private static func rowsByDay(_ rows: [ActivityStepsRow]) -> [String: DayTotals] {
+        var totals: [String: DayTotals] = [:]
+        for row in rows {
+            let current = totals[row.day] ?? DayTotals(
+                day: row.day, steps: 0, distanceKm: 0, calories: 0, exerciseMinutes: 0
+            )
+            totals[row.day] = DayTotals(
+                day: row.day,
+                steps: current.steps + row.steps,
+                distanceKm: current.distanceKm + row.distance_km,
+                calories: current.calories + row.calories,
+                exerciseMinutes: current.exerciseMinutes + row.exercise_minutes
+            )
+        }
+        return totals
+    }
+
     /// Last `days` days of activity for the signed-in user, oldest first,
     /// with missing days filled with zeroes (mirrors `useHistorySteps`).
     static func historyFilled(days: Int) async -> [(day: String, steps: Int, distance: Double)] {
-        let rows = (try? await history(days: days)) ?? []
-        var byDay: [String: ActivityStepsRow] = [:]
-        for r in rows { byDay[r.day] = r }
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.timeZone = .current
+        let totals = await historyTotals(days: days)
+        return totals.map { ($0.day, $0.steps, $0.distanceKm) }
+    }
+
+    static func historyTotalsResult(days: Int) async throws -> [DayTotals] {
+        let rows = try await history(days: days)
+        let byDay = rowsByDay(rows)
         var out: [(String, Int, Double)] = []
-        for i in stride(from: days - 1, through: 0, by: -1) {
-            let d = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
-            let key = f.string(from: d)
-            let r = byDay[key]
-            out.append((key, r?.steps ?? 0, r?.distance_km ?? 0))
+        var totals: [DayTotals] = []
+        for offset in stride(from: max(1, days) - 1, through: 0, by: -1) {
+            guard let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date()) else { continue }
+            let key = dayKey(date)
+            totals.append(byDay[key] ?? DayTotals(
+                day: key, steps: 0, distanceKm: 0, calories: 0, exerciseMinutes: 0
+            ))
         }
-        return out
+        return totals
     }
 
     /// Full per-day totals (steps, distance, calories, exercise) — the native
     /// equivalent of the web `DayTotals` used by challenges and statistics.
     static func historyTotals(days: Int) async -> [DayTotals] {
-        let rows = (try? await history(days: days)) ?? []
-        var byDay: [String: ActivityStepsRow] = [:]
-        for r in rows { byDay[r.day] = r }
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.timeZone = .current
-        var out: [DayTotals] = []
-        for i in stride(from: days - 1, through: 0, by: -1) {
-            let d = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
-            let key = f.string(from: d)
-            let r = byDay[key]
-            out.append(DayTotals(day: key, steps: r?.steps ?? 0, distanceKm: r?.distance_km ?? 0,
-                                 calories: r?.calories ?? 0, exerciseMinutes: r?.exercise_minutes ?? 0))
-        }
-        return out
+        (try? await historyTotalsResult(days: days)) ?? []
     }
 
     static func weekTotals() async -> [DayTotals] { await historyTotals(days: 7) }
