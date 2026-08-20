@@ -29,19 +29,44 @@ struct CoachView: View {
         .task { if msgs.isEmpty { msgs = [CoachMessage(role: "assistant", content: L.t("coach.seed"))] } }
     }
 
+    /// Port of `ProLockCard` in `src/components/Pro.tsx` — centred sparkles tile,
+    /// PRO eyebrow, title, description and a full-width upgrade button.
     private var lockCard: some View {
-        CardSurface(padding: 24) {
+        let isChild = settings.role == "child"
+        return CardSurface(padding: 24) {
             VStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: R.xl2, style: .continuous).fill(theme.p.s100)
                     Image(systemName: "sparkles").font(.system(size: 22)).foregroundStyle(theme.p.s700)
                 }
                 .frame(width: 48, height: 48)
-                Text(L.t("coach.locked_title")).font(F.sans(16, .semibold)).foregroundStyle(theme.p.s950)
-                Text(settings.role == "child" ? L.t("pro.child_desc") : L.t("coach.locked_desc"))
-                    .font(F.sm).foregroundStyle(theme.p.s600).multilineTextAlignment(.center)
+                VStack(spacing: 4) {
+                    Text(L.t("pro.badge")).font(F.sans(12, .semibold))
+                        .textCase(.uppercase).tracking(1.6).foregroundStyle(theme.p.s600)
+                    Text(L.t("coach.locked_title")).font(F.sans(16, .semibold))
+                        .foregroundStyle(theme.foreground)
+                    Text(isChild ? L.t("pro.child_desc") : L.t("coach.locked_desc"))
+                        .font(F.sm).foregroundStyle(theme.p.s600).multilineTextAlignment(.center)
+                }
+                if !isChild {
+                    Button { proOpen = true } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "sparkles").font(.system(size: 14, weight: .semibold))
+                            Text(L.t("pro.upgrade")).font(F.sans(14, .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .foregroundStyle(theme.primaryForeground)
+                        .background(theme.primary, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
+                }
             }
             .frame(maxWidth: .infinity)
+        }
+        .sheet(isPresented: $proOpen) {
+            ProUpgradeDialog().environmentObject(theme).environmentObject(settings)
         }
     }
 
