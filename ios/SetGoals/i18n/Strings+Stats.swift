@@ -57,6 +57,7 @@ extension L {
             "challenges.detail.resets_daily": "Vid dagens slut",
             "challenges.detail.resets_weekly": "Vid veckans slut",
             "challenges.detail.done": "Utmaning klar!",
+            "challenges.detail.hint": "Klara utmaningen för att få belöningsminuterna.",
             "challenges.unit.steps": "steg",
             "challenges.unit.days": "dagar",
             "challenges.unit.complete": "Klar",
