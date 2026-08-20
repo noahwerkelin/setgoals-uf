@@ -125,15 +125,23 @@ enum SupabaseAPI {
             user_id: uid, day: todayKey, steps: steps, distance_km: distanceKm,
             calories: calories, exercise_minutes: exerciseMinutes, source: "healthkit"
         )
-        try await supabase.from("activity_steps").upsert(row, onConflict: "user_id,day").execute()
+        try await supabase.from("activity_steps")
+            .upsert(row, onConflict: "user_id,day,source")
+            .execute()
     }
 
     static func history(days: Int) async throws -> [ActivityStepsRow] {
         guard let uid = await currentUserID() else { return [] }
+        let calendar = Calendar.current
+        let start = calendar.date(byAdding: .day, value: -(max(1, days) - 1),
+                                  to: calendar.startOfDay(for: Date())) ?? Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = .current
         return try await supabase.from("activity_steps").select()
             .eq("user_id", value: uid)
+            .gte("day", value: formatter.string(from: start))
             .order("day", ascending: true)
-            .limit(days)
             .execute().value
     }
 

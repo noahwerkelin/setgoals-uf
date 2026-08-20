@@ -34,6 +34,7 @@ targets:
       path: SetGoals/SetGoals.entitlements
       properties:
         com.apple.developer.family-controls: true
+        com.apple.developer.healthkit: true
         com.apple.security.application-groups:
           - group.app.setgoals.shared
     dependencies:

@@ -10,6 +10,7 @@ struct StatsView: View {
 
     @State private var history: [DayTotals] = []
     @State private var proOpen = false
+    @State private var syncError: String?
 
     // MARK: Derived numbers — same math as the web page
 
@@ -17,7 +18,13 @@ struct StatsView: View {
     /// page always matches what the rest of the app shows.
     private var week: [DayTotals] {
         let last7 = Array(history.suffix(7))
-        guard let today = last7.last else { return last7 }
+        guard let today = last7.last else {
+            return [DayTotals(day: SupabaseAPI.todayKey,
+                              steps: health.steps,
+                              distanceKm: health.distanceKm,
+                              calories: health.calories,
+                              exerciseMinutes: health.exerciseMinutes)]
+        }
         var out = last7
         out[out.count - 1] = DayTotals(day: today.day,
                                        steps: max(today.steps, health.steps),
@@ -85,7 +92,13 @@ struct StatsView: View {
         }
         .task {
             await HealthKitService.shared.refreshToday()
-            history = await SupabaseAPI.historyTotals(days: 180)
+            do {
+                history = try await SupabaseAPI.historyTotalsResult(days: 180)
+                syncError = HealthKitService.shared.syncError
+            } catch {
+                syncError = error.localizedDescription
+                history = await SupabaseAPI.historyTotals(days: 180)
+            }
         }
         .sheet(isPresented: $proOpen) {
             ProUpgradeDialog().environmentObject(theme).environmentObject(settings)
