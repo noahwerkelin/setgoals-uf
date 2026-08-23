@@ -41,6 +41,10 @@ struct ChallengesView: View {
             week = await SupabaseAPI.weekTotals()
             earnedBadges = (try? await SupabaseAPI.earnedBadges()) ?? []
             streak = try? await SupabaseAPI.streak()
+            // Completed challenges pay out their screen-time reward once
+            // per day (daily) or per week (weekly).
+            await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
+
         }
         .sheet(item: $detail) { c in
             ChallengeDetailSheet(challenge: c, progress: ChallengeCatalog.progress(c, today: health, week: week, settings: settings))

@@ -39,10 +39,18 @@ struct HomeView: View {
                 if settings.role != "child" && settings.isPro && rolloverMin > 0 { rolloverCard }
                 quoteCard
                 RecentWins(earned: earnedBadges) { tab = .challenges }
-                FamilyCard(rows: family) { tab = .profile }
+                FamilyCard(rows: family) {
+                    NavIntent.shared.parentSection = .children
+                    NavIntent.shared.openParent = true
+                    tab = .profile
+                }
                 MyTasksCard()
                 TaskNotificationsCard()
-                LeaderboardTile(rank: friendsRank, total: friendsTotal) { tab = .challenges }
+                LeaderboardTile(rank: friendsRank, total: friendsTotal) {
+                    NavIntent.shared.challengesTab = .lb
+                    tab = .challenges
+                }
+
 
             }
             .padding(.horizontal, 24)
@@ -65,7 +73,11 @@ struct HomeView: View {
         if let me = await SupabaseAPI.currentUserID() {
             friendsRank = friends.first(where: { $0.user_id == me })?.rank ?? 0
         }
+        // Pay out any challenge rewards completed since the last visit.
+        let week = await SupabaseAPI.weekTotals()
+        await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
         ScreenTimeService.shared.apply(remainingMin: remainingMin)
+
     }
 
     // MARK: header

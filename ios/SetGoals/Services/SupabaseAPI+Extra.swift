@@ -186,6 +186,31 @@ extension SupabaseAPI {
         ]).execute()
     }
 
+    /// Adds bonus screen-time minutes to the signed-in user's own balance for
+    /// today and returns the new total.
+    @discardableResult
+    static func addOwnBonusMinutes(_ minutes: Int) async throws -> Int {
+        guard let uid = await currentUserID() else { return 0 }
+        struct Bal: Codable { let bonus_min: Int? }
+        let existing: Bal? = try? await supabase.from("earned_balances")
+            .select("bonus_min").eq("user_id", value: uid).eq("day", value: todayKey)
+            .single().execute().value
+        let total = (existing?.bonus_min ?? 0) + minutes
+        if existing != nil {
+            try await supabase.from("earned_balances")
+                .update(["bonus_min": AnyJSON.integer(total)])
+                .eq("user_id", value: uid).eq("day", value: todayKey).execute()
+        } else {
+            try await supabase.from("earned_balances").insert([
+                "user_id": AnyJSON.string(uid.uuidString),
+                "day": .string(todayKey),
+                "bonus_min": .integer(total),
+            ]).execute()
+        }
+        return total
+    }
+
+
     static func updateProfile(_ patch: [String: AnyJSON]) async throws {
         guard let uid = await currentUserID() else { return }
         try await supabase.from("profiles").update(patch).eq("id", value: uid).execute()

@@ -7,13 +7,22 @@ import Supabase
 final class NavIntent {
     static let shared = NavIntent()
     var challengesTab: ChallengesView.Tab = .goals
+    /// Which tab ParentView should open on, and whether it should open at all.
+    var parentSection: ParentView.ParentTab = .personal
+    var openParent = false
 
     /// Reads the pending tab once, then falls back to the default.
     func consumeChallengesTab() -> ChallengesView.Tab {
         defer { challengesTab = .goals }
         return challengesTab
     }
+
+    func consumeParentSection() -> ParentView.ParentTab {
+        defer { parentSection = .personal }
+        return parentSection
+    }
 }
+
 
 /// 1:1 port of `src/routes/profile.tsx`.
 /// Hero (ProfileAura + avatar + name) → Today → Progress → Manage.
@@ -52,6 +61,15 @@ struct ProfileView: View {
             .padding(.bottom, 32)
         }
         .task { earned = (try? await SupabaseAPI.earnedBadges()) ?? [] }
+        .onAppear {
+            // Deep link from Home ("Add child" / family card) opens the
+            // children screen-time page instead of just the profile.
+            if NavIntent.shared.openParent {
+                NavIntent.shared.openParent = false
+                showParent = true
+            }
+        }
+
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
             Task { await handlePick(item) }
@@ -60,8 +78,10 @@ struct ProfileView: View {
             SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings)
         }
         .fullScreenCover(isPresented: $showParent) {
-            ParentView(tab: $tab).environmentObject(theme).environmentObject(settings)
+            ParentView(tab: $tab, initialSection: NavIntent.shared.consumeParentSection())
+                .environmentObject(theme).environmentObject(settings)
         }
+
         .fullScreenCover(isPresented: $showStats) {
             StatsView(tab: $tab).environmentObject(theme).environmentObject(settings)
         }
@@ -220,9 +240,16 @@ struct ProfileView: View {
                 row("chart.bar", L.t("profile.row.stats"), L.t("profile.row.stats_sub")) { showStats = true }
                 if !isChild {
                     divider
-                    row("shield", L.t("profile.row.screentime"), L.t("profile.row.screentime_sub")) { showParent = true }
+                    row("shield", L.t("profile.row.screentime"), L.t("profile.row.screentime_sub")) {
+                        NavIntent.shared.parentSection = .personal
+                        showParent = true
+                    }
                     divider
-                    row("person.2", L.t("profile.row.children"), L.t("profile.row.children_sub")) { showParent = true }
+                    row("person.2", L.t("profile.row.children"), L.t("profile.row.children_sub")) {
+                        NavIntent.shared.parentSection = .children
+                        showParent = true
+                    }
+
                 }
                 divider
                 row("gearshape", L.t("profile.row.settings"), L.t("profile.row.settings_sub")) { showSettings = true }
