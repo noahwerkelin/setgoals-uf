@@ -61,6 +61,15 @@ struct ProfileView: View {
             .padding(.bottom, 32)
         }
         .task { earned = (try? await SupabaseAPI.earnedBadges()) ?? [] }
+        .onAppear {
+            // Deep link from Home ("Add child" / family card) opens the
+            // children screen-time page instead of just the profile.
+            if NavIntent.shared.openParent {
+                NavIntent.shared.openParent = false
+                showParent = true
+            }
+        }
+
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
             Task { await handlePick(item) }
