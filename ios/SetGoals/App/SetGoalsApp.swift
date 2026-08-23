@@ -31,8 +31,14 @@ struct SetGoalsApp: App {
             .task {
                 await auth.bootstrap()
                 ScreenTimeService.shared.scheduleDailyMonitoring()
+                // Nearby activities start loading at launch, not on the map page.
+                if onboarded { NearbyStore.shared.start() }
                 if onboarded, HealthKitService.shared.isAvailable {
                     await HealthKitService.shared.requestAuthorization()
+                }
+                if auth.signedIn {
+                    await settings.load()
+                    await StreakSync.syncFromHealthKit()
                 }
                 try? await Task.sleep(for: .seconds(2.5))
                 withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
