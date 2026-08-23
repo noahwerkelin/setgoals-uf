@@ -13,7 +13,9 @@ struct ParentView: View {
 
     enum ParentTab: Hashable { case personal, children }
 
+    var initialSection: ParentTab = .personal
     @State private var section: ParentTab = .personal
+
     @State private var children: [ChildRow] = []
     @State private var today: [UUID: ChildDayStats] = [:]
     @State private var week: [UUID: [String: (steps: Int, usedMin: Int)]] = [:]
