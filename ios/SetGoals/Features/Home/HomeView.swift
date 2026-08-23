@@ -73,7 +73,11 @@ struct HomeView: View {
         if let me = await SupabaseAPI.currentUserID() {
             friendsRank = friends.first(where: { $0.user_id == me })?.rank ?? 0
         }
+        // Pay out any challenge rewards completed since the last visit.
+        let week = await SupabaseAPI.weekTotals()
+        await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
         ScreenTimeService.shared.apply(remainingMin: remainingMin)
+
     }
 
     // MARK: header
