@@ -67,7 +67,11 @@ struct ParentView: View {
             }
             .padding(.horizontal, 24)
         }
-        .task { await reload() }
+        .task {
+            section = canManageChildren ? initialSection : .personal
+            await reload()
+        }
+
         .sheet(isPresented: $showPro) { ProUpgradeDialog() }
         .sheet(isPresented: $editingMyST) {
             ParentScreenTimeDialog(title: L.t("parent.my_screentime"),
