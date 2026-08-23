@@ -7,13 +7,22 @@ import Supabase
 final class NavIntent {
     static let shared = NavIntent()
     var challengesTab: ChallengesView.Tab = .goals
+    /// Which tab ParentView should open on, and whether it should open at all.
+    var parentSection: ParentView.ParentTab = .personal
+    var openParent = false
 
     /// Reads the pending tab once, then falls back to the default.
     func consumeChallengesTab() -> ChallengesView.Tab {
         defer { challengesTab = .goals }
         return challengesTab
     }
+
+    func consumeParentSection() -> ParentView.ParentTab {
+        defer { parentSection = .personal }
+        return parentSection
+    }
 }
+
 
 /// 1:1 port of `src/routes/profile.tsx`.
 /// Hero (ProfileAura + avatar + name) → Today → Progress → Manage.
