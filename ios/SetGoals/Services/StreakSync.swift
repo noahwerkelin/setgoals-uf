@@ -1,4 +1,5 @@
 import Foundation
+import Supabase
 
 /// Native port of `recordSteps` in `src/lib/settings.tsx`.
 /// Adds a day to the streak the first time today's steps reach the daily goal,
