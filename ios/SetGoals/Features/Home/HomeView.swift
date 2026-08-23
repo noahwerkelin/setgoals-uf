@@ -39,10 +39,18 @@ struct HomeView: View {
                 if settings.role != "child" && settings.isPro && rolloverMin > 0 { rolloverCard }
                 quoteCard
                 RecentWins(earned: earnedBadges) { tab = .challenges }
-                FamilyCard(rows: family) { tab = .profile }
+                FamilyCard(rows: family) {
+                    NavIntent.shared.parentSection = .children
+                    NavIntent.shared.openParent = true
+                    tab = .profile
+                }
                 MyTasksCard()
                 TaskNotificationsCard()
-                LeaderboardTile(rank: friendsRank, total: friendsTotal) { tab = .challenges }
+                LeaderboardTile(rank: friendsRank, total: friendsTotal) {
+                    NavIntent.shared.challengesTab = .lb
+                    tab = .challenges
+                }
+
 
             }
             .padding(.horizontal, 24)
