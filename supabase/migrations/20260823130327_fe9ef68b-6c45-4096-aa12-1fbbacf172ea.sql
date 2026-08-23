@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.leaderboard_ranked(text, uuid) FROM anon;
