@@ -467,6 +467,8 @@ struct CategoryToggle: View {
                  fill: Color(red: 0.96, green: 0.62, blue: 0.04)) { onChange(false) }
         }
         .padding(4)
+        // Fixed control width so every category row lines up identically.
+        .frame(width: 188)
         .background(theme.p.s50, in: Capsule())
         .overlay(Capsule().stroke(.black.opacity(0.05), lineWidth: 1))
         .opacity(enabled ? 1 : 0.6)
@@ -478,13 +480,16 @@ struct CategoryToggle: View {
         Button { withAnimation(.easeOut(duration: 0.3)) { action() } } label: {
             HStack(spacing: 4) {
                 Image(systemName: icon).font(.system(size: 10, weight: .semibold))
-                Text(title).font(F.sans(11, .semibold)).lineLimit(1)
+                Text(title).font(F.sans(11, .semibold)).lineLimit(1).minimumScaleFactor(0.8)
             }
+            .frame(maxWidth: .infinity)
             .foregroundStyle(active ? .white : theme.p.s700)
-            .padding(.horizontal, 12).padding(.vertical, 6)
+            .padding(.vertical, 6)
             .background(active ? fill : .clear, in: Capsule())
         }
+        .buttonStyle(.plain)
     }
+
 }
 
 // MARK: - Weekly summary
