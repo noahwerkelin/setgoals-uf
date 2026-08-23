@@ -240,9 +240,16 @@ struct ProfileView: View {
                 row("chart.bar", L.t("profile.row.stats"), L.t("profile.row.stats_sub")) { showStats = true }
                 if !isChild {
                     divider
-                    row("shield", L.t("profile.row.screentime"), L.t("profile.row.screentime_sub")) { showParent = true }
+                    row("shield", L.t("profile.row.screentime"), L.t("profile.row.screentime_sub")) {
+                        NavIntent.shared.parentSection = .personal
+                        showParent = true
+                    }
                     divider
-                    row("person.2", L.t("profile.row.children"), L.t("profile.row.children_sub")) { showParent = true }
+                    row("person.2", L.t("profile.row.children"), L.t("profile.row.children_sub")) {
+                        NavIntent.shared.parentSection = .children
+                        showParent = true
+                    }
+
                 }
                 divider
                 row("gearshape", L.t("profile.row.settings"), L.t("profile.row.settings_sub")) { showSettings = true }
