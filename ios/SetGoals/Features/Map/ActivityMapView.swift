@@ -56,10 +56,8 @@ struct ActivityMapView: View {
     @EnvironmentObject var settings: SettingsStore
     @Binding var tab: AppTab
 
-    @StateObject private var locator = Locator()
-    @State private var activities: [NearbyActivity] = []
+    @ObservedObject private var store = NearbyStore.shared
     @State private var filter: Filter = .all
-    @State private var loading = false
     @State private var pageSize = 5
     @State private var expandedID: String?
     @State private var camera: MapCameraPosition = .automatic
@@ -81,6 +79,10 @@ struct ActivityMapView: View {
         .kind(.Swim), .kind(.Gym), .kind(.Nature), .kind(.Family),
     ]
 
+    private var locator: Locator { store.locator }
+    private var activities: [NearbyActivity] { store.activities }
+    private var loading: Bool { store.loading }
+
     private var visible: [NearbyActivity] {
         switch filter {
         case .all: return activities
@@ -91,12 +93,8 @@ struct ActivityMapView: View {
     var body: some View {
         AppShell(tab: $tab) {
             PageHeader(eyebrow: L.t("map.eyebrow"), title: L.t("map.title")) {
-                HStack(spacing: 8) {
-                    circleButton("arrow.clockwise", spinning: loading,
-                                 label: L.t("map.refresh")) { Task { await load(force: true) } }
-                    circleButton("location.fill", pulsing: locator.locating,
-                                 label: L.t("map.use_location")) { locator.request() }
-                }
+                circleButton("location.fill", spinning: loading, pulsing: locator.locating,
+                             label: L.t("map.use_location")) { store.refresh() }
             }
 
             VStack(spacing: 20) {
@@ -114,8 +112,17 @@ struct ActivityMapView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }
-        .task { locator.request() }
-        .onChange(of: locator.centerKey) { _, _ in Task { await load() } }
+        .task {
+            store.start()
+            if let c = locator.center {
+                camera = .region(MKCoordinateRegion(center: c, latitudinalMeters: 6000, longitudinalMeters: 6000))
+            }
+        }
+        .onChange(of: locator.centerKey) { _, _ in
+            if let c = locator.center {
+                camera = .region(MKCoordinateRegion(center: c, latitudinalMeters: 6000, longitudinalMeters: 6000))
+            }
+        }
         .onChange(of: filter) { _, _ in pageSize = 5; expandedID = nil }
     }
 
@@ -348,16 +355,6 @@ struct ActivityMapView: View {
 
     // MARK: Data
 
-    private func load(force: Bool = false) async {
-        guard let c = locator.center else { return }
-        if loading && !force { return }
-        loading = true
-        defer { loading = false }
-        camera = .region(MKCoordinateRegion(center: c, latitudinalMeters: 6000, longitudinalMeters: 6000))
-        let found = (try? await ActivitiesService.nearby(lat: c.latitude, lng: c.longitude)) ?? []
-        activities = found.sorted { $0.distanceM < $1.distanceM }
-    }
-
     private func openDirections(_ a: NearbyActivity) {
         let item = MKMapItem(placemark: MKPlacemark(coordinate: a.coord))
         item.name = a.name
@@ -378,7 +375,7 @@ struct SagePin: View {
         case .Running: return "figure.run"
         case .Cycling: return "bicycle"
         case .Swim: return "figure.pool.swim"
-        case .Family: return "house.fill"
+        case .Family: return "tree.fill"
         case .Gym: return "dumbbell.fill"
         }
     }
@@ -428,6 +425,8 @@ private struct PinShape: InsettableShape {
 
 @MainActor
 final class Locator: NSObject, ObservableObject, CLLocationManagerDelegate {
+    static let shared = Locator()
+
     @Published var center: CLLocationCoordinate2D?
     @Published var locating = false
     @Published var denied = false

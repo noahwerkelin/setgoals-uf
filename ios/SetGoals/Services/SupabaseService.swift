@@ -162,8 +162,14 @@ enum SupabaseAPI {
         try await supabase.rpc("family_today").execute().value
     }
 
+    /// Top 10 for the scope plus the caller's own row (with their true rank)
+    /// when they are outside the top 10 — `leaderboard_ranked` in the backend.
     static func leaderboard(scope: String) async throws -> [LeaderboardEntry] {
-        try await supabase.rpc("leaderboard", params: ["_scope": scope]).execute().value
+        guard let uid = await currentUserID() else { return [] }
+        return try await supabase.rpc("leaderboard_ranked", params: [
+            "_scope": AnyJSON.string(scope),
+            "_uid": .string(uid.uuidString),
+        ]).execute().value
     }
 
     static func usernameAvailable(_ username: String) async throws -> Bool {

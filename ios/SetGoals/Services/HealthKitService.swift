@@ -70,7 +70,8 @@ final class HealthKitService: ObservableObject {
             syncError = error.localizedDescription
         }
 
-        // Keep badges in step with the movement that was just recorded.
+        // Keep the streak and badges in step with the movement just recorded.
+        await StreakSync.record(steps: steps, goal: SettingsStore.shared.dailyGoal)
         await BadgeSync.run()
     }
 

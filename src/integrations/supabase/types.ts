@@ -692,6 +692,17 @@ export type Database = {
           username: string
         }[]
       }
+      leaderboard_ranked: {
+        Args: { _scope: string; _uid?: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          rank: number
+          total_steps: number
+          user_id: string
+          username: string
+        }[]
+      }
       parent_family_pro: { Args: never; Returns: boolean }
       parent_family_pro_status: {
         Args: { _uid: string }
