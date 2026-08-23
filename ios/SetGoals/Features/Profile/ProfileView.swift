@@ -69,8 +69,10 @@ struct ProfileView: View {
             SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings)
         }
         .fullScreenCover(isPresented: $showParent) {
-            ParentView(tab: $tab).environmentObject(theme).environmentObject(settings)
+            ParentView(tab: $tab, initialSection: NavIntent.shared.consumeParentSection())
+                .environmentObject(theme).environmentObject(settings)
         }
+
         .fullScreenCover(isPresented: $showStats) {
             StatsView(tab: $tab).environmentObject(theme).environmentObject(settings)
         }
