@@ -24,18 +24,202 @@ extension L {
             "auth.accept_required": "You must accept the Terms of Use and Privacy Policy.",
 
             "legal.privacy.body": """
-## What we collect
-Account details you give us (name, username, email, birthday), your step and \
-distance activity, screen-time settings and, if you allow it, your approximate location.
-## How we use it
-To show your progress, run streaks, badges, challenges and leaderboards, and to \
-let a parent manage a linked child account.
-## Sharing
-We do not sell your data. Leaderboards show your name or an anonymous label \
-depending on your privacy setting.
-## Your choices
-You can change your privacy settings, turn location sharing off, or delete your \
-account and all related data at any time from Settings.
+Last updated: 2026-09-06
+This Privacy Policy describes how SetGoals UF ("SetGoals", "we", "us") processes personal data when you use SetGoals.
+We take your privacy seriously and process personal data in accordance with applicable data protection law, including the EU General Data Protection Regulation (GDPR).
+## 1. Data controller
+The data controller is:
+SetGoals UF Sweden
+Email: kontakt@setgoals.se
+If you have questions about how we process your personal data, you can contact us at the email address above.
+## 2. Personal data we process
+The personal data processed depends on which features you use and which permissions you give SetGoals.
+Account and identity data
+We may process:
+• name,
+• username,
+• email address,
+• date of birth,
+• password in securely protected form,
+• profile picture,
+• data required to administer your account.
+Activity and health data
+If you allow SetGoals to read information from Apple HealthKit, we may process:
+• step count,
+• distance,
+• calories,
+• exercise minutes.
+This data is used to provide the app's activity and screen-time related features.
+Which data is used or shown may depend on the type of account you use. For example, calories are not shown in child accounts.
+HealthKit data is only used for features relevant to SetGoals and is not used for advertising or marketing.
+Social information
+For accounts where social features are available, we may process:
+• which users you have added as friends,
+• which users you have blocked,
+• your name,
+• your username,
+• your profile picture,
+• today's step count.
+Some of this information may be shown to other users according to the app's social features.
+Social features are not available in child accounts. Child accounts therefore cannot search for, add or see other users' activity data.
+Technical data
+We may process technical data required to provide, troubleshoot and secure the service, for example:
+• device and operating system information,
+• technical identifiers,
+• information about app usage,
+• error and diagnostic data.
+Exactly which technical data is processed depends on the technical solutions and services used in the current version of the app.
+Location and motion data
+Certain features, including the AI coach, may use information about the user's location or motion when this is relevant to the user's question or the feature being used.
+Such data is only used when needed for the relevant feature and in accordance with the permissions the user has granted.
+Purchases and subscriptions
+We may process information about your subscription status, for example whether you have PRO or PRO Family.
+Subscription purchases via the Apple App Store are handled through Apple's payment system. SetGoals does not normally receive the user's full payment card number through such purchases.
+## 3. Why we process personal data
+We process personal data in order to:
+• create and administer user accounts,
+• provide SetGoals features,
+• calculate earned screen time,
+• show activity statistics,
+• provide social features where available,
+• provide parental controls,
+• provide premium features,
+• manage subscriptions and entitlements,
+• prevent abuse and unauthorised use,
+• ensure the technical function of the app,
+• detect and troubleshoot technical problems,
+• improve the app's function and user experience where compatible with applicable law,
+• provide the AI coach,
+• process location and motion data where required for a feature the user has chosen to use.
+HealthKit data is only used for the purposes required for SetGoals' activity and fitness related features.
+HealthKit data is not used for advertising, marketing or the sale of data.
+## 4. HealthKit
+SetGoals may request access to Apple HealthKit.
+Depending on which features are used, SetGoals may read:
+• steps,
+• distance,
+• calories,
+• exercise minutes.
+We only request the permissions needed for the features the app provides.
+The user can change or revoke SetGoals' access to HealthKit at any time in Apple's settings.
+If access is revoked, some SetGoals features may stop working or work with limited information.
+HealthKit data is not used for:
+• advertising,
+• targeted advertising,
+• marketing,
+• sale of personal data,
+• usage-based data mining for purposes other than SetGoals features.
+We do not share HealthKit data with ad networks or data brokers.
+## 5. Apple Screen Time and parental controls
+SetGoals uses Apple's FamilyControls, ManagedSettings and DeviceActivity for features that help the user manage and limit app usage.
+These features may require specific permissions from the user.
+Among other things, the user can choose which app categories are covered by SetGoals' screen-time features and which apps are always unlocked, depending on the features and settings available in the app.
+SetGoals respects the permissions and choices the user provides.
+If a required permission is revoked, features that need Screen Time permission may stop working.
+## 6. Photos and profile pictures
+If the user chooses to add a profile picture, SetGoals may use an image the user selects.
+SetGoals uses the image to provide the profile feature and, for accounts where social features are available, to show the profile picture to other users according to the app's features.
+We do not use the user's photo library to build a database of images or for advertising.
+SetGoals aims to use Apple's photo picker and limited photo access where possible.
+## 7. Social features
+For accounts where social features are available, users can find other users by username and add them as friends.
+When two users are friends, the following information may be shown according to the app's features:
+• name,
+• username,
+• profile picture,
+• today's step count.
+The user can remove friends and block other users.
+Child accounts do not have access to features for searching for, adding or seeing other users and their activity data.
+## 8. AI coach
+SetGoals may offer an AI coach that helps the user with questions and information related to the app's features.
+To provide the AI coach, information relevant to the user's question may need to be processed by external service providers.
+Depending on the user's question and the information needed to give a relevant answer, this may for example include:
+• screen-time related information,
+• name,
+• motion data,
+• location information.
+Only information needed for the relevant feature shall be used.
+The AI coach is provided with Google Gemini through the Lovable AI Gateway.
+The AI coach is a technical aid and does not replace professional medical, psychological or other expert advice.
+SetGoals does not use the AI coach to make medical diagnoses.
+## 9. Third-party services
+SetGoals uses external services to provide, operate and develop the app.
+Supabase
+Supabase is used among other things for storage and management of the app's data.
+Supabase may process personal data on behalf of SetGoals where required to provide the service.
+Google
+Google may be used for among other things:
+• Google Gemini in connection with the AI coach,
+• Google Maps and map-related features.
+Which Google services process information depends on the features the user uses and how the current version of the app is configured.
+Lovable
+Lovable is used among other things in connection with the AI coach's technical functions through the Lovable AI Gateway.
+Lovable may process information on behalf of SetGoals where required to provide the relevant feature.
+Apple
+Apple is used among other things for:
+• HealthKit,
+• FamilyControls,
+• ManagedSettings,
+• DeviceActivity,
+• App Store,
+• payment infrastructure for in-app purchases.
+Use of Apple's services is also covered by Apple's own terms and privacy policy.
+## 10. Legal basis
+The legal basis we rely on depends on the processing in question.
+It may for example be:
+• that the processing is necessary to perform a contract with the user,
+• the user's consent,
+• that the processing is necessary to comply with a legal obligation,
+• our legitimate interest, where permitted and where the user's interests or fundamental rights do not override it.
+For processing based on consent, the user may withdraw their consent.
+Withdrawal does not affect the lawfulness of processing carried out before consent was withdrawn.
+Where processing of children's personal data requires consent from a parent or guardian, such consent shall be obtained in accordance with applicable rules.
+## 11. Children and personal data
+SetGoals has a stated minimum age of 9 years.
+Because SetGoals may be used by children, we process children's personal data with particular care and seek to limit collection to what is needed for the app's features.
+Child accounts have limited functionality. They do not have access to the app's social features for searching for, adding or seeing other users and their activity data. Calories are not shown in child accounts.
+For users who under applicable law cannot themselves give valid consent, the required consent from a parent or guardian shall be obtained where the law requires it.
+SetGoals does not use children's personal data for targeted advertising based on sensitive data.
+We do not seek to collect more personal data about children than is necessary to provide the features the child uses.
+## 12. How long we keep data
+We keep personal data for as long as necessary for the purposes described in this policy, for as long as the user has an active account, or for as long as we have a legal obligation to retain the data.
+When an account is deleted, personal data that no longer needs to be retained will be deleted or anonymised within 14 days, unless longer storage is required or permitted by law.
+Some data may need to be kept longer if required by law or to establish, exercise or defend legal claims.
+Backups and technical logs may in some cases remain for a limited period after deletion before being overwritten or deleted according to our technical routines.
+## 13. Where data is stored
+Personal data may be stored on servers provided by our service providers, including Supabase and other providers used to deliver SetGoals.
+Some service providers may process personal data outside the EU/EEA.
+If personal data is transferred outside the EU/EEA, SetGoals shall use a lawful transfer mechanism under the GDPR where one is required.
+## 14. Security
+We take technical and organisational security measures to protect personal data against unauthorised access, loss, alteration and destruction.
+Passwords shall be stored securely and not in plain text.
+Access to personal data shall be limited to what is needed to provide and administer the service.
+However, no internet-based service can be guaranteed to be completely secure.
+## 15. Your rights
+Under the GDPR you may, depending on the circumstances, have the right to:
+• be informed about how we process your personal data,
+• access your personal data,
+• have inaccurate data corrected,
+• have your personal data erased,
+• have processing restricted,
+• object to certain processing,
+• receive certain personal data in a structured, machine-readable format,
+• withdraw consent where processing is based on consent.
+To exercise your rights you can contact: kontakt@setgoals.se
+You also have the right to lodge a complaint with the Swedish Authority for Privacy Protection (IMY) if you believe our processing of personal data breaches the GDPR.
+## 16. Account deletion
+The user may request that their account be deleted.
+When the account is deleted, personal data will be deleted or anonymised in accordance with our retention routines and our legal obligations.
+Deleting an account does not automatically mean that information that must be retained by law is immediately deleted.
+Data needed to comply with legal obligations or to establish, exercise or defend legal claims may need to be retained for a longer period.
+## 17. Changes to this Privacy Policy
+We may update this Privacy Policy as our services, technical solutions or legal requirements change.
+For significant changes we will inform users in an appropriate way.
+The date of the most recent update is stated at the top of this policy.
+## 18. Contact
+For questions about this Privacy Policy or SetGoals' processing of personal data:
+SetGoals UF Sweden
+kontakt@setgoals.se
 """,
 
             "legal.terms.body": """
