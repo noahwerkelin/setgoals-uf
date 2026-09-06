@@ -128,6 +128,7 @@ struct ChallengeDetailSheet: View {
     let progress: ChallengeCatalog.Progress
 
     var body: some View {
+        ScrollView {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: progress.done ? "checkmark.circle.fill" : "circle")
@@ -180,11 +181,14 @@ struct ChallengeDetailSheet: View {
 
             Spacer(minLength: 0)
         }
-        .padding(24)
+        .padding(.horizontal, 24)
+        .padding(.top, 20)
+        .padding(.bottom, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.background)
-        .presentationDetents([.height(470)])
-        .presentationCornerRadius(28)
+        }
+        .safeAreaPadding(.bottom, 8)
+        .background(theme.card.ignoresSafeArea())
+        .appSheet()
     }
 
     private func infoTile(icon: String, label: String, value: String) -> some View {
