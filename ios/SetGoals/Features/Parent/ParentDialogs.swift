@@ -156,8 +156,6 @@ struct ChildEditDialog: View {
                                     onCancel: { dismiss() },
                                     onConfirm: { Task { await save() } })
             }
-        .background(theme.card.ignoresSafeArea())
-        .appSheet(detents: [.large])
         .onAppear(perform: seed)
         .onChange(of: photoItem) { _, item in
             guard let item else { return }

@@ -273,8 +273,6 @@ struct TaskEditDialog: View {
                                     onCancel: { dismiss() },
                                     onConfirm: { Task { await save() } })
             }
-        .background(theme.card.ignoresSafeArea())
-        .appSheet(detents: [.large])
         .onAppear(perform: seed)
     }
 
@@ -428,8 +426,6 @@ struct TaskReviewDialog: View {
                     .disabled(busy)
                 }
             }
-        .background(theme.card.ignoresSafeArea())
-        .appSheet()
     }
 
     private func infoBox(_ text: String) -> some View {
