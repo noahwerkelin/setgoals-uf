@@ -116,9 +116,15 @@ function Page() {
                 e.target.value = "";
               }}
             />
-            <div>
+            <div className="flex flex-col items-center gap-1.5">
               <p className="text-lg font-semibold leading-tight">{displayName}</p>
-              <p className="mt-0.5 text-xs text-sage-600">@{settings.username}</p>
+              <p className="text-xs text-sage-600">@{settings.username}</p>
+              {settings.isPro && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-cyan-100 via-sky-300 to-indigo-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                  <Crown className="size-3" />
+                  {t("pro.badge")}
+                </span>
+              )}
             </div>
             {avatarLocked ? (
               <p className="pt-1 text-[11px] text-sage-600">{t("profile.photo_parent_managed")}</p>
