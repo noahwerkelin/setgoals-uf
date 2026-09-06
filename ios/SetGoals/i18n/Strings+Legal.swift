@@ -223,17 +223,160 @@ kontakt@setgoals.se
 """,
 
             "legal.terms.body": """
-## Using SetGoals
-You need an account to use SetGoals. Keep your login details safe and give us \
-accurate information.
-## Your content
-You are responsible for what you upload, including photos used as task proof or \
-profile pictures.
-## Health information
-SetGoals is a motivation tool, not medical advice. Always listen to your body.
-## Ending your use
-You can stop using SetGoals and delete your account at any time. We may suspend \
-accounts that break these terms or the Community Guidelines.
+Last updated: 2026-09-06
+These Terms of Use ("the Terms") apply to the use of the SetGoals mobile application ("SetGoals", "the app", "the service") provided by SetGoals UF ("SetGoals", "we", "us").
+By creating an account or using SetGoals, you accept these Terms. If you do not accept the Terms, you must not use the service.
+## 1. About SetGoals
+SetGoals is an app that helps the user convert physical activity into screen time. The app may use information from Apple HealthKit to calculate the user's steps and other activity data.
+By default, 1,000 steps are converted into 30 minutes of earned screen time. The user can change this conversion setting within the options the app offers.
+SetGoals may also use Apple's screen time features, including FamilyControls, ManagedSettings and DeviceActivity, to restrict or manage access to apps on the user's device.
+SetGoals also offers social features, statistics, parental controls and paid premium features.
+## 2. Account
+To use certain parts of SetGoals, you need to create an account.
+When registering, we may collect, among other things:
+* name,
+* username,
+* email address,
+* date of birth,
+* password,
+* profile picture.
+You are responsible for ensuring that the information you provide is correct and up to date.
+You are responsible for keeping your login details confidential and must not give other people access to your account.
+An account is personal and may not be sold, transferred or used to impersonate someone else.
+## 3. Age limit
+SetGoals is intended for users from 9 years of age.
+If you are below the age at which you are allowed under applicable law to consent to the processing of personal data yourself, a parent or other legal guardian must ensure that use of the service is permitted and, where required, provide the necessary consent.
+Parents or guardians are responsible for ensuring that children's use of SetGoals takes place in an appropriate manner.
+SetGoals may introduce additional age restrictions for certain features.
+## 4. Health data and Apple HealthKit
+SetGoals may, with the user's permission, read activity information from Apple HealthKit.
+The types of information that may be read are:
+* step count,
+* distance,
+* calories,
+* exercise minutes.
+The information is used primarily to calculate and display the user's activity and to convert activity into screen time in accordance with the app's functions.
+The user decides whether SetGoals may access HealthKit data through Apple's permission system. If access is denied or revoked, features that require such information may stop working or become limited.
+SetGoals does not use HealthKit data for advertising or marketing.
+More information about the processing of this data is available in SetGoals' Privacy Policy.
+## 5. Screen time features
+SetGoals may use Apple's FamilyControls, ManagedSettings and DeviceActivity to provide features that limit or manage the use of apps on the user's device.
+The user can choose which app categories are covered by screen-time restrictions and which should always be unlocked, to the extent permitted by the app's and Apple's features.
+The availability of the functions may be affected by:
+* Apple's operating system,
+* changes to Apple's APIs,
+* the user's permissions,
+* technical limitations,
+* settings on the user's device.
+SetGoals is not responsible for limitations caused by changes or errors in Apple's operating system or services that SetGoals does not control.
+## 6. Earned screen time
+SetGoals may convert activity into screen time according to the conversion rule selected by the user.
+The default setting is 1,000 steps = 30 minutes.
+The user can change the conversion setting when such a feature is offered in the app.
+SetGoals may introduce technical limitations on how much screen time can be earned, used or saved.
+If the user uses a premium feature that allows saving unused screen time from the previous day, the rules stated in the app for that feature apply.
+SetGoals does not guarantee that activity data is always recorded or synchronised correctly. Data from Apple HealthKit may, for example, be affected by the device's settings, permissions or availability.
+## 7. Friends and social features
+SetGoals may offer social features where users can find and add other users by their username.
+Depending on the user's settings and the app's functions, friends may see:
+* name,
+* username,
+* profile picture,
+* today's step count.
+The user can remove friends and, where the feature is offered, block other users.
+You must not use SetGoals' social features to:
+* harass or threaten others,
+* impersonate someone else,
+* publish illegal or offensive content,
+* attempt to bypass security features,
+* collect other users' data for unauthorised purposes,
+* manipulate or misuse the app's social features.
+We may restrict or terminate accounts that break these rules.
+## 8. Profile pictures
+The user can choose a profile picture from their photo library.
+By uploading a profile picture, the user confirms that he or she has the right to use the image and that the upload does not infringe anyone else's rights.
+The profile picture may be shown to other SetGoals users in accordance with the app's social features.
+The user can change or remove their profile picture at any time, provided that such a feature is available.
+## 9. Manipulation and misuse
+The user must not attempt to manipulate SetGoals to obtain more screen time or other benefits than the user is entitled to.
+It is prohibited, among other things, to:
+* manipulate activity data,
+* attempt to fake steps or other activity information,
+* bypass the app's screen-time restrictions,
+* exploit technical errors to obtain benefits,
+* use automated methods to affect the service,
+* attempt to gain unauthorised access to SetGoals or other users' accounts.
+In the event of suspected misuse, SetGoals may temporarily limit features or deactivate an account.
+## 10. Premium subscriptions
+SetGoals offers paid subscriptions with additional features.
+PRO
+PRO costs:
+* SEK 49 per month, or
+* SEK 490 per year.
+PRO includes:
+* the ability to save the previous day's unused screen time as a bonus,
+* a personal AI coach,
+* advanced parental controls,
+* deeper statistics and insights,
+* exclusive colour themes,
+* a PRO badge on the profile.
+PRO Family
+PRO Family costs:
+* SEK 69 per month, or
+* SEK 690 per year.
+PRO Family includes the PRO features above and also means that children linked to the current family account get access to PRO features according to SetGoals' current family feature.
+Features and prices may change in future versions of the service. Changes to an ongoing subscription are handled in accordance with applicable rules and Apple's terms.
+## 11. Payment and automatic renewal
+Subscriptions purchased via the Apple App Store are handled through Apple's in-app purchase system.
+Payment, renewal, cancellation and refund may therefore be subject to Apple's rules and processes.
+If a subscription renews automatically, it is renewed according to the selected subscription period until the user cancels the subscription.
+The user can manage or cancel a subscription through the features Apple provides for App Store subscriptions.
+## 12. Intellectual property rights
+SetGoals and its content, including but not limited to code, design, graphics, logos, trademarks, texts and features, belong to SetGoals or its licensors.
+The user may not copy, modify, distribute, sell or otherwise exploit SetGoals or its content without our written permission, unless otherwise required by mandatory law.
+## 13. User content
+The user retains their rights to content that the user uploads themselves, for example a profile picture.
+By using SetGoals, the user gives SetGoals a limited right to store, process and display such content to the extent required to provide the service.
+We do not use the user's content for purposes other than those stated in these Terms and the Privacy Policy.
+## 14. Availability and technical errors
+We strive for SetGoals to work reliably but cannot guarantee that the service is always available or free from errors.
+The service may be affected by, for example:
+* maintenance,
+* technical problems,
+* internet connection,
+* problems with external services,
+* changes to Apple's operating system or APIs.
+We may temporarily limit or shut down parts of the service when required for maintenance, security or technical measures.
+## 15. AI coach
+SetGoals may offer a personal AI coach as a premium feature.
+The AI coach is a technical aid and does not replace a doctor, psychologist, dietitian or other qualified professional.
+AI-generated recommendations may be incorrect or inappropriate. The user should therefore not make medical or other important decisions based solely on the AI coach's responses.
+SetGoals does not use the AI coach as a replacement for professional medical advice.
+SetGoals may use your screen-time data, location, name and motion data for the AI coach in order to provide answers depending on your question.
+SetGoals uses Google Gemini via the Lovable AI Gateway as the AI coach.
+## 16. Suspension and termination of account
+The user can terminate their account using the features SetGoals offers.
+We may temporarily restrict or terminate an account if:
+* the user breaches the Terms,
+* the account is used for fraud or misuse,
+* the user attempts to bypass security features,
+* continued use constitutes a security risk,
+* we are required to do so by law.
+When an account is terminated, associated information may be deleted in accordance with our Privacy Policy and our legal obligations.
+## 17. Changes to the service
+SetGoals may develop, change or remove features in the service.
+If a change constitutes a material deterioration for the user or requires a change to these Terms, we will, where required, inform the user in an appropriate manner.
+## 18. Changes to the Terms
+We may update these Terms when necessary, for example due to changes in the service, legislation or technical conditions.
+For significant changes, the user will be informed in an appropriate manner before the change takes effect, where this is required.
+## 19. Applicable law
+These Terms are governed by Swedish law.
+If the user is a consumer, this does not affect the rights the user has under mandatory consumer legislation.
+## 20. Contact
+Questions about these Terms can be sent to:
+SetGoals UF Sweden
+Email: kontakt@setgoals.se
+Last updated: 2026-09-06
 """,
 
             "legal.subs.body": """
@@ -480,18 +623,161 @@ kontakt@setgoals.se
 """,
 
             "legal.terms.body": """
-## Att använda SetGoals
-Du behöver ett konto för att använda SetGoals. Håll dina inloggningsuppgifter \
-säkra och lämna korrekta uppgifter.
-## Ditt innehåll
-Du ansvarar för det du laddar upp, inklusive foton som bevis för uppdrag eller \
-som profilbild.
-## Hälsoinformation
-SetGoals är ett motivationsverktyg, inte medicinsk rådgivning. Lyssna alltid på \
-din kropp.
-## Avsluta
-Du kan sluta använda SetGoals och radera ditt konto när som helst. Vi kan stänga \
-av konton som bryter mot villkoren eller communityreglerna.
+Senast uppdaterad: 2026-09-06
+Dessa användarvillkor ("Villkoren") gäller för användningen av mobilapplikationen SetGoals ("SetGoals", "appen", "tjänsten") som tillhandahålls av SetGoals UF ("SetGoals", "vi", "oss").
+Genom att skapa ett konto eller använda SetGoals godkänner du dessa Villkor. Om du inte godkänner Villkoren ska du inte använda tjänsten.
+## 1. Om SetGoals
+SetGoals är en app som hjälper användaren att omvandla fysisk aktivitet till skärmtid. Appen kan använda information från Apple HealthKit för att beräkna användarens steg och annan aktivitetsdata.
+Som grundinställning omvandlas 1 000 steg till 30 minuters intjänad skärmtid. Användaren kan själv ändra denna omvandlingsinställning inom de alternativ som appen erbjuder.
+SetGoals kan även använda Apples funktioner för skärmtid, inklusive FamilyControls, ManagedSettings och DeviceActivity, för att begränsa eller hantera åtkomsten till appar på användarens enhet.
+SetGoals erbjuder även sociala funktioner, statistik, föräldrakontroller och betalningsbaserade premiumfunktioner.
+## 2. Konto
+För att använda vissa delar av SetGoals behöver du skapa ett konto.
+Vid registrering kan vi samla in bland annat:
+* namn,
+* användarnamn,
+* e-postadress,
+* födelsedatum,
+* lösenord,
+* profilbild.
+Du ansvarar för att de uppgifter du lämnar är korrekta och aktuella.
+Du ansvarar för att hålla dina inloggningsuppgifter konfidentiella och ska inte ge andra personer tillgång till ditt konto.
+Ett konto är personligt och får inte säljas, överlåtas eller användas för att utge sig för att vara någon annan.
+## 3. Åldersgräns
+SetGoals är avsett för användare från 9 år.
+Om du är under den ålder där du enligt tillämplig lag själv får samtycka till behandling av personuppgifter ska en förälder eller annan behörig vårdnadshavare säkerställa att användningen av tjänsten är tillåten och, när det krävs, lämna erforderligt samtycke.
+Föräldrar eller vårdnadshavare ansvarar för att barns användning av SetGoals sker på ett lämpligt sätt.
+SetGoals kan införa ytterligare åldersbegränsningar för vissa funktioner.
+## 4. Hälsodata och Apple HealthKit
+SetGoals kan, efter användarens tillstånd, läsa aktivitetsinformation från Apple HealthKit.
+De typer av information som kan läsas är:
+* antal steg,
+* distans,
+* kalorier,
+* träningsminuter.
+Informationen används framför allt för att beräkna och visa användarens aktivitet samt omvandla aktivitet till skärmtid enligt appens funktioner.
+Användaren bestämmer själv om SetGoals får tillgång till HealthKit-data genom Apples behörighetssystem. Om åtkomsten nekas eller återkallas kan funktioner som kräver sådan information sluta fungera eller bli begränsade.
+SetGoals använder inte HealthKit-data för reklam eller marknadsföring.
+Mer information om behandlingen av dessa uppgifter finns i SetGoals integritetspolicy.
+## 5. Skärmtidsfunktioner
+SetGoals kan använda Apples FamilyControls, ManagedSettings och DeviceActivity för att tillhandahålla funktioner som begränsar eller hanterar användningen av appar på användarens enhet.
+Användaren kan själv välja vilka appkategorier som omfattas av skärmtidsbegränsningar och vilka som alltid ska vara upplåsta, i den utsträckning som appens och Apples funktioner tillåter.
+Funktionernas tillgänglighet kan påverkas av:
+* Apples operativsystem,
+* ändringar i Apples API:er,
+* användarens behörigheter,
+* tekniska begränsningar,
+* inställningar på användarens enhet.
+SetGoals ansvarar inte för begränsningar som beror på förändringar eller fel i Apples operativsystem eller tjänster som SetGoals inte kontrollerar.
+## 6. Intjänad skärmtid
+SetGoals kan omvandla aktivitet till skärmtid enligt den omvandlingsregel som användaren valt.
+Standardinställningen är 1 000 steg = 30 minuter.
+Användaren kan ändra omvandlingsinställningen när sådan funktion erbjuds i appen.
+SetGoals kan införa tekniska begränsningar för hur mycket skärmtid som kan tjänas in, användas eller sparas.
+Om användaren använder en premiumfunktion som tillåter sparande av oanvänd skärmtid från föregående dag gäller de regler som anges i appen för denna funktion.
+SetGoals garanterar inte att aktivitetsdata alltid registreras eller synkroniseras korrekt. Data från Apple HealthKit kan exempelvis påverkas av enhetens inställningar, behörigheter eller tillgänglighet.
+## 7. Vänner och sociala funktioner
+SetGoals kan erbjuda sociala funktioner där användare kan hitta och lägga till andra användare genom deras användarnamn.
+Beroende på användarens inställningar och appens funktioner kan vänner se:
+* namn,
+* användarnamn,
+* profilbild,
+* dagens stegantal.
+Användaren kan ta bort vänner och, där funktionen erbjuds, blockera andra användare.
+Du får inte använda SetGoals sociala funktioner för att:
+* trakassera eller hota andra,
+* utge dig för att vara någon annan,
+* publicera olagligt eller kränkande innehåll,
+* försöka kringgå säkerhetsfunktioner,
+* samla in andra användares uppgifter för otillåtna ändamål,
+* manipulera eller missbruka appens sociala funktioner.
+Vi kan begränsa eller avsluta konton som bryter mot dessa regler.
+## 8. Profilbilder
+Användaren kan välja en profilbild från sitt bildbibliotek.
+Genom att ladda upp en profilbild intygar användaren att han eller hon har rätt att använda bilden och att uppladdningen inte kränker någon annans rättigheter.
+Profilbilden kan visas för andra SetGoals-användare enligt appens sociala funktioner.
+Användaren kan när som helst byta eller ta bort sin profilbild, under förutsättning att sådan funktion finns tillgänglig.
+## 9. Manipulation och missbruk
+Användaren får inte försöka manipulera SetGoals för att få mer skärmtid eller andra förmåner än användaren har rätt till.
+Det är bland annat förbjudet att:
+* manipulera aktivitetsdata,
+* försöka förfalska steg eller annan aktivitetsinformation,
+* kringgå appens skärmtidsbegränsningar,
+* utnyttja tekniska fel för att få förmåner,
+* använda automatiserade metoder för att påverka tjänsten,
+* försöka få obehörig åtkomst till SetGoals eller andra användares konton.
+Vid misstänkt missbruk kan SetGoals tillfälligt begränsa funktioner eller stänga av ett konto.
+## 10. Premiumabonnemang
+SetGoals erbjuder betalda abonnemang med ytterligare funktioner.
+PRO
+PRO kostar:
+* 49 SEK per månad, eller
+* 490 SEK per år.
+PRO innehåller:
+* möjlighet att spara föregående dags oanvända skärmtid som bonus,
+* personlig AI-coach,
+* avancerade föräldrakontroller,
+* djupare statistik och insikter,
+* exklusiva färgteman,
+* PRO-märke på profilen.
+PRO Family
+PRO Family kostar:
+* 69 SEK per månad, eller
+* 690 SEK per år.
+PRO Family innehåller PRO-funktionerna ovan och innebär dessutom att barn som är kopplade till det aktuella familjekontot får tillgång till PRO-funktioner enligt SetGoals aktuella familjefunktion.
+Funktioner och priser kan ändras i framtida versioner av tjänsten. Ändringar av ett pågående abonnemang hanteras i enlighet med tillämpliga regler och Apples villkor.
+## 11. Betalning och automatisk förnyelse
+Abonnemang som köps via Apple App Store hanteras genom Apples system för köp i appar.
+Betalning, förnyelse, uppsägning och återbetalning kan därför vara föremål för Apples regler och processer.
+Om ett abonnemang är automatiskt förnyande förnyas det enligt den valda abonnemangsperioden tills användaren säger upp abonnemanget.
+Användaren kan hantera eller säga upp ett abonnemang genom de funktioner som Apple tillhandahåller för App Store-abonnemang.
+## 12. Immateriella rättigheter
+SetGoals och dess innehåll, inklusive men inte begränsat till programkod, design, grafik, logotyper, varumärken, texter och funktioner, tillhör SetGoals eller dess licensgivare.
+Användaren får inte kopiera, modifiera, distribuera, sälja eller på annat sätt exploatera SetGoals eller dess innehåll utan vårt skriftliga tillstånd, om inte annat följer av tvingande lag.
+## 13. Användarens innehåll
+Användaren behåller sina rättigheter till innehåll som användaren själv laddar upp, exempelvis en profilbild.
+Genom att använda SetGoals ger användaren SetGoals en begränsad rätt att lagra, behandla och visa sådant innehåll i den utsträckning som krävs för att tillhandahålla tjänsten.
+Vi använder inte användarens innehåll för andra ändamål än de som anges i dessa Villkor och Integritetspolicyn.
+## 14. Tillgänglighet och tekniska fel
+Vi strävar efter att SetGoals ska fungera pålitligt men kan inte garantera att tjänsten alltid är tillgänglig eller fri från fel.
+Tjänsten kan påverkas av exempelvis:
+* underhåll,
+* tekniska problem,
+* internetanslutning,
+* problem hos externa tjänster,
+* förändringar i Apples operativsystem eller API:er.
+Vi kan tillfälligt begränsa eller stänga av delar av tjänsten när det krävs för underhåll, säkerhet eller tekniska åtgärder.
+## 15. AI-coach
+SetGoals kan erbjuda en personlig AI-coach som premiumfunktion.
+AI-coachen är ett tekniskt hjälpmedel och ersätter inte läkare, psykolog, dietist eller annan kvalificerad yrkesperson.
+AI-genererade rekommendationer kan vara felaktiga eller olämpliga. Användaren bör därför inte fatta medicinska eller andra viktiga beslut enbart baserat på AI-coachens svar.
+SetGoals använder inte AI-coachen som ersättning för professionell medicinsk rådgivning.
+SetGoals kan använda din skärmtidsdata, plats, namn och rörelsedata till AI-coachen för att ge svar beroende på din fråga.
+SetGoals använder Google Gemini via Lovable AI Gateway som AI-coach.
+## 16. Avstängning och avslutande av konto
+Användaren kan avsluta sitt konto enligt de funktioner som SetGoals erbjuder.
+Vi kan tillfälligt begränsa eller avsluta ett konto om:
+* användaren bryter mot Villkoren,
+* kontot används för bedrägeri eller missbruk,
+* användaren försöker kringgå säkerhetsfunktioner,
+* fortsatt användning innebär en säkerhetsrisk,
+* vi enligt lag måste göra det.
+När ett konto avslutas kan tillhörande information raderas i enlighet med vår Integritetspolicy och våra rättsliga skyldigheter.
+## 17. Ändringar av tjänsten
+SetGoals kan utveckla, ändra eller ta bort funktioner i tjänsten.
+Om en förändring innebär en väsentlig försämring för användaren eller kräver ändring av dessa Villkor kommer vi, när det krävs, att informera användaren på lämpligt sätt.
+## 18. Ändringar av Villkoren
+Vi kan uppdatera dessa Villkor när det behövs, exempelvis på grund av ändringar i tjänsten, lagstiftningen eller tekniska förutsättningar.
+Vid väsentliga ändringar kommer användaren att informeras på lämpligt sätt innan ändringen träder i kraft, när detta krävs.
+## 19. Tillämplig lag
+Dessa Villkor regleras av svensk rätt.
+Om användaren är konsument påverkar detta inte de rättigheter som användaren har enligt tvingande konsumentlagstiftning.
+## 20. Kontakt
+Frågor om dessa Villkor kan skickas till:
+SetGoals UF
+Sverige
+E-post: kontakt@setgoals.se
+Senast uppdaterad: 2026-09-06
 """,
 
             "legal.subs.body": """
