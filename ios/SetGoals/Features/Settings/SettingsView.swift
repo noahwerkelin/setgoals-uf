@@ -24,6 +24,7 @@ struct SettingsView: View {
     @State private var passwordOpen = false
     @State private var reportOpen = false
     @State private var deleteOpen = false
+    @State private var legalOpen = false
 
     private var isChild: Bool { settings.role == "child" }
 
@@ -47,6 +48,7 @@ struct SettingsView: View {
         }
         .id(lang)
         .sheet(isPresented: $proOpen) { ProUpgradeDialog() }
+        .sheet(isPresented: $legalOpen) { LegalCenterSheet().environmentObject(theme) }
         .sheet(isPresented: $themeOpen) { ThemePickerDialog() }
         .sheet(isPresented: $goalOpen) {
             SliderDialog(title: L.t("settings.daily_goal"), initial: settings.dailyGoal,
@@ -306,6 +308,8 @@ struct SettingsView: View {
     private var supportGroup: some View {
         group(L.t("settings.support")) {
             row(L.t("settings.report_problem")) { reportOpen = true }
+            divider
+            row(L.t("legal.title")) { legalOpen = true }
             if !isChild {
                 divider
                 row(L.t("settings.delete_account"), danger: true) { deleteOpen = true }

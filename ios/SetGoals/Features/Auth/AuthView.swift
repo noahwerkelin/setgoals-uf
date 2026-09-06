@@ -129,6 +129,8 @@ private struct SignUpForm: View {
     @State private var email = "", password = "", displayName = "", username = "", birthday = ""
     @State private var busy = false
     @State private var error: String?
+    @State private var accepted = false
+    @State private var legalDoc: LegalDoc?
 
     var body: some View {
         VStack(spacing: 12) {
@@ -148,6 +150,8 @@ private struct SignUpForm: View {
                 TextField("YYYY-MM-DD", text: $birthday).fieldStyle()
             }
 
+            acceptRow
+
             if let error { Text(error).font(F.xs).foregroundStyle(theme.destructive) }
 
             PrimaryButton(title: busy ? L.t("auth.creating") : L.t("auth.create_btn"), busy: busy) {
@@ -157,9 +161,47 @@ private struct SignUpForm: View {
 
             SocialButtons()
         }
+        .sheet(item: $legalDoc) { LegalDocSheet(doc: $0).environmentObject(theme) }
+    }
+
+    private var acceptRow: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Button { accepted.toggle() } label: {
+                Image(systemName: accepted ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 18))
+                    .foregroundStyle(accepted ? theme.primary : theme.p.s400)
+            }
+            .buttonStyle(.plain)
+
+            (
+                Text(L.t("auth.accept_pre") + " ").foregroundColor(theme.p.s600)
+                + Text(L.t("auth.accept_terms")).foregroundColor(theme.p.s900).underline()
+                + Text(" " + L.t("auth.accept_and") + " ").foregroundColor(theme.p.s600)
+                + Text(L.t("auth.accept_privacy")).foregroundColor(theme.p.s900).underline()
+            )
+            .font(F.xs)
+            .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 4)
+        .overlay(alignment: .topLeading) {
+            HStack(spacing: 10) {
+                Color.clear.frame(width: 18)
+                HStack(spacing: 8) {
+                    Button(L.t("auth.accept_terms")) { legalDoc = .terms }
+                        .font(F.xs).opacity(0.001)
+                    Button(L.t("auth.accept_privacy")) { legalDoc = .privacy }
+                        .font(F.xs).opacity(0.001)
+                }
+            }
+            .hidden()
+        }
+        .contentShape(Rectangle())
     }
 
     private func submit() async {
+        guard accepted else { error = L.t("auth.accept_required"); return }
         guard password.count >= 8 else { error = L.t("auth.password_short"); return }
         guard username.range(of: "^[a-z0-9_]{3,20}$", options: .regularExpression) != nil else {
             error = L.t("auth.username_invalid"); return
