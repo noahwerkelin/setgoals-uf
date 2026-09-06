@@ -92,9 +92,8 @@ struct ChildEditDialog: View {
     @State private var error: String?
 
     var body: some View {
-        ScrollView {
-            AppDialog(title: isNew ? L.t("parent.child.new") : L.t("parent.child.edit"),
-                      description: L.t("parent.child.code_help")) {
+        AppDialog(title: isNew ? L.t("parent.child.new") : L.t("parent.child.edit"),
+                  description: L.t("parent.child.code_help")) {
                 VStack(alignment: .leading, spacing: 16) {
                     avatarPicker
 
@@ -157,7 +156,6 @@ struct ChildEditDialog: View {
                                     onCancel: { dismiss() },
                                     onConfirm: { Task { await save() } })
             }
-        }
         .background(theme.card.ignoresSafeArea())
         .appSheet(detents: [.large])
         .onAppear(perform: seed)
