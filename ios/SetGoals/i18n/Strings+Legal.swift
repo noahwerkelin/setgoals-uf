@@ -380,17 +380,32 @@ Last updated: 2026-09-06
 """,
 
             "legal.subs.body": """
-## Plans
-SetGoals PRO and PRO Family are paid subscriptions billed monthly or yearly.
-## Renewal
-Subscriptions renew automatically until you cancel. Cancelling keeps your access \
-until the end of the current billing period.
-## PRO Family
-PRO Family extends PRO features to the child accounts linked to your account. \
-Access ends for those children when the subscription period ends.
-## Refunds
-Payments are handled by the app store or payment provider you purchased through, \
-and their refund rules apply.
+## 1. Premium subscriptions
+SetGoals offers the following subscriptions:
+
+PRO — 49 SEK/month or 490 SEK/year. PRO may give access to: rollover of the previous day's unused screen time as a bonus, a personal AI coach, advanced parent controls, deeper statistics and insights, exclusive colour themes, and a PRO badge on your profile.
+
+PRO Family — 69 SEK/month or 690 SEK/year. PRO Family includes the PRO features and also gives children linked to the family account access to PRO according to SetGoals' current family features.
+## 2. Purchases via Apple App Store
+Subscriptions offered in SetGoals are purchased through Apple's in-app purchase system. Payment is processed by Apple in accordance with Apple's terms and payment system. SetGoals does not receive access to the user's full payment details when the purchase is processed by Apple.
+## 3. Automatic renewal
+The subscription is an automatically renewing subscription that renews automatically at the end of the current subscription period unless the user cancels it. Monthly subscriptions renew monthly. Yearly subscriptions renew yearly. The user can cancel the subscription through Apple's subscription settings.
+## 4. Cancellation
+Deleting the SetGoals app from a device does not necessarily end an active subscription. The user is responsible for cancelling the subscription through the platform where the subscription was purchased. After cancellation, premium features normally remain available until the end of the already paid subscription period, unless otherwise follows from Apple's rules.
+## 5. Prices
+The prices shown at the time of purchase apply to that purchase. SetGoals may change future prices. If the price of an existing subscription changes, information and any required user action are handled in accordance with Apple's subscription rules and applicable law.
+## 6. Free trials and promotions
+SetGoals may sometimes offer free trials or other promotions. If a free trial is offered, the terms of the promotion are shown before the user completes the purchase. After a free trial, the subscription may convert to a paid subscription according to the terms shown at purchase, unless the user cancels before the free trial ends.
+## 7. Refunds
+Refunds for purchases processed through the Apple App Store are handled in accordance with Apple's rules and processes. SetGoals cannot guarantee refunds outside the rights provided by applicable law or Apple's rules.
+## 8. Availability of premium features
+SetGoals may develop and change premium features over time. We strive for the subscription to continue providing meaningful value during the subscription period. If a change materially worsens a paid service, the user will be informed when required by law.
+## 9. PRO Family
+PRO Family is intended for family accounts. The account holder who purchases PRO Family is responsible for ensuring that only persons who are authorised under SetGoals' family features are linked to the account. Children's access to PRO depends on the family link remaining active and the technical features working.
+## 10. Contact
+Questions about SetGoals subscriptions can be sent to: kontakt@setgoals.se. For questions about payments processed directly by Apple, the user may also need to contact Apple.
+
+Last updated: 2026-09-06
 """,
 
             "legal.community.body": """
