@@ -883,15 +883,73 @@ Senast uppdaterad: 2026-09-06
 """,
 
             "legal.community.body": """
-## Var ärlig
-Fejka inte steg eller aktivitet för att klättra på topplistor eller få belöningar.
-## Visa respekt
-Välj namn, användarnamn och bilder som passar alla åldrar.
-## Skydda barn
-Föräldrar ansvarar för de barnkonton de skapar och hanterar.
-## Rapportera
-Använd "Rapportera ett problem" i Inställningar för att berätta om något som \
-bryter mot dessa regler.
+SetGoals ska vara en trygg och positiv plats där användare kan följa sin aktivitet, hantera sin skärmtid och umgås med vänner. Dessa communityregler gäller för alla sociala funktioner i SetGoals.
+## 1. Ingen falsk identitet
+Du får inte utge dig för att vara:
+* en annan användare,
+* en offentlig person,
+* en representant för SetGoals,
+* någon annan person eller organisation.
+Användarnamn och profilbilder får inte användas för att vilseleda andra.
+## 2. Profilbilder
+Profilbilder ska vara lämpliga för SetGoals åldersgrupp. Du får inte använda en profilbild som:
+* kränker någon annan,
+* innehåller olagligt material,
+* används för att trakassera någon,
+* utger sig för att vara någon annan,
+* på annat sätt bryter mot dessa regler.
+## 3. Användarnamn
+Användarnamn får inte:
+* utge sig för att tillhöra någon annan,
+* innehålla hot eller trakasserier,
+* vara avsiktligt stötande,
+* användas för bedrägeri,
+* på annat sätt bryta mot SetGoals regler.
+SetGoals kan ändra eller ta bort användarnamn som bryter mot reglerna.
+## 4. Vänner
+Du kan lägga till andra användare som vänner genom deras användarnamn. Du kan när som helst ta bort en vän och använda tillgängliga blockeringsfunktioner. Du får inte använda vänfunktionen för att:
+* masslägga till användare,
+* trakassera andra,
+* samla in användaruppgifter,
+* försöka få tillgång till andra användares konton,
+* använda sociala funktioner för bedrägeri eller manipulation.
+## 5. Stegdata
+Dagens stegantal kan visas för användarens vänner enligt SetGoals funktioner. Du får inte försöka manipulera, förfalska eller tekniskt kringgå SetGoals system för att visa ett falskt stegantal eller få orättvisa fördelar.
+## 6. Förbjudet innehåll
+Du får inte använda SetGoals för att publicera eller sprida innehåll som är:
+* olagligt,
+* hotfullt,
+* trakasserande,
+* bedrägligt,
+* avsett att skada andra,
+* upphovsrättsintrångande,
+* avsett att kringgå SetGoals säkerhetsfunktioner.
+## 7. Rapportering
+Om SetGoals erbjuder rapporteringsfunktion kan användare rapportera innehåll eller beteende som bryter mot dessa regler. Rapporter kan skickas till: kontakt@setgoals.se. Vi kan undersöka rapporter och vidta åtgärder när det är motiverat.
+## 8. Åtgärder vid regelbrott
+Om en användare bryter mot Communityreglerna kan SetGoals exempelvis:
+* ta bort eller dölja innehåll,
+* ta bort ett användarnamn,
+* begränsa sociala funktioner,
+* begränsa kontot,
+* tillfälligt stänga av kontot,
+* avsluta kontot.
+Vilken åtgärd som vidtas beror på överträdelsens allvar och omständigheterna.
+## 9. Barn och unga
+SetGoals kan användas av barn och unga. Därför förväntas alla användare visa särskild respekt i sociala funktioner. Föräldrar eller vårdnadshavare kan använda SetGoals föräldrakontroller där sådana funktioner erbjuds.
+## 10. Säkerhet
+Du får inte:
+* försöka hacka SetGoals,
+* försöka få åtkomst till andra användares konton,
+* sprida skadlig kod,
+* genomföra automatiserade attacker,
+* försöka kringgå tekniska begränsningar.
+## 11. Ändringar
+SetGoals kan uppdatera dessa Communityregler när funktionerna eller tjänsten utvecklas. Väsentliga ändringar kommuniceras på lämpligt sätt.
+## 12. Kontakt
+Frågor eller rapporter om communityn kan skickas till: kontakt@setgoals.se
+
+Senast uppdaterad: 2026-09-06
 """,
         ],
     ]
