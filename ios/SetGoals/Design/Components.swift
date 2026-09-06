@@ -62,6 +62,27 @@ extension View {
 
     /// `animate-rise` — 0.5s cubic-bezier(0.16, 1, 0.3, 1), 8px translate + fade.
     func rise(delay: Double = 0) -> some View { modifier(RiseModifier(delay: delay)) }
+
+    /// Shared presentation treatment for every in-app popup. Adaptive detents
+    /// avoid fixed-height clipping on compact devices and with larger text.
+    func appSheet(detents: Set<PresentationDetent> = [.medium, .large]) -> some View {
+        modifier(AppSheetModifier(detents: detents))
+    }
+}
+
+private struct AppSheetModifier: ViewModifier {
+    @EnvironmentObject var theme: Theme
+    let detents: Set<PresentationDetent>
+
+    func body(content: Content) -> some View {
+        content
+            .presentationDetents(detents)
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(R.xl3)
+            .presentationBackground(theme.card)
+            .presentationContentInteraction(.scrolls)
+            .presentationBackgroundInteraction(.disabled)
+    }
 }
 
 struct RiseModifier: ViewModifier {

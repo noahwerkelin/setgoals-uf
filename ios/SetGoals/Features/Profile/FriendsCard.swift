@@ -169,7 +169,7 @@ private struct AddFriendSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .appSheet()
         .task(id: q) {
             let query = q.trimmingCharacters(in: .whitespaces)
             guard query.count >= 2 else { results = []; return }

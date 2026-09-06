@@ -223,9 +223,8 @@ struct TaskEditDialog: View {
     @State private var error: String?
 
     var body: some View {
-        ScrollView {
-            AppDialog(title: L.t(task != nil ? "tasks.edit_title" : "tasks.new_title"),
-                      description: L.t("tasks.new_sub")) {
+        AppDialog(title: L.t(task != nil ? "tasks.edit_title" : "tasks.new_title"),
+                  description: L.t("tasks.new_sub")) {
                 VStack(alignment: .leading, spacing: 14) {
                     labeled(L.t("tasks.field.title")) { TextField("", text: $title).fieldStyle() }
                     labeled(L.t("tasks.field.desc")) { TextField("", text: $desc).fieldStyle() }
@@ -274,10 +273,6 @@ struct TaskEditDialog: View {
                                     onCancel: { dismiss() },
                                     onConfirm: { Task { await save() } })
             }
-        }
-        .background(theme.card)
-        .presentationCornerRadius(R.xl3)
-        .presentationDetents([.large])
         .onAppear(perform: seed)
     }
 
@@ -374,10 +369,9 @@ struct TaskReviewDialog: View {
     @State private var error: String?
 
     var body: some View {
-        ScrollView {
-            AppDialog(title: L.t("tasks.review_title"),
-                      description: L.t("tasks.review_sub", ["name": childName.isEmpty ? "—" : childName,
-                                                            "title": task.title])) {
+        AppDialog(title: L.t("tasks.review_title"),
+                  description: L.t("tasks.review_sub", ["name": childName.isEmpty ? "—" : childName,
+                                                        "title": task.title])) {
                 VStack(alignment: .leading, spacing: 12) {
                     infoBox("\(L.t("tasks.reward_label")): +\(ChildTasksSection.formatReward(task.reward_minutes))")
                     if let note = task.proof_note, !note.isEmpty { infoBox(note) }
@@ -432,10 +426,6 @@ struct TaskReviewDialog: View {
                     .disabled(busy)
                 }
             }
-        }
-        .background(theme.card)
-        .presentationCornerRadius(R.xl3)
-        .presentationDetents([.medium, .large])
     }
 
     private func infoBox(_ text: String) -> some View {
