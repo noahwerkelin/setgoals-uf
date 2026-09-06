@@ -65,7 +65,6 @@ struct ParentScreenTimeDialog: View {
             steps = Double(stepsPer30)
             cap = Double(dailyCapHours >= 24 ? 9 : dailyCapHours)
         }
-        .presentationDetents([.height(pst.rollover ? 480 : 400)])
     }
 }
 
@@ -159,9 +158,8 @@ struct ChildEditDialog: View {
                                     onConfirm: { Task { await save() } })
             }
         }
-        .background(theme.card)
-        .presentationCornerRadius(R.xl3)
-        .presentationDetents([.large])
+        .background(theme.card.ignoresSafeArea())
+        .appSheet(detents: [.large])
         .onAppear(perform: seed)
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
@@ -321,7 +319,6 @@ struct DeleteChildDialog: View {
                                     }
                                 })
         }
-        .presentationDetents([.height(340)])
     }
 }
 
@@ -389,6 +386,5 @@ struct GiftScreenTimeDialog: View {
                                     }
                                 })
         }
-        .presentationDetents([.height(420)])
     }
 }

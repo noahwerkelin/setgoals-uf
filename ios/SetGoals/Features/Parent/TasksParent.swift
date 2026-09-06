@@ -275,9 +275,8 @@ struct TaskEditDialog: View {
                                     onConfirm: { Task { await save() } })
             }
         }
-        .background(theme.card)
-        .presentationCornerRadius(R.xl3)
-        .presentationDetents([.large])
+        .background(theme.card.ignoresSafeArea())
+        .appSheet(detents: [.large])
         .onAppear(perform: seed)
     }
 
@@ -433,9 +432,8 @@ struct TaskReviewDialog: View {
                 }
             }
         }
-        .background(theme.card)
-        .presentationCornerRadius(R.xl3)
-        .presentationDetents([.medium, .large])
+        .background(theme.card.ignoresSafeArea())
+        .appSheet()
     }
 
     private func infoBox(_ text: String) -> some View {
