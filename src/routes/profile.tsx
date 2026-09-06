@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { BarChart3, Camera, ChevronRight, Flame, Settings, Shield, Trash2, Users } from "lucide-react";
+import { BarChart3, Camera, ChevronRight, Crown, Flame, Settings, Shield, Trash2, Users } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
 import { ProfileAura } from "@/components/ProfileAura";
