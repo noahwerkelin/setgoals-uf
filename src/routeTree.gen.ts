@@ -21,6 +21,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
+import { Route as ApiPublicDeleteAccountRouteImport } from './routes/api/public/delete-account'
 import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
 import { Route as ApiPublicNearbyActivitiesRouteImport } from './routes/api/public/nearby-activities'
 import { Route as ApiPublicPaymentsAppleNotificationsRouteImport } from './routes/api/public/payments/apple-notifications'
@@ -85,6 +86,11 @@ const StatsRoute = StatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDeleteAccountRoute = ApiPublicDeleteAccountRouteImport.update({
+  id: '/api/public/delete-account',
+  path: '/api/public/delete-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicIngestStepsRoute = ApiPublicIngestStepsRouteImport.update({
   id: '/api/public/ingest-steps',
   path: '/api/public/ingest-steps',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
     | '/api/public/payments/apple-notifications'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
     | '/api/public/payments/apple-notifications'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
     | '/api/public/payments/apple-notifications'
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
+  ApiPublicDeleteAccountRoute: typeof ApiPublicDeleteAccountRoute
   ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
   ApiPublicNearbyActivitiesRoute: typeof ApiPublicNearbyActivitiesRoute
   ApiPublicPaymentsAppleNotificationsRoute: typeof ApiPublicPaymentsAppleNotificationsRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/delete-account': {
+      id: '/api/public/delete-account'
+      path: '/api/public/delete-account'
+      fullPath: '/api/public/delete-account'
+      preLoaderRoute: typeof ApiPublicDeleteAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/ingest-steps': {
       id: '/api/public/ingest-steps'
       path: '/api/public/ingest-steps'
@@ -350,6 +370,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
+  ApiPublicDeleteAccountRoute: ApiPublicDeleteAccountRoute,
   ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
   ApiPublicNearbyActivitiesRoute: ApiPublicNearbyActivitiesRoute,
   ApiPublicPaymentsAppleNotificationsRoute:

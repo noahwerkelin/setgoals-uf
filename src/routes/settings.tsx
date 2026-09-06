@@ -116,16 +116,10 @@ function Page() {
 
 
   const deleteAccount = async (password: string): Promise<boolean> => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user?.email) return false;
-    const { error: signInErr } = await supabase.auth.signInWithPassword({
-      email: u.user.email,
-      password,
-    });
-    if (signInErr) {
-      toast.error(t("delete.wrong_password"));
-      return false;
-    }
+    const { data: s } = await supabase.auth.getSession();
+    const token = s.session?.access_token;
+    if (!token) return false;
+
     // Release the local PRO entitlement. An App Store subscription itself can
     // only be cancelled by the user in the App Store — we remind them of that.
     if (settings.isPro && !isChild) {
@@ -136,13 +130,24 @@ function Page() {
         /* deletion must not be blocked by a billing hiccup */
       }
     }
-    await supabase.from("account_deletion_requests").insert({ user_id: u.user.id });
-    await supabase.from("profiles").delete().eq("id", u.user.id);
+
+    const res = await fetch("/api/public/delete-account", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+      body: JSON.stringify({ password }),
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error(body.error === "wrong_password" ? t("delete.wrong_password") : t("health.error"));
+      return false;
+    }
+
     await supabase.auth.signOut();
     toast.success(t("delete.submitted"));
     navigate({ to: "/auth" });
     return true;
   };
+
   const [reportOpen, setReportOpen] = useState(false);
   const [reportText, setReportText] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);

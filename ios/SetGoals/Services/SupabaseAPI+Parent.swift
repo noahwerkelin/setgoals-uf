@@ -135,18 +135,13 @@ extension SupabaseAPI {
         return code
     }
 
-    /// Deletes a child after re-authenticating the parent with their password.
+    /// Permanently deletes a child profile and, when the child has joined,
+    /// their account and all of its data. The parent's password is verified
+    /// server-side before anything is removed.
     static func deleteChild(_ id: UUID, password: String) async throws {
-        guard let email = try? await supabase.auth.user().email, !email.isEmpty else {
-            throw ParentAPIError.message(L.t("delete.wrong_password"))
-        }
-        do {
-            _ = try await supabase.auth.signIn(email: email, password: password)
-        } catch {
-            throw ParentAPIError.message(L.t("delete.wrong_password"))
-        }
-        try await supabase.from("children").delete().eq("id", value: id).execute()
+        try await AccountDeletionService.delete(password: password, childId: id)
     }
+
 
     /// Gift bonus minutes to a linked child for today (same math as the web
     /// `grantScreenTime` server function).

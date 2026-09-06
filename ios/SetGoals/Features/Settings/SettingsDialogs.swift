@@ -338,22 +338,19 @@ struct DeleteAccountDialog: View {
     private func deleteAccount() async {
         busy = true
         error = nil
-        defer { busy = false }
-        guard let email = try? await supabase.auth.user().email else { return }
         do {
-            try await supabase.auth.signIn(email: email, password: password)
+            // Deletes this account, all of its data and every linked child account.
+            try await AccountDeletionService.delete(password: password)
         } catch {
-            self.error = L.t("delete.wrong_password")
+            self.error = error.localizedDescription
+            busy = false
             return
         }
-        if let uid = await SupabaseAPI.currentUserID() {
-            try? await supabase.from("account_deletion_requests")
-                .insert(["user_id": AnyJSON.string(uid.uuidString)]).execute()
-            try? await supabase.from("profiles").delete().eq("id", value: uid).execute()
-        }
+        busy = false
         await AuthStore.shared.signOut()
         dismiss()
     }
+
 }
 
 // MARK: - Account field dialogs
