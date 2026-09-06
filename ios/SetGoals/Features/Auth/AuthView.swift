@@ -169,35 +169,28 @@ private struct SignUpForm: View {
             Button { accepted.toggle() } label: {
                 Image(systemName: accepted ? "checkmark.square.fill" : "square")
                     .font(.system(size: 18))
-                    .foregroundStyle(accepted ? theme.primary : theme.p.s400)
+                    .foregroundStyle(accepted ? theme.primary : theme.p.s300)
             }
             .buttonStyle(.plain)
 
-            (
-                Text(L.t("auth.accept_pre") + " ").foregroundColor(theme.p.s600)
-                + Text(L.t("auth.accept_terms")).foregroundColor(theme.p.s900).underline()
-                + Text(" " + L.t("auth.accept_and") + " ").foregroundColor(theme.p.s600)
-                + Text(L.t("auth.accept_privacy")).foregroundColor(theme.p.s900).underline()
-            )
-            .font(F.xs)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L.t("auth.accept_pre"))
+                    .font(F.xs).foregroundStyle(theme.p.s600)
+                HStack(spacing: 6) {
+                    Button(L.t("auth.accept_terms")) { legalDoc = .terms }
+                        .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900)
+                        .underline()
+                    Text(L.t("auth.accept_and")).font(F.xs).foregroundStyle(theme.p.s600)
+                    Button(L.t("auth.accept_privacy")) { legalDoc = .privacy }
+                        .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900)
+                        .underline()
+                }
+            }
             .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 0)
         }
         .padding(.top, 4)
-        .overlay(alignment: .topLeading) {
-            HStack(spacing: 10) {
-                Color.clear.frame(width: 18)
-                HStack(spacing: 8) {
-                    Button(L.t("auth.accept_terms")) { legalDoc = .terms }
-                        .font(F.xs).opacity(0.001)
-                    Button(L.t("auth.accept_privacy")) { legalDoc = .privacy }
-                        .font(F.xs).opacity(0.001)
-                }
-            }
-            .hidden()
-        }
-        .contentShape(Rectangle())
     }
 
     private func submit() async {
