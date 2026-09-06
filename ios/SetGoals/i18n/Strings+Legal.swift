@@ -409,15 +409,73 @@ Last updated: 2026-09-06
 """,
 
             "legal.community.body": """
-## Be honest
-Do not fake steps or activity to climb leaderboards or earn rewards.
-## Be respectful
-Choose names, usernames and pictures that are appropriate for all ages.
-## Protect children
-Parents are responsible for the child accounts they create and manage.
-## Reporting
-Use "Report a problem" in Settings to tell us about anything that breaks these \
-guidelines.
+SetGoals should be a safe and positive place where users can track their activity, manage their screen time and spend time with friends. These community rules apply to all social features in SetGoals.
+## 1. No false identity
+You may not pretend to be:
+* another user,
+* a public figure,
+* a representative of SetGoals,
+* any other person or organisation.
+Usernames and profile pictures must not be used to mislead others.
+## 2. Profile pictures
+Profile pictures must be appropriate for SetGoals' age group. You may not use a profile picture that:
+* violates someone else's rights,
+* contains illegal material,
+* is used to harass someone,
+* impersonates someone else,
+* otherwise breaks these rules.
+## 3. Usernames
+Usernames must not:
+* pretend to belong to someone else,
+* contain threats or harassment,
+* be intentionally offensive,
+* be used for fraud,
+* otherwise break SetGoals' rules.
+SetGoals may change or remove usernames that break the rules.
+## 4. Friends
+You can add other users as friends by their username. You can remove a friend at any time and use available blocking features. You may not use the friend feature to:
+* mass-add users,
+* harass others,
+* collect user data,
+* try to access other users' accounts,
+* use social features for fraud or manipulation.
+## 5. Step data
+Today's step count may be shown to a user's friends according to SetGoals' features. You may not try to manipulate, falsify or technically bypass SetGoals' systems to show a false step count or gain unfair advantages.
+## 6. Prohibited content
+You may not use SetGoals to publish or spread content that is:
+* illegal,
+* threatening,
+* harassing,
+* fraudulent,
+* intended to harm others,
+* infringing copyright,
+* intended to bypass SetGoals' security features.
+## 7. Reporting
+If SetGoals offers a reporting function, users can report content or behaviour that breaks these rules. Reports can be sent to: kontakt@setgoals.se. We may investigate reports and take action when justified.
+## 8. Actions for rule violations
+If a user breaks the Community Rules, SetGoals may, for example:
+* remove or hide content,
+* remove a username,
+* limit social features,
+* restrict the account,
+* temporarily suspend the account,
+* terminate the account.
+The action taken depends on the severity of the violation and the circumstances.
+## 9. Children and young people
+SetGoals can be used by children and young people. Therefore, all users are expected to show special respect in social features. Parents or guardians can use SetGoals' parent controls where such features are offered.
+## 10. Security
+You may not:
+* try to hack SetGoals,
+* try to access other users' accounts,
+* spread malicious code,
+* carry out automated attacks,
+* try to bypass technical limitations.
+## 11. Changes
+SetGoals may update these Community Rules as features or the service develop. Material changes will be communicated in an appropriate way.
+## 12. Contact
+Questions or reports about the community can be sent to: kontakt@setgoals.se
+
+Last updated: 2026-09-06
 """,
         ],
         "sv": [
