@@ -130,21 +130,35 @@ final class ScreenTimeService: ObservableObject {
 
     // MARK: enforcement
 
-    /// Shields every managed app/category when nothing is left, lifts the
-    /// shield as soon as there are minutes to spend.
+    /// Shields only the categories the user marked "Only with earned time"
+    /// when nothing is left, and lifts the shield as soon as there are minutes
+    /// to spend. Always-allowed apps (and SetGoals itself) are never shielded.
     private func applyShields() {
-        let shouldShield = remainingMin <= 0
-        if shouldShield {
-            store.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
-            store.shield.applicationCategories = selection.categoryTokens.isEmpty
-                ? nil
-                : .specific(selection.categoryTokens)
-            store.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
-        } else {
-            store.shield.applications = nil
-            store.shield.applicationCategories = nil
-            store.shield.webDomains = nil
-        }
+        ScreenTimeRules.apply(shielding: remainingMin <= 0, to: store)
+    }
+
+    // MARK: category rules
+
+    /// Called from the settings rows: switches a category between
+    /// "Always" and "Only with earned time" and re-applies the real shields.
+    func setPolicy(alwaysAllow: Bool, for key: String) {
+        var p = ScreenTimeRules.policies
+        p[key] = alwaysAllow
+        ScreenTimeRules.policies = p
+        refreshFromStore()
+        restartMonitoring()
+    }
+
+    /// Called when the user picks which apps belong to a category.
+    func setSelection(_ sel: FamilyActivitySelection, for key: String) {
+        ScreenTimeRules.setSelection(sel, for: key)
+        selection = ScreenTimeRules.restricted
+        refreshFromStore()
+        restartMonitoring()
+    }
+
+    func selection(for key: String) -> FamilyActivitySelection {
+        ScreenTimeRules.selection(for: key)
     }
 
     /// Kept for existing call sites: the ledger stays the source of truth, this
