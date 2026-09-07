@@ -2,9 +2,16 @@ import Foundation
 
 /// Grants the screen-time reward printed on each challenge card once the
 /// challenge is completed. Daily challenges pay out once per day, weekly ones
-/// once per ISO week — the claim ledger is stored locally and the minutes are
-/// written to today's `earned_balances.bonus_min`, the same field parents use
-/// when gifting screen time.
+/// once per ISO week.
+///
+/// The reward is only ever marked as claimed after Apple's Screen Time system
+/// has actually granted it (`ScreenTimeService.grant`), so the UI can never
+/// claim a reward that did not take effect.
+struct ChallengeClaim {
+    var minutes: Int = 0
+    var failed: Bool = false
+}
+
 enum ChallengeRewards {
     private static let key = "challenges.claimed"
 
@@ -26,7 +33,7 @@ enum ChallengeRewards {
     @discardableResult
     static func claimCompleted(week: [DayTotals],
                                today: HealthKitService,
-                               settings: SettingsStore) async -> Int {
+                               settings: SettingsStore) async -> ChallengeClaim {
         let all = ChallengeCatalog.todaysDaily + ChallengeCatalog.thisWeeksWeekly
         var ledger = claimed
         var minutes = 0
@@ -41,15 +48,18 @@ enum ChallengeRewards {
             newKeys.append(k)
         }
 
-        guard minutes > 0 else { return 0 }
+        guard minutes > 0 else { return ChallengeClaim() }
+
         do {
-            let total = try await SupabaseAPI.addOwnBonusMinutes(minutes)
-            settings.bonusMin = total
-            ledger.formUnion(newKeys)
-            claimed = ledger
-            return minutes
+            // Apple's Screen Time system is the source of truth: only when this
+            // succeeds is the reward real.
+            try ScreenTimeService.shared.grant(minutes: minutes)
         } catch {
-            return 0
+            return ChallengeClaim(minutes: 0, failed: true)
         }
+
+        ledger.formUnion(newKeys)
+        claimed = ledger
+        return ChallengeClaim(minutes: minutes, failed: false)
     }
 }
