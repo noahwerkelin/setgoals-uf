@@ -21,12 +21,26 @@ struct ScreenTimeCategory: Identifiable, Codable {
     var dailyMaxMin: Int?
 }
 
+/// Failures that must never be reported to the user as a granted reward.
+enum ScreenTimeError: LocalizedError {
+    case notAuthorized
+    case monitoringFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .notAuthorized: return "Screen Time access is not authorized."
+        case .monitoringFailed(let m): return m
+        }
+    }
+}
+
 @MainActor
 final class ScreenTimeService: ObservableObject {
     static let shared = ScreenTimeService()
 
     private let store = ManagedSettingsStore(named: .init("setgoals"))
     private let center = AuthorizationCenter.shared
+    private let activityName = DeviceActivityName("setgoals.daily")
 
     @Published var authorized = false
     @Published var selection = FamilyActivitySelection()
@@ -39,9 +53,28 @@ final class ScreenTimeService: ObservableObject {
         .init(id: "productivity", labelKey: "st.cat.productivity", policy: .alwaysAllow, dailyMaxMin: nil),
     ]
 
+    /// Mirrors of the shared ledger so SwiftUI redraws when they change.
+    @Published private(set) var allowanceMin: Int = ScreenTimeBudget.allowanceMin
+    @Published private(set) var usedMin: Int = ScreenTimeBudget.usedMin
+    @Published private(set) var rewardMin: Int = ScreenTimeBudget.rewardMin
+
+    /// Minutes left before Apple's Screen Time shields lock the managed apps.
+    var remainingMin: Int { max(0, allowanceMin - usedMin) }
+
+    private init() {
+        refreshAuthorization()
+        refreshFromStore()
+    }
+
+    // MARK: authorization
+
+    func refreshAuthorization() {
+        authorized = center.authorizationStatus == .approved
+    }
+
     /// Individual account: authorize self. Parent account: authorize the child
     /// device with `.child` so the parent's restrictions cannot be removed.
-    func requestAuthorization(forChild: Bool) async {
+    func requestAuthorization(forChild: Bool = false) async {
         do {
             try await center.requestAuthorization(for: forChild ? .child : .individual)
             authorized = center.authorizationStatus == .approved
@@ -50,10 +83,56 @@ final class ScreenTimeService: ObservableObject {
         }
     }
 
-    /// Called whenever earned/remaining minutes change. When the balance hits
-    /// zero every `earnedOnly` category is shielded; when there is time left
-    /// the shield lifts.
-    func apply(remainingMin: Int) {
+    // MARK: ledger
+
+    /// Re-reads the shared ledger (app launch, foreground, after an extension
+    /// recorded usage) and re-applies shields to match.
+    func refreshFromStore() {
+        ScreenTimeBudget.rollIfNeeded()
+        allowanceMin = ScreenTimeBudget.allowanceMin
+        usedMin = ScreenTimeBudget.usedMin
+        rewardMin = ScreenTimeBudget.rewardMin
+        applyShields()
+    }
+
+    /// Sets today's step/bonus derived allowance. Challenge rewards are kept
+    /// separately so they survive step recalculation.
+    func setBaseAllowance(_ minutes: Int) {
+        guard ScreenTimeBudget.baseMin != minutes else {
+            refreshFromStore()
+            return
+        }
+        ScreenTimeBudget.baseMin = minutes
+        refreshFromStore()
+        restartMonitoring()
+    }
+
+    /// Genuinely grants extra screen time through Apple's Screen Time system:
+    /// the allowance grows, the shields lift, and the DeviceActivity budget is
+    /// rescheduled with the new threshold. Throws when Screen Time cannot be
+    /// changed, so callers must not claim the reward.
+    func grant(minutes: Int) throws {
+        guard minutes > 0 else { return }
+        refreshAuthorization()
+        guard authorized else { throw ScreenTimeError.notAuthorized }
+
+        ScreenTimeBudget.rewardMin += minutes
+        refreshFromStore()
+        do {
+            try startMonitoring()
+        } catch {
+            // Roll back: the reward was not really put into effect.
+            ScreenTimeBudget.rewardMin = max(0, ScreenTimeBudget.rewardMin - minutes)
+            refreshFromStore()
+            throw ScreenTimeError.monitoringFailed(error.localizedDescription)
+        }
+    }
+
+    // MARK: enforcement
+
+    /// Shields every managed app/category when nothing is left, lifts the
+    /// shield as soon as there are minutes to spend.
+    private func applyShields() {
         let shouldShield = remainingMin <= 0
         if shouldShield {
             store.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
@@ -68,16 +147,54 @@ final class ScreenTimeService: ObservableObject {
         }
     }
 
-    /// Schedules a daily DeviceActivity window so usage is measured and the
-    /// balance resets at local midnight, matching `src/lib/day.ts`.
-    func scheduleDailyMonitoring() {
+    /// Kept for existing call sites: the ledger stays the source of truth, this
+    /// only forces a re-evaluation of the shields.
+    func apply(remainingMin: Int) {
+        refreshFromStore()
+    }
+
+    // MARK: DeviceActivity
+
+    /// Schedules a daily window plus one threshold event every 5 minutes of
+    /// managed-app usage. The monitor extension records each tick into the
+    /// shared ledger and shields when the budget is spent, so time actually
+    /// spent is subtracted from "Remaining".
+    func startMonitoring() throws {
         let schedule = DeviceActivitySchedule(
             intervalStart: DateComponents(hour: 0, minute: 0),
             intervalEnd: DateComponents(hour: 23, minute: 59),
             repeats: true
         )
+
+        var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
+        if !(selection.applicationTokens.isEmpty
+             && selection.categoryTokens.isEmpty
+             && selection.webDomainTokens.isEmpty) {
+            let step = 5
+            let ticks = max(1, min(48, Int(ceil(Double(allowanceMin) / Double(step)))))
+            for i in 1...ticks {
+                let minutes = i * step
+                events[DeviceActivityEvent.Name("tick.\(minutes)")] = DeviceActivityEvent(
+                    applications: selection.applicationTokens,
+                    categories: selection.categoryTokens,
+                    webDomains: selection.webDomainTokens,
+                    threshold: DateComponents(minute: minutes)
+                )
+            }
+        }
+
         let center = DeviceActivityCenter()
-        try? center.startMonitoring(.init("setgoals.daily"), during: schedule)
+        center.stopMonitoring([activityName])
+        try center.startMonitoring(activityName, during: schedule, events: events)
+    }
+
+    private func restartMonitoring() {
+        try? startMonitoring()
+    }
+
+    /// Legacy entry point used at app launch.
+    func scheduleDailyMonitoring() {
+        try? startMonitoring()
     }
 
     func clearAllShields() {
