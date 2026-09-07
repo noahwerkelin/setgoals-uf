@@ -282,8 +282,6 @@ struct SettingsView: View {
                 divider
                 row(L.t("settings.password"), meta: "••••••••") { passwordOpen = true }
             }
-            divider
-            row(L.t("settings.signout")) { Task { await AuthStore.shared.signOut() } }
         }
     }
 
@@ -294,6 +292,8 @@ struct SettingsView: View {
             row(L.t("settings.report_problem")) { reportOpen = true }
             divider
             row(L.t("legal.title")) { legalOpen = true }
+            divider
+            row(L.t("settings.signout")) { Task { await AuthStore.shared.signOut() } }
             if !isChild {
                 divider
                 row(L.t("settings.delete_account"), danger: true) { deleteOpen = true }
