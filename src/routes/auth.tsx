@@ -93,31 +93,6 @@ function Field(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
-async function withGoogle() {
-  const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-  if (r.error) toast.error(r.error.message);
-}
-async function withApple() {
-  const r = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
-  if (r.error) toast.error(r.error.message);
-}
-
-function SocialButtons() {
-  const { t } = useT();
-  return (
-    <>
-      <div className="my-6 flex items-center gap-3 text-[11px] font-medium uppercase tracking-widest text-sage-600">
-        <span className="h-px flex-1 bg-sage-200" /> {t("auth.or")} <span className="h-px flex-1 bg-sage-200" />
-      </div>
-      <button type="button" onClick={withGoogle} className="mb-2 w-full rounded-full bg-card py-3 text-sm font-semibold text-sage-900 ring-1 ring-black/5">
-        {t("auth.google")}
-      </button>
-      <button type="button" onClick={withApple} className="w-full rounded-full bg-sage-950 py-3 text-sm font-semibold text-sage-50">
-        {t("auth.apple")}
-      </button>
-    </>
-  );
-}
 
 function SignIn({ onForgot, onSignup, onJoin }: { onForgot: () => void; onSignup: () => void; onJoin: () => void }) {
   const [email, setEmail] = useState("");
@@ -145,7 +120,6 @@ function SignIn({ onForgot, onSignup, onJoin }: { onForgot: () => void; onSignup
       <button disabled={busy} type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
         {busy ? t("auth.signing_in") : t("auth.signin")}
       </button>
-      <SocialButtons />
       <button
         type="button"
         onClick={onJoin}
@@ -225,7 +199,6 @@ function SignUp({ onSignin }: { onSignin: () => void }) {
       <button disabled={busy} type="submit" className="mt-2 w-full rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
         {busy ? t("auth.creating") : t("auth.create_btn")}
       </button>
-      <SocialButtons />
     </form>
   );
 }
