@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import Supabase
+import FamilyControls
 
 /// 1:1 port of `src/routes/parent.tsx` — Personal / Children tabs, category
 /// permissions, PRO screen-time rules, child cards, weekly summary, tasks,
@@ -27,6 +28,9 @@ struct ParentView: View {
     @State private var gifting: ChildRow?
     @State private var editingChildST: ChildRow?
     @State private var editingMyST = false
+    /// Which category row is choosing its apps in Apple's picker.
+    @State private var pickerKey: String?
+    @State private var pickerSelection = FamilyActivitySelection()
     @State private var showPro = false
 
     private var isIndividual: Bool { settings.role == "individual" }
