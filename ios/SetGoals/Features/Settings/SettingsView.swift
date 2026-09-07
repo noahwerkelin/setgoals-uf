@@ -244,13 +244,6 @@ struct SettingsView: View {
                     Task { try? await SupabaseAPI.updateSettings(["googlefit_connected": .bool(false)]) }
                 } else { connectKind = "gf" }
             }
-            divider
-            toggleRow(L.t("settings.push"), isOn: Binding(
-                get: { settings.pushOn },
-                set: { v in
-                    settings.pushOn = v
-                    Task { try? await SupabaseAPI.updateSettings(["push_on": .bool(v)]) }
-                }))
         }
     }
 
@@ -264,15 +257,6 @@ struct SettingsView: View {
                     settings.anonymousLeaderboard = v
                     Task { try? await SupabaseAPI.updateSettings(["anonymous_leaderboard": .bool(v)]) }
                 }))
-            divider
-            selectRow(L.t("settings.share_loc"),
-                      value: settings.shareLocation,
-                      options: [("off", L.t("settings.off")),
-                                ("while_using", L.t("settings.while_using")),
-                                ("always", L.t("settings.on"))]) { v in
-                settings.shareLocation = v
-                Task { try? await SupabaseAPI.updateSettings(["share_location": .string(v)]) }
-            }
         }
     }
 
@@ -298,8 +282,6 @@ struct SettingsView: View {
                 divider
                 row(L.t("settings.password"), meta: "••••••••") { passwordOpen = true }
             }
-            divider
-            row(L.t("settings.signout")) { Task { await AuthStore.shared.signOut() } }
         }
     }
 
@@ -310,6 +292,8 @@ struct SettingsView: View {
             row(L.t("settings.report_problem")) { reportOpen = true }
             divider
             row(L.t("legal.title")) { legalOpen = true }
+            divider
+            row(L.t("settings.signout")) { Task { await AuthStore.shared.signOut() } }
             if !isChild {
                 divider
                 row(L.t("settings.delete_account"), danger: true) { deleteOpen = true }

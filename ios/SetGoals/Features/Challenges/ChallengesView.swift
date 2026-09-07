@@ -207,6 +207,7 @@ struct ChallengeDetailSheet: View {
 /// Port of the `Leaderboard` component in `src/routes/challenges.tsx`.
 struct LeaderboardsSection: View {
     @EnvironmentObject var theme: Theme
+    @EnvironmentObject var settings: SettingsStore
     @State private var scope = "local"
     @State private var rows: [LeaderboardEntry] = []
     @State private var loading = true
@@ -259,6 +260,14 @@ struct LeaderboardsSection: View {
 
             if let you = youRow, you.rank > 10 {
                 row(you, isYou: true)
+            }
+
+            if settings.anonymousLeaderboard {
+                Text(L.t("lb.anon_note"))
+                    .font(F.xs).foregroundStyle(theme.p.s600)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 4)
             }
 
             Text(L.t("lb.refresh"))
@@ -333,7 +342,7 @@ struct LeaderboardsSection: View {
                 .foregroundStyle(isYou ? theme.primaryForeground : theme.p.s700)
                 .frame(width: 32, height: 32)
                 .background(isYou ? Color.white.opacity(0.15) : theme.p.s100, in: Circle())
-            Text(isYou ? L.t("lb.you") : r.display_name)
+            Text(isYou ? L.t(settings.anonymousLeaderboard ? "lb.you_anon" : "lb.you") : r.display_name)
                 .font(F.sans(14, .medium)).lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .foregroundStyle(isYou ? theme.primaryForeground : theme.foreground)
