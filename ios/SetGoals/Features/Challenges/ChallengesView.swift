@@ -261,6 +261,14 @@ struct LeaderboardsSection: View {
                 row(you, isYou: true)
             }
 
+            if settings.anonymousLeaderboard {
+                Text(L.t("lb.anon_note"))
+                    .font(F.xs).foregroundStyle(theme.p.s600)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 4)
+            }
+
             Text(L.t("lb.refresh"))
                 .font(F.xs).foregroundStyle(theme.p.s600)
                 .frame(maxWidth: .infinity, alignment: .center)
