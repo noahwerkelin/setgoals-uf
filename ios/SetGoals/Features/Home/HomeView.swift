@@ -5,6 +5,8 @@ struct HomeView: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
     @ObservedObject var health = HealthKitService.shared
+    @ObservedObject var screenTime = ScreenTimeService.shared
+    @Environment(\.scenePhase) private var scenePhase
     @Binding var tab: AppTab
 
     @AppStorage("st.rollover") private var rolloverEnabled = false
@@ -14,6 +16,7 @@ struct HomeView: View {
     @State private var friendsTotal: Int = 0
     @State private var earnedBadges: [String] = []
     @State private var yesterdaySteps = 0
+    @State private var rewardFailed = false
 
     private var goal: Int { settings.dailyGoal > 0 ? settings.dailyGoal : 8000 }
     private var steps: Int { health.steps }
@@ -24,10 +27,16 @@ struct HomeView: View {
         return max(0, capMin - usedYesterday)
     }
     private var baseEarned: Int { settings.earnedMin(from: steps) }
-    private var earnedMin: Int { min(capMin + rolloverMin, baseEarned + rolloverMin) + settings.bonusMin }
-    private var remainingMin: Int {
-        max(0, capMin + rolloverMin - min(capMin + rolloverMin, baseEarned + rolloverMin))
+    /// Screen time earned today from steps, rollover and parent gifts.
+    private var baseAllowanceMin: Int {
+        min(capMin + rolloverMin, baseEarned + rolloverMin) + settings.bonusMin
     }
+    /// Everything earned today, including challenge rewards Apple has granted.
+    private var earnedMin: Int { screenTime.allowanceMin }
+    /// Minutes left before Apple's Screen Time locks the managed apps.
+    private var remainingMin: Int { screenTime.remainingMin }
+    /// Challenge screen time actually granted today.
+    private var challengeRewardMin: Int { screenTime.rewardMin }
     private var ringProgress: Double { min(1, Double(steps) / Double(max(goal, 1))) }
 
     var body: some View {
