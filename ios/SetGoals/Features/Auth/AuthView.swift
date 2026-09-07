@@ -1,4 +1,3 @@
-import AuthenticationServices
 import SwiftUI
 
 /// Port of `src/routes/auth.tsx` — sign in / sign up / forgot / join with code.
@@ -103,8 +102,6 @@ private struct SignInForm: View {
             }
             .padding(.top, 8)
 
-            SocialButtons()
-
             Button { mode = .join } label: {
                 Text(L.t("auth.join_code"))
                     .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
@@ -159,7 +156,6 @@ private struct SignUpForm: View {
             }
             .padding(.top, 8)
 
-            SocialButtons()
         }
         .sheet(item: $legalDoc) { LegalDocSheet(doc: $0).environmentObject(theme) }
     }
@@ -281,56 +277,4 @@ private struct JoinForm: View {
     }
 }
 
-private struct SocialButtons: View {
-    @EnvironmentObject var theme: Theme
-    @State private var busy = false
-    @State private var error: String?
-
-    var body: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 12) {
-                Rectangle().fill(theme.p.s200).frame(height: 1)
-                Text(L.t("auth.or")).eyebrow(theme.p.s600).fixedSize()
-                Rectangle().fill(theme.p.s200).frame(height: 1)
-            }
-            .padding(.vertical, 24)
-
-            Button { run { try await OAuthService.shared.signInWithGoogle() } } label: {
-                Text(L.t("auth.google"))
-                    .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
-                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                    .background(theme.card, in: Capsule())
-                    .overlay(Capsule().strokeBorder(theme.ringBorder, lineWidth: 1))
-            }
-            .disabled(busy)
-            Button { run { try await OAuthService.shared.signInWithApple() } } label: {
-                Text(L.t("auth.apple"))
-                    .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s50)
-                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                    .background(theme.p.s950, in: Capsule())
-            }
-            .disabled(busy)
-
-            if let error {
-                Text(error).font(F.sans(12, .medium)).foregroundStyle(.red)
-                    .padding(.top, 8)
-            }
-        }
-    }
-
-    private func run(_ op: @escaping () async throws -> Void) {
-        guard !busy else { return }
-        busy = true
-        error = nil
-        Task { @MainActor in
-            do { try await op() }
-            catch is CancellationError {}
-            catch let err as ASWebAuthenticationSessionError where err.code == .canceledLogin {}
-            catch let err as NSError where err.domain == ASAuthorizationError.errorDomain
-                && err.code == ASAuthorizationError.canceled.rawValue {}
-            catch { self.error = error.localizedDescription }
-            busy = false
-        }
-    }
-}
 
