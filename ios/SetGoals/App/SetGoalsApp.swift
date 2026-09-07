@@ -44,6 +44,16 @@ struct SetGoalsApp: App {
                 if auth.signedIn {
                     await settings.load()
                     await StreakSync.syncFromHealthKit()
+                    // A child device is authorized as `.child`, so the parent
+                    // remains the moderator in Apple's own Screen Time system
+                    // and the child cannot lift the restrictions.
+                    if onboarded, !ScreenTimeService.shared.authorized {
+                        await ScreenTimeService.shared.requestAuthorization(
+                            forChild: settings.role == "child"
+                        )
+                        ScreenTimeService.shared.refreshFromStore()
+                        ScreenTimeService.shared.scheduleDailyMonitoring()
+                    }
                 }
                 try? await Task.sleep(for: .seconds(2.5))
                 withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
