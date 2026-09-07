@@ -34,13 +34,6 @@ struct SetGoalsApp: App {
                 // pills the user sees.
                 ScreenTimeRules.policies = ProSTStore.shared.alwaysAllow
                 ScreenTimeService.shared.refreshAuthorization()
-                if !ScreenTimeService.shared.authorized {
-                    // A child device is authorized as `.child`, so the parent
-                    // stays the moderator in Apple's own Screen Time system.
-                    await ScreenTimeService.shared.requestAuthorization(
-                        forChild: settings.role == "child"
-                    )
-                }
                 ScreenTimeService.shared.refreshFromStore()
                 ScreenTimeService.shared.scheduleDailyMonitoring()
                 // Nearby activities start loading at launch, not on the map page.
