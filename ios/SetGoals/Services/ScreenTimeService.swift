@@ -89,6 +89,7 @@ final class ScreenTimeService: ObservableObject {
     /// recorded usage) and re-applies shields to match.
     func refreshFromStore() {
         ScreenTimeBudget.rollIfNeeded()
+        selection = ScreenTimeRules.restricted
         allowanceMin = ScreenTimeBudget.allowanceMin
         usedMin = ScreenTimeBudget.usedMin
         rewardMin = ScreenTimeBudget.rewardMin
