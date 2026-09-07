@@ -13,7 +13,13 @@ final class ProSTStore: ObservableObject {
     @Published var weekendCap: Int { didSet { d.set(weekendCap, forKey: "st.weekendCap") } }
     @Published var catLimits: [String: Int] { didSet { d.set(catLimits, forKey: "st.catLimits") } }
     /// Category permissions: `true` = always allow, `false` = only with earned time.
-    @Published var alwaysAllow: [String: Bool] { didSet { d.set(alwaysAllow, forKey: "st.alwaysAllow") } }
+    @Published var alwaysAllow: [String: Bool] {
+        didSet {
+            d.set(alwaysAllow, forKey: "st.alwaysAllow")
+            // Apple's Screen Time shields follow the same rules.
+            ScreenTimeRules.policies = alwaysAllow
+        }
+    }
 
     private let d = UserDefaults.standard
 

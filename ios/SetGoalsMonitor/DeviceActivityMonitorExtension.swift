@@ -37,14 +37,12 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     }
 
     private func applyShields() {
-        store.shield.applicationCategories = .all()
-        store.shield.webDomainCategories = .all()
+        // Only the categories marked "Only with earned time" get locked, so
+        // always-allowed apps and SetGoals itself stay reachable.
+        ScreenTimeRules.apply(shielding: true, to: store)
     }
 
     private func clearShields() {
-        store.shield.applications = nil
-        store.shield.applicationCategories = nil
-        store.shield.webDomains = nil
-        store.shield.webDomainCategories = nil
+        ScreenTimeRules.apply(shielding: false, to: store)
     }
 }

@@ -61,6 +61,8 @@ targets:
       - path: SetGoalsMonitor
       # Shared ledger: the extension and the app must read the same numbers.
       - path: SetGoals/Services/ScreenTimeBudget.swift
+      # Shared category rules: the extension shields exactly what the app does.
+      - path: SetGoals/Services/ScreenTimeRules.swift
     info:
       path: SetGoalsMonitor/Info.plist
       properties:

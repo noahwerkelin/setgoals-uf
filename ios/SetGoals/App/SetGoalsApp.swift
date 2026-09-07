@@ -30,6 +30,9 @@ struct SetGoalsApp: App {
             .preferredColorScheme(.light)
             .task {
                 await auth.bootstrap()
+                // Keep Apple's Screen Time rules in step with the category
+                // pills the user sees.
+                ScreenTimeRules.policies = ProSTStore.shared.alwaysAllow
                 ScreenTimeService.shared.refreshAuthorization()
                 ScreenTimeService.shared.refreshFromStore()
                 ScreenTimeService.shared.scheduleDailyMonitoring()
@@ -41,6 +44,16 @@ struct SetGoalsApp: App {
                 if auth.signedIn {
                     await settings.load()
                     await StreakSync.syncFromHealthKit()
+                    // A child device is authorized as `.child`, so the parent
+                    // remains the moderator in Apple's own Screen Time system
+                    // and the child cannot lift the restrictions.
+                    if onboarded, !ScreenTimeService.shared.authorized {
+                        await ScreenTimeService.shared.requestAuthorization(
+                            forChild: settings.role == "child"
+                        )
+                        ScreenTimeService.shared.refreshFromStore()
+                        ScreenTimeService.shared.scheduleDailyMonitoring()
+                    }
                 }
                 try? await Task.sleep(for: .seconds(2.5))
                 withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
