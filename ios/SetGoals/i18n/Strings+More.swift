@@ -5,6 +5,9 @@ import Foundation
 extension L {
     static let extra: [String: [String: String]] = [
         "en": [
+            "home.earned_of": "{e} of {c}",
+            "home.challenge_reward": "+{m} earned from challenges today",
+            "home.challenge_reward_failed": "Screen Time access is needed to add your challenge reward",
             "onb.brand": "SetGoals",
             "onb.headline": "Earn screen time by moving.",
             "onb.sub": "A calmer, healthier way to use your phone \u2014 for the whole family.",
@@ -103,6 +106,9 @@ extension L {
             "parent.delete_desc": "This removes {n} and their linked data.",
         ],
         "sv": [
+            "home.earned_of": "{e} av {c}",
+            "home.challenge_reward": "+{m} intj\u00e4nat fr\u00e5n utmaningar idag",
+            "home.challenge_reward_failed": "Sk\u00e4rmtid-beh\u00f6righet kr\u00e4vs f\u00f6r att l\u00e4gga till din bel\u00f6ning",
             "onb.brand": "SetGoals",
             "onb.headline": "Tj\u00e4na sk\u00e4rmtid genom att r\u00f6ra dig.",
             "onb.sub": "Ett lugnare, h\u00e4lsosammare s\u00e4tt att anv\u00e4nda mobilen \u2014 f\u00f6r hela familjen.",

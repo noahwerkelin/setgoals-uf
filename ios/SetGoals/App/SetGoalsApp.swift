@@ -30,6 +30,8 @@ struct SetGoalsApp: App {
             .preferredColorScheme(.light)
             .task {
                 await auth.bootstrap()
+                ScreenTimeService.shared.refreshAuthorization()
+                ScreenTimeService.shared.refreshFromStore()
                 ScreenTimeService.shared.scheduleDailyMonitoring()
                 // Nearby activities start loading at launch, not on the map page.
                 if onboarded { NearbyStore.shared.start() }

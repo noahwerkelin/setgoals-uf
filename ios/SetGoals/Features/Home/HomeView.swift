@@ -5,6 +5,8 @@ struct HomeView: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
     @ObservedObject var health = HealthKitService.shared
+    @ObservedObject var screenTime = ScreenTimeService.shared
+    @Environment(\.scenePhase) private var scenePhase
     @Binding var tab: AppTab
 
     @AppStorage("st.rollover") private var rolloverEnabled = false
@@ -14,6 +16,7 @@ struct HomeView: View {
     @State private var friendsTotal: Int = 0
     @State private var earnedBadges: [String] = []
     @State private var yesterdaySteps = 0
+    @State private var rewardFailed = false
 
     private var goal: Int { settings.dailyGoal > 0 ? settings.dailyGoal : 8000 }
     private var steps: Int { health.steps }
@@ -24,10 +27,16 @@ struct HomeView: View {
         return max(0, capMin - usedYesterday)
     }
     private var baseEarned: Int { settings.earnedMin(from: steps) }
-    private var earnedMin: Int { min(capMin + rolloverMin, baseEarned + rolloverMin) + settings.bonusMin }
-    private var remainingMin: Int {
-        max(0, capMin + rolloverMin - min(capMin + rolloverMin, baseEarned + rolloverMin))
+    /// Screen time earned today from steps, rollover and parent gifts.
+    private var baseAllowanceMin: Int {
+        min(capMin + rolloverMin, baseEarned + rolloverMin) + settings.bonusMin
     }
+    /// Everything earned today, including challenge rewards Apple has granted.
+    private var earnedMin: Int { screenTime.allowanceMin }
+    /// Minutes left before Apple's Screen Time locks the managed apps.
+    private var remainingMin: Int { screenTime.remainingMin }
+    /// Challenge screen time actually granted today.
+    private var challengeRewardMin: Int { screenTime.rewardMin }
     private var ringProgress: Double { min(1, Double(steps) / Double(max(goal, 1))) }
 
     var body: some View {
@@ -56,14 +65,21 @@ struct HomeView: View {
             .padding(.horizontal, 24)
         }
         .task { await reload() }
-        .onChange(of: remainingMin) { _, new in
-            ScreenTimeService.shared.apply(remainingMin: new)
+        .onChange(of: baseAllowanceMin) { _, new in
+            screenTime.setBaseAllowance(new)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Keep the app in sync with Apple's Screen Time state whenever it
+            // comes back to the foreground.
+            if phase == .active { screenTime.refreshFromStore() }
         }
     }
 
     private func reload() async {
         await settings.load()
         await health.requestAuthorization()
+        screenTime.refreshAuthorization()
+        screenTime.setBaseAllowance(baseAllowanceMin)
         family = (try? await SupabaseAPI.familyToday()) ?? []
         earnedBadges = await SupabaseAPI.earnedBadgesOrdered()
         let hist = await SupabaseAPI.historyFilled(days: 2)
@@ -75,9 +91,10 @@ struct HomeView: View {
         }
         // Pay out any challenge rewards completed since the last visit.
         let week = await SupabaseAPI.weekTotals()
-        await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
-        ScreenTimeService.shared.apply(remainingMin: remainingMin)
-
+        screenTime.setBaseAllowance(baseAllowanceMin)
+        let claim = await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
+        rewardFailed = claim.failed
+        screenTime.refreshFromStore()
     }
 
     // MARK: header
@@ -116,9 +133,32 @@ struct HomeView: View {
                     }
                 }
                 HStack(spacing: 0) {
-                    metric(L.t("home.earned"), SettingsStore.formatScreenMin(earnedMin), theme.foreground)
+                    metric(L.t("home.earned"),
+                           L.t("home.earned_of", [
+                               "e": SettingsStore.formatScreenMin(earnedMin),
+                               "c": SettingsStore.formatScreenMin(capMin),
+                           ]),
+                           theme.foreground)
                     Rectangle().fill(theme.p.s950.opacity(0.05)).frame(width: 1)
                     metric(L.t("home.remaining"), SettingsStore.formatScreenMin(remainingMin), theme.p.s600)
+                }
+                if challengeRewardMin > 0 {
+                    Text(L.t("home.challenge_reward", ["m": SettingsStore.formatScreenMin(challengeRewardMin)]))
+                        .font(F.sans(11, .semibold))
+                        .foregroundStyle(theme.p.s700)
+                        .padding(.horizontal, 12).padding(.vertical, 6)
+                        .background(theme.p.s100, in: Capsule())
+                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
+                        .padding(.top, -8)
+                } else if rewardFailed {
+                    Text(L.t("home.challenge_reward_failed"))
+                        .font(F.sans(11, .semibold))
+                        .foregroundStyle(theme.p.s700)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 12).padding(.vertical, 6)
+                        .background(theme.p.s100, in: Capsule())
+                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
+                        .padding(.top, -8)
                 }
                 if settings.bonusMin > 0 {
                     Text(L.t("home.bonus_gift", ["m": SettingsStore.formatScreenMin(settings.bonusMin)]))
@@ -139,6 +179,7 @@ struct HomeView: View {
         VStack(spacing: 4) {
             Text(label).eyebrow(theme.p.s600)
             Text(value).font(F.sans(18, .medium)).tabularNums().foregroundStyle(color)
+                .lineLimit(1).minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity)
     }
