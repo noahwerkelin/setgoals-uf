@@ -179,6 +179,7 @@ struct HomeView: View {
         VStack(spacing: 4) {
             Text(label).eyebrow(theme.p.s600)
             Text(value).font(F.sans(18, .medium)).tabularNums().foregroundStyle(color)
+                .lineLimit(1).minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity)
     }
