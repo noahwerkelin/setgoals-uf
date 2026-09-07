@@ -133,9 +133,32 @@ struct HomeView: View {
                     }
                 }
                 HStack(spacing: 0) {
-                    metric(L.t("home.earned"), SettingsStore.formatScreenMin(earnedMin), theme.foreground)
+                    metric(L.t("home.earned"),
+                           L.t("home.earned_of", [
+                               "e": SettingsStore.formatScreenMin(earnedMin),
+                               "c": SettingsStore.formatScreenMin(capMin),
+                           ]),
+                           theme.foreground)
                     Rectangle().fill(theme.p.s950.opacity(0.05)).frame(width: 1)
                     metric(L.t("home.remaining"), SettingsStore.formatScreenMin(remainingMin), theme.p.s600)
+                }
+                if challengeRewardMin > 0 {
+                    Text(L.t("home.challenge_reward", ["m": SettingsStore.formatScreenMin(challengeRewardMin)]))
+                        .font(F.sans(11, .semibold))
+                        .foregroundStyle(theme.p.s700)
+                        .padding(.horizontal, 12).padding(.vertical, 6)
+                        .background(theme.p.s100, in: Capsule())
+                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
+                        .padding(.top, -8)
+                } else if rewardFailed {
+                    Text(L.t("home.challenge_reward_failed"))
+                        .font(F.sans(11, .semibold))
+                        .foregroundStyle(theme.p.s700)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 12).padding(.vertical, 6)
+                        .background(theme.p.s100, in: Capsule())
+                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
+                        .padding(.top, -8)
                 }
                 if settings.bonusMin > 0 {
                     Text(L.t("home.bonus_gift", ["m": SettingsStore.formatScreenMin(settings.bonusMin)]))
