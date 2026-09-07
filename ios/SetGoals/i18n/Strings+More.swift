@@ -5,6 +5,9 @@ import Foundation
 extension L {
     static let extra: [String: [String: String]] = [
         "en": [
+            "home.earned_of": "{e} of {c}",
+            "home.challenge_reward": "+{m} earned from challenges today",
+            "home.challenge_reward_failed": "Screen Time access is needed to add your challenge reward",
             "onb.brand": "SetGoals",
             "onb.headline": "Earn screen time by moving.",
             "onb.sub": "A calmer, healthier way to use your phone \u2014 for the whole family.",
