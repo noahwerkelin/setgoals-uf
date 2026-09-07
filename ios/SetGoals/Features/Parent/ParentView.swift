@@ -171,13 +171,18 @@ struct ParentView: View {
                 ForEach(Array(ScreenTimeCategories.keys.enumerated()), id: \.element) { i, key in
                     if i > 0 { Divider().background(theme.p.s100) }
                     HStack(spacing: 12) {
-                        Text(L.t(key)).font(F.sm).foregroundStyle(theme.p.s900).lineLimit(1)
+                        Button { if !isChild { pickerKey = key } } label: {
+                            Text(L.t(key)).font(F.sm).foregroundStyle(theme.p.s900).lineLimit(1)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(isChild)
                         Spacer(minLength: 8)
                         CategoryToggle(
                             isAlways: pst.alwaysAllow[key] ?? true,
                             enabled: !isChild
                         ) { next in
                             pst.alwaysAllow[key] = next
+                            ScreenTimeService.shared.setPolicy(alwaysAllow: next, for: key)
                         }
                     }
                     .padding(16)
@@ -186,6 +191,16 @@ struct ParentView: View {
             .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
                 .stroke(.black.opacity(0.05), lineWidth: 1))
+        }
+        .familyActivityPicker(
+            isPresented: Binding(get: { pickerKey != nil }, set: { if !$0 { pickerKey = nil } }),
+            selection: $pickerSelection
+        )
+        .onChange(of: pickerSelection) { _, new in
+            if let key = pickerKey { ScreenTimeService.shared.setSelection(new, for: key) }
+        }
+        .onChange(of: pickerKey) { _, key in
+            if let key { pickerSelection = ScreenTimeService.shared.selection(for: key) }
         }
     }
 
