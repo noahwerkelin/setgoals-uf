@@ -207,6 +207,7 @@ struct ChallengeDetailSheet: View {
 /// Port of the `Leaderboard` component in `src/routes/challenges.tsx`.
 struct LeaderboardsSection: View {
     @EnvironmentObject var theme: Theme
+    @EnvironmentObject var settings: SettingsStore
     @State private var scope = "local"
     @State private var rows: [LeaderboardEntry] = []
     @State private var loading = true
