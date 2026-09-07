@@ -244,13 +244,6 @@ struct SettingsView: View {
                     Task { try? await SupabaseAPI.updateSettings(["googlefit_connected": .bool(false)]) }
                 } else { connectKind = "gf" }
             }
-            divider
-            toggleRow(L.t("settings.push"), isOn: Binding(
-                get: { settings.pushOn },
-                set: { v in
-                    settings.pushOn = v
-                    Task { try? await SupabaseAPI.updateSettings(["push_on": .bool(v)]) }
-                }))
         }
     }
 
