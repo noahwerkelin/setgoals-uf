@@ -65,14 +65,21 @@ struct HomeView: View {
             .padding(.horizontal, 24)
         }
         .task { await reload() }
-        .onChange(of: remainingMin) { _, new in
-            ScreenTimeService.shared.apply(remainingMin: new)
+        .onChange(of: baseAllowanceMin) { _, new in
+            screenTime.setBaseAllowance(new)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Keep the app in sync with Apple's Screen Time state whenever it
+            // comes back to the foreground.
+            if phase == .active { screenTime.refreshFromStore() }
         }
     }
 
     private func reload() async {
         await settings.load()
         await health.requestAuthorization()
+        screenTime.refreshAuthorization()
+        screenTime.setBaseAllowance(baseAllowanceMin)
         family = (try? await SupabaseAPI.familyToday()) ?? []
         earnedBadges = await SupabaseAPI.earnedBadgesOrdered()
         let hist = await SupabaseAPI.historyFilled(days: 2)
@@ -84,9 +91,10 @@ struct HomeView: View {
         }
         // Pay out any challenge rewards completed since the last visit.
         let week = await SupabaseAPI.weekTotals()
-        await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
-        ScreenTimeService.shared.apply(remainingMin: remainingMin)
-
+        screenTime.setBaseAllowance(baseAllowanceMin)
+        let claim = await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
+        rewardFailed = claim.failed
+        screenTime.refreshFromStore()
     }
 
     // MARK: header
