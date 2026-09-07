@@ -75,7 +75,6 @@ struct LegalCenterSheet: View {
             }
         }
         .sheet(item: $open) { LegalDocSheet(doc: $0) }
-        .appSheet(detents: [.large])
     }
 }
 
@@ -118,7 +117,6 @@ struct LegalDocSheet: View {
                 }
             }
         }
-        .appSheet(detents: [.large])
     }
 
     private struct Block { let text: String; let isHeading: Bool }

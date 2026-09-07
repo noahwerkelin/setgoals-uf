@@ -47,6 +47,7 @@ struct ChildProDialog: View {
             GhostButton(title: L.t("common.close")) { dismiss() }
                 .frame(maxWidth: .infinity)
         }
+        .presentationDetents([.height(280)])
     }
 }
 
@@ -104,6 +105,7 @@ struct UpgradeDialog: View {
                 }
             }
         }
+        .presentationDetents([.large])
     }
 
     private var planGrid: some View {
@@ -190,6 +192,7 @@ struct ManageSubscriptionDialog: View {
                 GhostButton(title: L.t("common.close")) { dismiss() }
             }
         }
+        .presentationDetents([.height(520)])
     }
 
     private func row(_ label: String, _ value: String) -> some View {

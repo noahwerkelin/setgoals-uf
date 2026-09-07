@@ -236,65 +236,62 @@ struct BadgeDetailSheet: View {
     let earned: Bool
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                BadgeMedal(badge: badge, earned: earned, size: 96, ringWidth: 4)
-                    .padding(.top, 8)
-                TierChip(tier: badge.tier, size: 10)
-                Text(badge.name).font(F.sans(18, .semibold)).foregroundStyle(theme.foreground)
-                Text(badge.desc).font(F.sm).foregroundStyle(theme.p.s600)
-                    .multilineTextAlignment(.center)
-                Text(earned ? L.t("badges.earned_on", ["date": Self.today]) : L.t("badges.locked_hint"))
-                    .font(F.xs).foregroundStyle(theme.p.s600)
-                    .multilineTextAlignment(.center)
-                if earned {
-                    let shareText = L.t("badges.share_text", [
-                        "tier": L.t("badges.tier.\(badge.tier.rawValue)"), "name": badge.name,
-                    ]) + " https://setgoals.app"
-                    VStack(spacing: 12) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "square.and.arrow.up").font(.system(size: 11, weight: .semibold))
-                            Text(L.t("badges.share")).font(F.sans(10, .bold))
-                                .textCase(.uppercase).tracking(1.2)
-                            Spacer()
-                        }
-                        .foregroundStyle(theme.p.s600)
-
-                        ShareLink(item: shareText) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "square.and.arrow.up").font(.system(size: 13))
-                                Text(L.t("badges.share")).font(F.sans(12, .semibold))
-                            }
-                            .frame(maxWidth: .infinity).padding(.vertical, 12)
-                            .foregroundStyle(theme.primaryForeground)
-                            .background(theme.p.s600, in: RoundedRectangle(cornerRadius: R.xl, style: .continuous))
-                        }
-
-                        Button {
-                            UIPasteboard.general.string = shareText
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "doc.on.doc").font(.system(size: 12))
-                                Text(L.t("badges.share_copy")).font(F.sans(12, .semibold))
-                            }
-                            .frame(maxWidth: .infinity).padding(.vertical, 10)
-                            .foregroundStyle(theme.p.s700)
-                            .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.xl, style: .continuous))
-                        }
-                        .buttonStyle(.plain)
+        VStack(spacing: 12) {
+            BadgeMedal(badge: badge, earned: earned, size: 96, ringWidth: 4)
+                .padding(.top, 8)
+            TierChip(tier: badge.tier, size: 10)
+            Text(badge.name).font(F.sans(18, .semibold)).foregroundStyle(theme.foreground)
+            Text(badge.desc).font(F.sm).foregroundStyle(theme.p.s600)
+                .multilineTextAlignment(.center)
+            Text(earned ? L.t("badges.earned_on", ["date": Self.today]) : L.t("badges.locked_hint"))
+                .font(F.xs).foregroundStyle(theme.p.s600)
+                .multilineTextAlignment(.center)
+            if earned {
+                let shareText = L.t("badges.share_text", [
+                    "tier": L.t("badges.tier.\(badge.tier.rawValue)"), "name": badge.name,
+                ]) + " https://setgoals.app"
+                VStack(spacing: 12) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.and.arrow.up").font(.system(size: 11, weight: .semibold))
+                        Text(L.t("badges.share")).font(F.sans(10, .bold))
+                            .textCase(.uppercase).tracking(1.2)
+                        Spacer()
                     }
-                    .padding(.top, 4)
+                    .foregroundStyle(theme.p.s600)
+
+                    ShareLink(item: shareText) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "square.and.arrow.up").font(.system(size: 13))
+                            Text(L.t("badges.share")).font(F.sans(12, .semibold))
+                        }
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .foregroundStyle(theme.primaryForeground)
+                        .background(theme.p.s600, in: RoundedRectangle(cornerRadius: R.xl, style: .continuous))
+                    }
+
+                    Button {
+                        UIPasteboard.general.string = shareText
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "doc.on.doc").font(.system(size: 12))
+                            Text(L.t("badges.share_copy")).font(F.sans(12, .semibold))
+                        }
+                        .frame(maxWidth: .infinity).padding(.vertical, 10)
+                        .foregroundStyle(theme.p.s700)
+                        .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.xl, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
                 }
-                Spacer(minLength: 0)
+                .padding(.top, 4)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 20)
-            .padding(.bottom, 16)
-            .frame(maxWidth: .infinity)
+
+            Spacer(minLength: 0)
         }
-        .safeAreaPadding(.bottom, 8)
-        .background(theme.card.ignoresSafeArea())
-        .appSheet()
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(theme.background)
+        .presentationDetents([.height(earned ? 520 : 380)])
+        .presentationCornerRadius(28)
     }
 
     private static var today: String {

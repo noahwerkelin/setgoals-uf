@@ -14,31 +14,26 @@ struct AppDialog<Content: View, Footer: View>: View {
     @ViewBuilder var footer: Footer
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: centered ? .center : .leading, spacing: 16) {
-                VStack(alignment: centered ? .center : .leading, spacing: 6) {
-                    Text(title)
-                        .font(F.sans(18, .semibold))
-                        .foregroundStyle(titleColor ?? theme.p.s950)
+        VStack(alignment: centered ? .center : .leading, spacing: 16) {
+            VStack(alignment: centered ? .center : .leading, spacing: 6) {
+                Text(title)
+                    .font(F.sans(18, .semibold))
+                    .foregroundStyle(titleColor ?? theme.p.s950)
+                    .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
+                if let description {
+                    Text(description).font(F.sm).foregroundStyle(theme.p.s600)
+                        .multilineTextAlignment(centered ? .center : .leading)
                         .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
-                    if let description {
-                        Text(description).font(F.sm).foregroundStyle(theme.p.s600)
-                            .multilineTextAlignment(centered ? .center : .leading)
-                            .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
-                    }
                 }
-                content
-                footer
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 20)
-            .padding(.bottom, 16)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            content
+            footer
         }
-        .scrollDismissesKeyboard(.interactively)
-        .safeAreaPadding(.bottom, 8)
-        .background(theme.card.ignoresSafeArea())
-        .appSheet()
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(theme.card)
+        .presentationCornerRadius(R.xl3)
+        .presentationBackground(theme.card)
     }
 }
 
@@ -151,6 +146,7 @@ struct SliderDialog: View {
             if let u = unlimited, initial >= u.sentinel { local = sliderMax }
             else { local = Double(initial) }
         }
+        .presentationDetents([.height(360)])
     }
 }
 
@@ -200,6 +196,7 @@ struct ThemePickerDialog: View {
             }
             .padding(.vertical, 4)
         } footer: { EmptyView() }
+        .presentationDetents([.height(420)])
     }
 }
 
@@ -242,6 +239,7 @@ struct HealthConnectDialog: View {
             if kind == "gf" { note = L.t("health.android_only") }
             else if !HealthKitService.shared.isAvailable { note = L.t("health.needs_ios_app") }
         }
+        .presentationDetents([.height(340)])
     }
 
     private func scope(_ key: String) -> some View {
@@ -300,6 +298,7 @@ struct ReportProblemDialog: View {
                 dismiss()
             }
         }
+        .presentationDetents([.height(360)])
     }
 }
 
@@ -333,6 +332,7 @@ struct DeleteAccountDialog: View {
                 Task { await deleteAccount() }
             }
         }
+        .presentationDetents([.height(330)])
     }
 
     private func deleteAccount() async {
@@ -379,6 +379,7 @@ struct NicknameDialog: View {
             }
         }
         .onAppear { val = current }
+        .presentationDetents([.height(280)])
     }
 }
 
@@ -414,6 +415,7 @@ struct UsernameDialog: View {
             }
         }
         .onAppear { val = current }
+        .presentationDetents([.height(300)])
     }
 
     private func submit() async {
@@ -471,6 +473,7 @@ struct EmailDialog: View {
             }
         }
         .onAppear { val = current }
+        .presentationDetents([.height(300)])
     }
 }
 
@@ -502,6 +505,7 @@ struct PasswordDialog: View {
                 Task { await submit() }
             }
         }
+        .presentationDetents([.height(440)])
     }
 
     private func field(_ label: String, _ binding: Binding<String>) -> some View {
