@@ -257,15 +257,6 @@ struct SettingsView: View {
                     settings.anonymousLeaderboard = v
                     Task { try? await SupabaseAPI.updateSettings(["anonymous_leaderboard": .bool(v)]) }
                 }))
-            divider
-            selectRow(L.t("settings.share_loc"),
-                      value: settings.shareLocation,
-                      options: [("off", L.t("settings.off")),
-                                ("while_using", L.t("settings.while_using")),
-                                ("always", L.t("settings.on"))]) { v in
-                settings.shareLocation = v
-                Task { try? await SupabaseAPI.updateSettings(["share_location": .string(v)]) }
-            }
         }
     }
 
