@@ -313,10 +313,7 @@ struct ActivityMapView: View {
     }
 
     private func subtitle(_ a: NearbyActivity) -> String {
-        var s = L.t("map.source.\(a.source)")
-        if a.openNow == true { s += " · " + L.t("map.open_now") }
-        if a.openNow == false { s += " · " + L.t("map.closed") }
-        return s
+        L.t("map.source.\(a.source)")
     }
 
     private func detailRow(_ k: String, _ v: String) -> some View {

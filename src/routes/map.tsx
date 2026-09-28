@@ -324,8 +324,6 @@ function MapPage() {
                     </p>
                     <p className="truncate text-[10px] uppercase tracking-wide text-sage-500 mt-0.5">
                       {t(`map.source.${a.source}`)}
-                      {a.openNow === true && ` · ${t("map.open_now")}`}
-                      {a.openNow === false && ` · ${t("map.closed")}`}
                     </p>
                   </div>
                   <ChevronDown
