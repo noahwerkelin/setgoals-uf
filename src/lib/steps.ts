@@ -108,6 +108,7 @@ export function useHistorySteps(days: number) {
   return useQuery({
     queryKey: ["history-steps", user?.id, days],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async (): Promise<DayTotals[]> => {
       const since = daysAgoISO(days - 1);
       const { data } = await supabase

@@ -34,7 +34,18 @@ function Page() {
   const MAX = Math.max(1, ...WEEK);
   const [proOpen, setProOpen] = useState(false);
   const avg = WEEK.length ? Math.round(WEEK.reduce((a, b) => a + b, 0) / WEEK.length) : 0;
-  const weeklyEarnedMin = WEEK.reduce((a, s) => a + earnedMinFromSteps(s, settings.stepsPer30, settings.dailyCapHours), 0);
+  const goal = Math.max(1, settings.dailyGoal || 1);
+
+  // Days since Monday this week (Mon = 1 … Sun = 7).
+  const jsDay = new Date().getDay();
+  const daysSinceMonday = jsDay === 0 ? 7 : jsDay;
+  const thisWeek = (history.length ? history : week).slice(-daysSinceMonday);
+
+  // Screen time earned since Monday.
+  const weeklyEarnedMin = thisWeek.reduce(
+    (a, d) => a + earnedMinFromSteps(d.steps, settings.stepsPer30, settings.dailyCapHours),
+    0,
+  );
 
   const dayLabel = (iso: string, opts: Intl.DateTimeFormatOptions) => {
     const [y, m, d] = iso.split("-").map(Number);
@@ -46,18 +57,17 @@ function Page() {
   const prev7 = history.slice(-14, -7).reduce((a, d) => a + d.steps, 0);
   const vsLastPct = prev7 > 0 ? Math.round(((last7 - prev7) / prev7) * 100) : null;
 
-  // Goal completion over the last 30 days (days with any data count toward it).
-  const goal = Math.max(1, settings.dailyGoal || 1);
+  // Goal completion: share of the last 30 days where the goal was reached.
   const last30 = history.slice(-30);
   const goalPct = last30.length
-    ? Math.round((last30.filter((d) => d.steps >= goal).length / last30.length) * 100)
+    ? Math.round((last30.filter((d) => d.steps >= goal).length / 30) * 100)
     : 0;
 
-  // Active days this week = days that hit the goal.
-  const activeDays = week.filter((d) => d.steps >= goal).length;
+  // Active days: days since Monday that hit the goal.
+  const activeDays = thisWeek.filter((d) => d.steps >= goal).length;
 
-  // Best day in the last 30 days.
-  const best = last30.reduce<{ day: string; steps: number } | null>(
+  // Best day by steps in the last 7 days.
+  const best = (history.length ? history.slice(-7) : week).reduce<{ day: string; steps: number } | null>(
     (acc, d) => (!acc || d.steps > acc.steps ? { day: d.day, steps: d.steps } : acc),
     null,
   );

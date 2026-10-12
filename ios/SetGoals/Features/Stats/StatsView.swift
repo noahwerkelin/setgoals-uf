@@ -8,7 +8,8 @@ struct StatsView: View {
     @ObservedObject var health = HealthKitService.shared
     @Binding var tab: AppTab
 
-    @State private var history: [DayTotals] = []
+    @ObservedObject private var cache = StatsCache.shared
+    private var history: [DayTotals] { cache.history }
     @State private var proOpen = false
     @State private var syncError: String?
 
@@ -39,16 +40,22 @@ struct StatsView: View {
         out.replaceSubrange((out.count - week.count)..<out.count, with: week)
         return out
     }
+    /// Days since Monday this week (Monday = 1 … Sunday = 7).
+    private var daysSinceMonday: Int {
+        let wd = Calendar.current.component(.weekday, from: Date()) // Sun=1
+        return wd == 1 ? 7 : wd - 1
+    }
+    private var thisWeek: [DayTotals] { Array(syncedHistory.isEmpty ? week : syncedHistory).suffix(daysSinceMonday) }
     private var maxSteps: Int { max(1, week.map(\.steps).max() ?? 1) }
     private var avg: Int { week.isEmpty ? 0 : week.reduce(0) { $0 + $1.steps } / week.count }
-    private var weeklyEarnedMin: Int { week.reduce(0) { $0 + settings.earnedMin(from: $1.steps) } }
+    private var weeklyEarnedMin: Int { thisWeek.reduce(0) { $0 + settings.earnedMin(from: $1.steps) } }
     private var goal: Int { max(1, settings.dailyGoal) }
     private var last30: [DayTotals] { Array(syncedHistory.suffix(30)) }
     private var goalPct: Int {
-        last30.isEmpty ? 0 : Int((Double(last30.filter { $0.steps >= goal }.count) / Double(last30.count) * 100).rounded())
+        last30.isEmpty ? 0 : Int((Double(last30.filter { $0.steps >= goal }.count) / 30.0 * 100).rounded())
     }
-    private var activeDays: Int { week.filter { $0.steps >= goal }.count }
-    private var best: DayTotals? { last30.max(by: { $0.steps < $1.steps }) }
+    private var activeDays: Int { thisWeek.filter { $0.steps >= goal }.count }
+    private var best: DayTotals? { week.max(by: { $0.steps < $1.steps }) }
     private var vsLastPct: Int? {
         let h = syncedHistory
         let last7 = h.suffix(7).reduce(0) { $0 + $1.steps }
@@ -92,13 +99,8 @@ struct StatsView: View {
         }
         .task {
             await HealthKitService.shared.refreshToday()
-            do {
-                history = try await SupabaseAPI.historyTotalsResult(days: 180)
-                syncError = HealthKitService.shared.syncError
-            } catch {
-                syncError = error.localizedDescription
-                history = await SupabaseAPI.historyTotals(days: 180)
-            }
+            await cache.load()
+            syncError = cache.error ?? HealthKitService.shared.syncError
         }
         .sheet(isPresented: $proOpen) {
             ProUpgradeDialog().environmentObject(theme).environmentObject(settings)
@@ -158,7 +160,7 @@ struct StatsView: View {
                 miniCard(L.t("stats.goal"), "\(goalPct)%", L.t("stats.goal_sub"))
             }
             HStack(spacing: 16) {
-                miniCard(L.t("stats.active"), "\(activeDays) / \(max(1, week.count))", L.t("stats.active_sub"))
+                miniCard(L.t("stats.active"), "\(activeDays) / \(daysSinceMonday)", L.t("stats.active_sub"))
                 miniCard(L.t("stats.best"),
                          (best?.steps ?? 0) > 0 ? best!.steps.formatted() : "—",
                          (best?.steps ?? 0) > 0 ? Self.weekdayLong(best!.day) : L.t("stats.no_data"))
@@ -530,5 +532,30 @@ struct Insights {
             msgs.append(L.t("insights.msg.quietest", ["d": worst]))
         }
         return Array(msgs.prefix(3))
+    }
+}
+
+
+/// Shared statistics cache, pre-loaded at app launch so the Stats page
+/// renders instantly instead of fetching on open.
+@MainActor
+final class StatsCache: ObservableObject {
+    static let shared = StatsCache()
+    @Published var history: [DayTotals] = []
+    @Published var error: String?
+    private var loading = false
+
+    func load() async {
+        guard !loading else { return }
+        loading = true
+        defer { loading = false }
+        do {
+            history = try await SupabaseAPI.historyTotalsResult(days: 180)
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+            let fallback = await SupabaseAPI.historyTotals(days: 180)
+            if !fallback.isEmpty { history = fallback }
+        }
     }
 }

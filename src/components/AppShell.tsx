@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
+import { useWeekSteps, useHistorySteps } from "@/lib/steps";
 
 type Props = {
   children: ReactNode;
@@ -7,6 +8,9 @@ type Props = {
 };
 
 export function AppShell({ children, hideNav }: Props) {
+  // Pre-load statistics data on every page so the Stats page opens instantly.
+  useWeekSteps();
+  useHistorySteps(180);
   return (
     <div className="min-h-dvh bg-background text-foreground font-sans">
       <div className="mx-auto w-full max-w-md pb-28">{children}</div>
