@@ -161,7 +161,7 @@ extension SupabaseAPI {
         guard let uid = await currentUserID() else { return }
         try? await supabase.from("user_badges")
             .upsert(["user_id": AnyJSON.string(uid.uuidString), "badge_id": .string(id)],
-                    onConflict: "user_id,badge_id")
+                    onConflict: "user_id,badge_id", ignoreDuplicates: true)
             .execute()
     }
 

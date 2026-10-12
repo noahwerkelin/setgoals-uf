@@ -44,6 +44,7 @@ struct SetGoalsApp: App {
                 if auth.signedIn {
                     // Pre-load statistics so the Stats page opens instantly.
                     Task { await StatsCache.shared.load() }
+                    Task { await BadgeStore.shared.preload() }
                     await settings.load()
                     await StreakSync.syncFromHealthKit()
                     // A child device is authorized as `.child`, so the parent
