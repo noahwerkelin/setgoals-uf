@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 
 /**
- * Personalized AI coach for the iOS app. Every request is authenticated with
+ * Personalized coach for the iOS app. Every request is authenticated with
  * the user's bearer token and all reads/writes go through RLS as that user.
  * The model never changes settings itself: it can only *propose* actions that
  * the app shows to the user for confirmation.
