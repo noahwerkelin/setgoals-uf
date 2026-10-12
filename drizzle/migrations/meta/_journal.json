@@ -29,6 +29,13 @@
       "when": 1791848471306,
       "tag": "0003_badges_once_only",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791849286294,
+      "tag": "0004_user_daily_stats_and_admin_analytics",
+      "breakpoints": true
     }
   ]
 }

@@ -25,6 +25,8 @@ struct SettingsView: View {
     @State private var reportOpen = false
     @State private var deleteOpen = false
     @State private var legalOpen = false
+    @State private var adminOpen = false
+    @State private var isAdmin = false
 
     private var isChild: Bool { settings.role == "child" }
 
@@ -47,6 +49,8 @@ struct SettingsView: View {
             .padding(.horizontal, 24)
         }
         .id(lang)
+        .task { isAdmin = await AdminAPI.isAdmin() }
+        .sheet(isPresented: $adminOpen) { AdminView().environmentObject(theme) }
         .sheet(isPresented: $proOpen) { ProUpgradeDialog() }
         .sheet(isPresented: $legalOpen) { LegalCenterSheet().environmentObject(theme) }
         .sheet(isPresented: $themeOpen) { ThemePickerDialog() }
@@ -303,6 +307,10 @@ struct SettingsView: View {
 
     private var supportGroup: some View {
         group(L.t("settings.support")) {
+            if isAdmin {
+                row("Admin analytics") { adminOpen = true }
+                divider
+            }
             row(L.t("settings.report_problem")) { reportOpen = true }
             divider
             row(L.t("legal.title")) { legalOpen = true }
