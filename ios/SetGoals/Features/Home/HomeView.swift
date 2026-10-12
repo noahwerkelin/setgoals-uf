@@ -14,7 +14,8 @@ struct HomeView: View {
     @State private var family: [FamilyMember] = []
     @State private var friendsRank: Int = 0
     @State private var friendsTotal: Int = 0
-    @State private var earnedBadges: [String] = []
+    @ObservedObject private var badgeStore = BadgeStore.shared
+    private var earnedBadges: [String] { badgeStore.ordered }
     @State private var yesterdaySteps = 0
     @State private var rewardFailed = false
 
@@ -81,7 +82,6 @@ struct HomeView: View {
         screenTime.refreshAuthorization()
         screenTime.setBaseAllowance(baseAllowanceMin)
         family = (try? await SupabaseAPI.familyToday()) ?? []
-        earnedBadges = await SupabaseAPI.earnedBadgesOrdered()
         let hist = await SupabaseAPI.historyFilled(days: 2)
         yesterdaySteps = hist.count >= 2 ? hist[hist.count - 2].steps : 0
         let friends = (try? await SupabaseAPI.leaderboard(scope: "friends")) ?? []

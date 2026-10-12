@@ -61,10 +61,27 @@ function updateHourlyBuckets(steps: number, hour: number): HourlyState {
 
 export function useEarnedBadges() {
   const getBadges = useServerFn(getUserBadges);
+  const { user } = useAuth();
   return useQuery({
-    queryKey: BADGE_QUERY_KEY,
+    queryKey: [...BADGE_QUERY_KEY, user?.id],
+    enabled: !!user,
+    staleTime: 5 * 60_000,
     queryFn: () => getBadges({ data: undefined }),
   });
+}
+
+/** Mounted once at the app root: pre-loads badges and awards new ones in the background. */
+export function BadgeSyncRunner() {
+  const { user } = useAuth();
+  return user ? <BadgeSyncInner /> : null;
+}
+function BadgeSyncInner() {
+  useEarnedBadges();
+  useActivityBadgeSync();
+  useStreakBadges();
+  useProBadge();
+  useUnlockerBadge();
+  return null;
 }
 
 export function useAwardBadge() {

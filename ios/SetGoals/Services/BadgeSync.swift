@@ -54,6 +54,7 @@ enum BadgeSync {
         if others.allSatisfy(newlyEarned.contains), !newlyEarned.contains("unlocker") {
             await SupabaseAPI.awardBadge("unlocker")
         }
+        await BadgeStore.shared.reload()
     }
 
     /// Leaderboard badges — mirrors `recordLeaderboardBadges`.
@@ -70,6 +71,33 @@ enum BadgeSync {
         }
         guard !ids.isEmpty else { return }
         let earned = (try? await SupabaseAPI.earnedBadges()) ?? []
-        for id in ids where !earned.contains(id) { await SupabaseAPI.awardBadge(id) }
+        let missing = ids.filter { !earned.contains($0) }
+        for id in missing { await SupabaseAPI.awardBadge(id) }
+        if !missing.isEmpty { await BadgeStore.shared.reload() }
+    }
+}
+
+
+/// App-wide badge cache. Loaded once at launch and refreshed only when a new
+/// badge is awarded, so badge views render instantly without refetching.
+@MainActor
+final class BadgeStore: ObservableObject {
+    static let shared = BadgeStore()
+    /// Most recently earned first.
+    @Published private(set) var ordered: [String] = []
+    var earned: Set<String> { Set(ordered) }
+    private var syncing = false
+
+    func reload() async {
+        ordered = await SupabaseAPI.earnedBadgesOrdered()
+    }
+
+    /// Load cached badges, then award anything new in the background.
+    func preload() async {
+        guard !syncing else { return }
+        syncing = true
+        defer { syncing = false }
+        await reload()
+        await BadgeSync.run()
     }
 }

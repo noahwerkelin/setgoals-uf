@@ -32,7 +32,8 @@ struct ProfileView: View {
     @ObservedObject var health = HealthKitService.shared
     @Binding var tab: AppTab
 
-    @State private var earned: Set<String> = []
+    @ObservedObject private var badgeStore = BadgeStore.shared
+    private var earned: Set<String> { badgeStore.earned }
     @State private var photoItem: PhotosPickerItem?
     @State private var uploading = false
     @State private var showSettings = false
@@ -60,7 +61,6 @@ struct ProfileView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 32)
         }
-        .task { earned = (try? await SupabaseAPI.earnedBadges()) ?? [] }
         .onAppear {
             // Deep link from Home ("Add child" / family card) opens the
             // children screen-time page instead of just the profile.

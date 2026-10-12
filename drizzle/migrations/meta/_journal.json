@@ -22,6 +22,13 @@
       "when": 1791847140904,
       "tag": "0002_coach_personalization",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791848471306,
+      "tag": "0003_badges_once_only",
+      "breakpoints": true
     }
   ]
 }
