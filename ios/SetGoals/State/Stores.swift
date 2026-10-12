@@ -14,7 +14,7 @@ final class SettingsStore: ObservableObject {
     @Published var linkedChild: Bool = false      // picture is parent-managed
     @Published var dailyGoal: Int = 8000
     @Published var stepsPer30: Int = 1000
-    @Published var dailyCapHours: Int = 3         // 24 == no cap
+    @Published var dailyCapHours: Int = 5         // 24 == no cap
     @Published var units: String = "metric"
     @Published var isPro: Bool = false
     @Published var proPlan: String = "monthly"

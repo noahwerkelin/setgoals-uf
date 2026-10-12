@@ -65,7 +65,7 @@ export const coachChat = createServerFn({ method: "POST" })
           const steps = (rows ?? []).reduce((a, r) => a + r.steps, 0);
           const distance_km = (rows ?? []).reduce((a, r) => a + Number(r.distance_km), 0);
           const stepsPer30 = settings?.steps_per_30 ?? 1000;
-          const capHours = settings?.daily_cap_hours ?? 3;
+          const capHours = settings?.daily_cap_hours ?? 5;
           const capMin = capHours * 60;
           const earnedMin = Math.min(capMin, Math.floor(steps / Math.max(1, stepsPer30)) * 30);
           const remainingMin = Math.max(0, capMin - earnedMin);
