@@ -70,7 +70,7 @@ We may process technical data required to provide, troubleshoot and secure the s
 • error and diagnostic data.
 Exactly which technical data is processed depends on the technical solutions and services used in the current version of the app.
 Location and motion data
-Certain features, including the AI coach, may use information about the user's location or motion when this is relevant to the user's question or the feature being used.
+Certain features, including the coach, may use information about the user's location or motion when this is relevant to the user's question or the feature being used.
 Such data is only used when needed for the relevant feature and in accordance with the permissions the user has granted.
 Purchases and subscriptions
 We may process information about your subscription status, for example whether you have PRO or PRO Family.
@@ -89,7 +89,7 @@ We process personal data in order to:
 • ensure the technical function of the app,
 • detect and troubleshoot technical problems,
 • improve the app's function and user experience where compatible with applicable law,
-• provide the AI coach,
+• provide the coach,
 • process location and motion data where required for a feature the user has chosen to use.
 HealthKit data is only used for the purposes required for SetGoals' activity and fitness related features.
 HealthKit data is not used for advertising, marketing or the sale of data.
@@ -130,18 +130,18 @@ When two users are friends, the following information may be shown according to 
 • today's step count.
 The user can remove friends and block other users.
 Child accounts do not have access to features for searching for, adding or seeing other users and their activity data.
-## 8. AI coach
-SetGoals may offer an AI coach that helps the user with questions and information related to the app's features.
-To provide the AI coach, information relevant to the user's question may need to be processed by external service providers.
+## 8. Coach
+SetGoals may offer an coach that helps the user with questions and information related to the app's features.
+To provide the coach, information relevant to the user's question may need to be processed by external service providers.
 Depending on the user's question and the information needed to give a relevant answer, this may for example include:
 • screen-time related information,
 • name,
 • motion data,
 • location information.
 Only information needed for the relevant feature shall be used.
-The AI coach is provided with Google Gemini through the Lovable AI Gateway.
-The AI coach is a technical aid and does not replace professional medical, psychological or other expert advice.
-SetGoals does not use the AI coach to make medical diagnoses.
+The coach is provided with Google Gemini through the Lovable AI Gateway.
+The coach is a technical aid and does not replace professional medical, psychological or other expert advice.
+SetGoals does not use the coach to make medical diagnoses.
 ## 9. Third-party services
 SetGoals uses external services to provide, operate and develop the app.
 Supabase
@@ -149,11 +149,11 @@ Supabase is used among other things for storage and management of the app's data
 Supabase may process personal data on behalf of SetGoals where required to provide the service.
 Google
 Google may be used for among other things:
-• Google Gemini in connection with the AI coach,
+• Google Gemini in connection with the coach,
 • Google Maps and map-related features.
 Which Google services process information depends on the features the user uses and how the current version of the app is configured.
 Lovable
-Lovable is used among other things in connection with the AI coach's technical functions through the Lovable AI Gateway.
+Lovable is used among other things in connection with the coach's technical functions through the Lovable AI Gateway.
 Lovable may process information on behalf of SetGoals where required to provide the relevant feature.
 Apple
 Apple is used among other things for:
@@ -315,7 +315,7 @@ PRO costs:
 * SEK 490 per year.
 PRO includes:
 * the ability to save the previous day's unused screen time as a bonus,
-* a personal AI coach,
+* a personal coach,
 * advanced parental controls,
 * deeper statistics and insights,
 * exclusive colour themes,
@@ -347,13 +347,13 @@ The service may be affected by, for example:
 * problems with external services,
 * changes to Apple's operating system or APIs.
 We may temporarily limit or shut down parts of the service when required for maintenance, security or technical measures.
-## 15. AI coach
-SetGoals may offer a personal AI coach as a premium feature.
-The AI coach is a technical aid and does not replace a doctor, psychologist, dietitian or other qualified professional.
-AI-generated recommendations may be incorrect or inappropriate. The user should therefore not make medical or other important decisions based solely on the AI coach's responses.
-SetGoals does not use the AI coach as a replacement for professional medical advice.
-SetGoals may use your screen-time data, location, name and motion data for the AI coach in order to provide answers depending on your question.
-SetGoals uses Google Gemini via the Lovable AI Gateway as the AI coach.
+## 15. Coach
+SetGoals may offer a personal coach as a premium feature.
+The coach is a technical aid and does not replace a doctor, psychologist, dietitian or other qualified professional.
+AI-generated recommendations may be incorrect or inappropriate. The user should therefore not make medical or other important decisions based solely on the coach's responses.
+SetGoals does not use the coach as a replacement for professional medical advice.
+SetGoals may use your screen-time data, location, name and motion data for the coach in order to provide answers depending on your question.
+SetGoals uses Google Gemini via the Lovable AI Gateway as the coach.
 ## 16. Suspension and termination of account
 The user can terminate their account using the features SetGoals offers.
 We may temporarily restrict or terminate an account if:
@@ -383,7 +383,7 @@ Last updated: 2026-09-06
 ## 1. Premium subscriptions
 SetGoals offers the following subscriptions:
 
-PRO — 49 SEK/month or 490 SEK/year. PRO may give access to: rollover of the previous day's unused screen time as a bonus, a personal AI coach, advanced parent controls, deeper statistics and insights, exclusive colour themes, and a PRO badge on your profile.
+PRO — 49 SEK/month or 490 SEK/year. PRO may give access to: rollover of the previous day's unused screen time as a bonus, a personal coach, advanced parent controls, deeper statistics and insights, exclusive colour themes, and a PRO badge on your profile.
 
 PRO Family — 69 SEK/month or 690 SEK/year. PRO Family includes the PRO features and also gives children linked to the family account access to PRO according to SetGoals' current family features.
 ## 2. Purchases via Apple App Store
@@ -543,7 +543,7 @@ Vi kan behandla tekniska uppgifter som krävs för att tillhandahålla, felsöka
 • fel- och diagnostikuppgifter.
 Exakt vilka tekniska uppgifter som behandlas beror på vilka tekniska lösningar och tjänster som används i den aktuella versionen av appen.
 Plats- och rörelsedata
-Vissa funktioner, inklusive AI-coachen, kan använda uppgifter om användarens plats eller rörelse när detta är relevant för användarens fråga eller den funktion som används.
+Vissa funktioner, inklusive coachen, kan använda uppgifter om användarens plats eller rörelse när detta är relevant för användarens fråga eller den funktion som används.
 Sådana uppgifter används endast när de behövs för den aktuella funktionen och i enlighet med de behörigheter som användaren har lämnat.
 Köp och abonnemang
 Vi kan behandla information om din abonnemangsstatus, exempelvis om du har PRO eller PRO Family.
@@ -562,7 +562,7 @@ Vi behandlar personuppgifter för att:
 • säkerställa appens tekniska funktion,
 • upptäcka och felsöka tekniska problem,
 • förbättra appens funktion och användarupplevelse när detta är förenligt med tillämplig lag,
-• tillhandahålla AI-coachen,
+• tillhandahålla coachen,
 • behandla plats- och rörelsedata när detta krävs för en funktion som användaren har valt att använda.
 HealthKit-data används endast för de ändamål som krävs för SetGoals aktivitets- och fitnessrelaterade funktioner.
 HealthKit-data används inte för reklam, marknadsföring eller försäljning av data.
@@ -603,18 +603,18 @@ När två användare är vänner kan följande information visas enligt appens f
 • dagens stegantal.
 Användaren kan ta bort vänner och blockera andra användare.
 Barnkonton har inte tillgång till funktioner för att söka efter, lägga till eller se andra användare och deras aktivitetsuppgifter.
-## 8. AI-coach
-SetGoals kan erbjuda en AI-coach som hjälper användaren med frågor och information kopplad till appens funktioner.
-För att tillhandahålla AI-coachen kan information som är relevant för användarens fråga behöva behandlas av externa tjänsteleverantörer.
+## 8. Coach
+SetGoals kan erbjuda en coach som hjälper användaren med frågor och information kopplad till appens funktioner.
+För att tillhandahålla coachen kan information som är relevant för användarens fråga behöva behandlas av externa tjänsteleverantörer.
 Beroende på användarens fråga och vilken information som behövs för att ge ett relevant svar kan detta exempelvis omfatta:
 • skärmtidsrelaterad information,
 • namn,
 • rörelsedata,
 • platsinformation.
 Endast information som behövs för den aktuella funktionen ska användas.
-AI-coachen tillhandahålls med Google Gemini genom Lovable AI Gateway.
-AI-coachen är ett tekniskt hjälpmedel och ersätter inte professionell medicinsk, psykologisk eller annan sakkunnig rådgivning.
-SetGoals använder inte AI-coachen för att ställa medicinska diagnoser.
+Coachen tillhandahålls med Google Gemini genom Lovable AI Gateway.
+Coachen är ett tekniskt hjälpmedel och ersätter inte professionell medicinsk, psykologisk eller annan sakkunnig rådgivning.
+SetGoals använder inte coachen för att ställa medicinska diagnoser.
 ## 9. Tredjepartstjänster
 SetGoals använder externa tjänster för att tillhandahålla, driva och utveckla appen.
 Supabase
@@ -622,11 +622,11 @@ Supabase används bland annat för lagring och hantering av appens data.
 Supabase kan behandla personuppgifter på uppdrag av SetGoals när detta krävs för att tillhandahålla tjänsten.
 Google
 Google kan användas för bland annat:
-• Google Gemini i samband med AI-coachen,
+• Google Gemini i samband med coachen,
 • Google Maps och kartrelaterade funktioner.
 Vilka Google-tjänster som behandlar information beror på vilka funktioner användaren använder och hur den aktuella versionen av appen är konfigurerad.
 Lovable
-Lovable används bland annat i samband med AI-coachens tekniska funktioner genom Lovable AI Gateway.
+Lovable används bland annat i samband med coachens tekniska funktioner genom Lovable AI Gateway.
 Lovable kan behandla information på uppdrag av SetGoals när detta krävs för att tillhandahålla den aktuella funktionen.
 Apple
 Apple används bland annat för:
@@ -788,7 +788,7 @@ PRO kostar:
 * 490 SEK per år.
 PRO innehåller:
 * möjlighet att spara föregående dags oanvända skärmtid som bonus,
-* personlig AI-coach,
+* personlig coach,
 * avancerade föräldrakontroller,
 * djupare statistik och insikter,
 * exklusiva färgteman,
@@ -820,13 +820,13 @@ Tjänsten kan påverkas av exempelvis:
 * problem hos externa tjänster,
 * förändringar i Apples operativsystem eller API:er.
 Vi kan tillfälligt begränsa eller stänga av delar av tjänsten när det krävs för underhåll, säkerhet eller tekniska åtgärder.
-## 15. AI-coach
-SetGoals kan erbjuda en personlig AI-coach som premiumfunktion.
-AI-coachen är ett tekniskt hjälpmedel och ersätter inte läkare, psykolog, dietist eller annan kvalificerad yrkesperson.
-AI-genererade rekommendationer kan vara felaktiga eller olämpliga. Användaren bör därför inte fatta medicinska eller andra viktiga beslut enbart baserat på AI-coachens svar.
-SetGoals använder inte AI-coachen som ersättning för professionell medicinsk rådgivning.
-SetGoals kan använda din skärmtidsdata, plats, namn och rörelsedata till AI-coachen för att ge svar beroende på din fråga.
-SetGoals använder Google Gemini via Lovable AI Gateway som AI-coach.
+## 15. Coach
+SetGoals kan erbjuda en personlig coach som premiumfunktion.
+Coachen är ett tekniskt hjälpmedel och ersätter inte läkare, psykolog, dietist eller annan kvalificerad yrkesperson.
+AI-genererade rekommendationer kan vara felaktiga eller olämpliga. Användaren bör därför inte fatta medicinska eller andra viktiga beslut enbart baserat på coachens svar.
+SetGoals använder inte coachen som ersättning för professionell medicinsk rådgivning.
+SetGoals kan använda din skärmtidsdata, plats, namn och rörelsedata till coachen för att ge svar beroende på din fråga.
+SetGoals använder Google Gemini via Lovable AI Gateway som coach.
 ## 16. Avstängning och avslutande av konto
 Användaren kan avsluta sitt konto enligt de funktioner som SetGoals erbjuder.
 Vi kan tillfälligt begränsa eller avsluta ett konto om:
@@ -857,7 +857,7 @@ Senast uppdaterad: 2026-09-06
 ## 1. Premiumabonnemang
 SetGoals erbjuder följande abonnemang:
 
-PRO — 49 SEK/månad eller 490 SEK/år. PRO kan ge tillgång till: sparande av föregående dags oanvända skärmtid som bonus, personlig AI-coach, avancerade föräldrakontroller, djupare statistik och insikter, exklusiva färgteman, och PRO-märke på profilen.
+PRO — 49 SEK/månad eller 490 SEK/år. PRO kan ge tillgång till: sparande av föregående dags oanvända skärmtid som bonus, personlig coach, avancerade föräldrakontroller, djupare statistik och insikter, exklusiva färgteman, och PRO-märke på profilen.
 
 PRO Family — 69 SEK/månad eller 690 SEK/år. PRO Family innehåller PRO-funktionerna och ger dessutom barn som är kopplade till familjekontot tillgång till PRO enligt SetGoals aktuella familjefunktioner.
 ## 2. Köp via Apple App Store

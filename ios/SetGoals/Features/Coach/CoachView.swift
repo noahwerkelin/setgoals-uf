@@ -1,7 +1,7 @@
 import SwiftUI
 import Supabase
 
-/// Port of `src/routes/coach.tsx` — PRO-locked AI coach, now personalized:
+/// Port of `src/routes/coach.tsx` — PRO-locked coach, now personalized:
 /// daily summary, personal challenges, persistent memory and confirmable actions.
 struct CoachView: View {
     @EnvironmentObject var theme: Theme
