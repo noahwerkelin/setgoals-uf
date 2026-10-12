@@ -15,6 +15,13 @@
       "when": 1791846810870,
       "tag": "0001_default_daily_cap_5h",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791847140904,
+      "tag": "0002_coach_personalization",
+      "breakpoints": true
     }
   ]
 }

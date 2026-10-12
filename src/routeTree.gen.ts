@@ -21,6 +21,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
+import { Route as ApiPublicCoachRouteImport } from './routes/api/public/coach'
 import { Route as ApiPublicDeleteAccountRouteImport } from './routes/api/public/delete-account'
 import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
 import { Route as ApiPublicNearbyActivitiesRouteImport } from './routes/api/public/nearby-activities'
@@ -86,6 +87,11 @@ const StatsRoute = StatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCoachRoute = ApiPublicCoachRouteImport.update({
+  id: '/api/public/coach',
+  path: '/api/public/coach',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDeleteAccountRoute = ApiPublicDeleteAccountRouteImport.update({
   id: '/api/public/delete-account',
   path: '/api/public/delete-account',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/coach'
     | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/coach'
     | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/coach'
     | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
+  ApiPublicCoachRoute: typeof ApiPublicCoachRoute
   ApiPublicDeleteAccountRoute: typeof ApiPublicDeleteAccountRoute
   ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
   ApiPublicNearbyActivitiesRoute: typeof ApiPublicNearbyActivitiesRoute
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/coach': {
+      id: '/api/public/coach'
+      path: '/api/public/coach'
+      fullPath: '/api/public/coach'
+      preLoaderRoute: typeof ApiPublicCoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/delete-account': {
       id: '/api/public/delete-account'
       path: '/api/public/delete-account'
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
+  ApiPublicCoachRoute: ApiPublicCoachRoute,
   ApiPublicDeleteAccountRoute: ApiPublicDeleteAccountRoute,
   ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
   ApiPublicNearbyActivitiesRoute: ApiPublicNearbyActivitiesRoute,

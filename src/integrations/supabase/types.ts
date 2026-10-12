@@ -134,6 +134,123 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_challenges: {
+        Row: {
+          created_at: string
+          days: number
+          id: string
+          metric: string
+          reason: string
+          start_day: string
+          status: string
+          target: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days: number
+          id?: string
+          metric: string
+          reason?: string
+          start_day?: string
+          status?: string
+          target: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days?: number
+          id?: string
+          metric?: string
+          reason?: string
+          start_day?: string
+          status?: string
+          target?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_insights: {
+        Row: {
+          created_at: string
+          day: string
+          input_hash: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          input_hash: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          input_hash?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_profiles: {
+        Row: {
+          coaching_style: string
+          main_goal: string
+          personal_target: string
+          preferences: Json
+          strategies: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          coaching_style?: string
+          main_goal?: string
+          personal_target?: string
+          preferences?: Json
+          strategies?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          coaching_style?: string
+          main_goal?: string
+          personal_target?: string
+          preferences?: Json
+          strategies?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       data_export_requests: {
         Row: {
           completed_at: string | null
