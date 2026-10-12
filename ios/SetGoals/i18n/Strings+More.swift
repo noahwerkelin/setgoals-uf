@@ -5,6 +5,10 @@ import Foundation
 extension L {
     static let extra: [String: [String: String]] = [
         "en": [
+            "pro.feature.earning": "Your own earning rules & daily screen-time cap",
+            "pro.included": "Included with every PRO plan",
+            "pro.choose_plan": "Choose your plan",
+            "pro.upgrade_subtitle": "More freedom. Better balance. Your rules.",
             "home.earned_of": "{e} of {c}",
             "home.challenge_reward": "+{m} earned from challenges today",
             "home.challenge_reward_failed": "Screen Time access is needed to add your challenge reward",
@@ -106,6 +110,10 @@ extension L {
             "parent.delete_desc": "This removes {n} and their linked data.",
         ],
         "sv": [
+            "pro.feature.earning": "Egna intjäningsregler och daglig skärmtidsgräns",
+            "pro.included": "Ingår i alla PRO-planer",
+            "pro.choose_plan": "Välj din plan",
+            "pro.upgrade_subtitle": "Mer frihet. Bättre balans. Dina regler.",
             "home.earned_of": "{e} av {c}",
             "home.challenge_reward": "+{m} intj\u00e4nat fr\u00e5n utmaningar idag",
             "home.challenge_reward_failed": "Sk\u00e4rmtid-beh\u00f6righet kr\u00e4vs f\u00f6r att l\u00e4gga till din bel\u00f6ning",

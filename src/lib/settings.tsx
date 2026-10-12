@@ -356,6 +356,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const update = useCallback<Ctx["update"]>(
     async (key, value) => {
+      // Personal earning customization is PRO-only; parent child-management is unchanged.
+      if ((key === "stepsPer30" || key === "dailyCapHours") && (!settings.isPro || settings.linkedChild)) return;
       setSettings((prev) => ({ ...prev, [key]: value }));
       if (!user) return;
 
@@ -453,7 +455,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return;
       }
     },
-    [user, settings.linkedChild, load],
+    [user, settings.linkedChild, settings.isPro, load],
 
   );
 
