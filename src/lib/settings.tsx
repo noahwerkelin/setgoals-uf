@@ -107,7 +107,7 @@ export type SettingsState = {
 
 const DEFAULTS: SettingsState = {
   stepsPer30: 1000,
-  dailyCapHours: 3,
+  dailyCapHours: 5,
   dailyGoal: 8000,
   healthkitConnected: false,
   googlefitConnected: false,
