@@ -8,7 +8,8 @@ struct StatsView: View {
     @ObservedObject var health = HealthKitService.shared
     @Binding var tab: AppTab
 
-    @State private var history: [DayTotals] = []
+    @ObservedObject private var cache = StatsCache.shared
+    private var history: [DayTotals] { cache.history }
     @State private var proOpen = false
     @State private var syncError: String?
 
@@ -39,16 +40,22 @@ struct StatsView: View {
         out.replaceSubrange((out.count - week.count)..<out.count, with: week)
         return out
     }
+    /// Days since Monday this week (Monday = 1 … Sunday = 7).
+    private var daysSinceMonday: Int {
+        let wd = Calendar.current.component(.weekday, from: Date()) // Sun=1
+        return wd == 1 ? 7 : wd - 1
+    }
+    private var thisWeek: [DayTotals] { Array(syncedHistory.isEmpty ? week : syncedHistory).suffix(daysSinceMonday) }
     private var maxSteps: Int { max(1, week.map(\.steps).max() ?? 1) }
     private var avg: Int { week.isEmpty ? 0 : week.reduce(0) { $0 + $1.steps } / week.count }
-    private var weeklyEarnedMin: Int { week.reduce(0) { $0 + settings.earnedMin(from: $1.steps) } }
+    private var weeklyEarnedMin: Int { thisWeek.reduce(0) { $0 + settings.earnedMin(from: $1.steps) } }
     private var goal: Int { max(1, settings.dailyGoal) }
     private var last30: [DayTotals] { Array(syncedHistory.suffix(30)) }
     private var goalPct: Int {
-        last30.isEmpty ? 0 : Int((Double(last30.filter { $0.steps >= goal }.count) / Double(last30.count) * 100).rounded())
+        last30.isEmpty ? 0 : Int((Double(last30.filter { $0.steps >= goal }.count) / 30.0 * 100).rounded())
     }
-    private var activeDays: Int { week.filter { $0.steps >= goal }.count }
-    private var best: DayTotals? { last30.max(by: { $0.steps < $1.steps }) }
+    private var activeDays: Int { thisWeek.filter { $0.steps >= goal }.count }
+    private var best: DayTotals? { week.max(by: { $0.steps < $1.steps }) }
     private var vsLastPct: Int? {
         let h = syncedHistory
         let last7 = h.suffix(7).reduce(0) { $0 + $1.steps }

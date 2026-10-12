@@ -42,6 +42,8 @@ struct SetGoalsApp: App {
                     await HealthKitService.shared.requestAuthorization()
                 }
                 if auth.signedIn {
+                    // Pre-load statistics so the Stats page opens instantly.
+                    Task { await StatsCache.shared.load() }
                     await settings.load()
                     await StreakSync.syncFromHealthKit()
                     // A child device is authorized as `.child`, so the parent
