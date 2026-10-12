@@ -448,10 +448,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
 
       if (settingsKeys[key]) {
-        await supabase
+        const { error } = await supabase
           .from("user_settings")
           .update({ [settingsKeys[key]!]: value } as never)
           .eq("user_id", user.id);
+        if (error && (key === "stepsPer30" || key === "dailyCapHours")) await load();
         return;
       }
     },

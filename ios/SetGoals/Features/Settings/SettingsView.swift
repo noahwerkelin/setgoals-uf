@@ -61,8 +61,12 @@ struct SettingsView: View {
             SliderDialog(title: L.t("settings.steps_per_30"), initial: settings.stepsPer30,
                          min: 200, max: 3000, step: 100) { v in
                 guard settings.isPro, !isChild else { proOpen = true; return }
-                settings.stepsPer30 = v
-                Task { try? await SupabaseAPI.updateSettings(["steps_per_30": .integer(v)]) }
+                Task {
+                    do {
+                        try await SupabaseAPI.updateSettings(["steps_per_30": .integer(v)])
+                        settings.stepsPer30 = v
+                    } catch { await settings.load() }
+                }
             }
         }
         .sheet(isPresented: $capOpen) {
@@ -70,8 +74,12 @@ struct SettingsView: View {
                          min: 1, max: 8, step: 1, unit: L.t("settings.hours"),
                          unlimited: (24, L.t("parent.no_cap"))) { v in
                 guard settings.isPro, !isChild else { proOpen = true; return }
-                settings.dailyCapHours = v
-                Task { try? await SupabaseAPI.updateSettings(["daily_cap_hours": .integer(v)]) }
+                Task {
+                    do {
+                        try await SupabaseAPI.updateSettings(["daily_cap_hours": .integer(v)])
+                        settings.dailyCapHours = v
+                    } catch { await settings.load() }
+                }
             }
         }
         .sheet(item: Binding(get: { connectKind.map(IdentifiedString.init) },
