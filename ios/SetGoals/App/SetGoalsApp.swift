@@ -12,7 +12,10 @@ struct SetGoalsApp: App {
         WindowGroup {
             ZStack {
                 if !onboarded {
-                    OnboardingView { onboarded = true }
+                    OnboardingView {
+                        onboarded = true
+                        Task { try? await SupabaseAPI.updateProfile(["onboarding_completed": .bool(true)]) }
+                    }
                         .environmentObject(theme)
                         .transition(.opacity)
                 } else {
