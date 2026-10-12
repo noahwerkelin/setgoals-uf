@@ -12,7 +12,8 @@ struct ChallengesView: View {
 
     @State private var sub: Tab = .goals
     @State private var week: [DayTotals] = []
-    @State private var earnedBadges: Set<String> = []
+    @ObservedObject private var badgeStore = BadgeStore.shared
+    private var earnedBadges: Set<String> { badgeStore.earned }
     @State private var streak: StreakRow?
     @State private var detail: Challenge?
 
@@ -37,9 +38,8 @@ struct ChallengesView: View {
             sub = initialTab
             // Sync movement first so badges reflect real activity.
             await HealthKitService.shared.refreshToday()
-            await BadgeSync.run()
+            Task { await BadgeSync.run() }
             week = await SupabaseAPI.weekTotals()
-            earnedBadges = (try? await SupabaseAPI.earnedBadges()) ?? []
             streak = try? await SupabaseAPI.streak()
             // Completed challenges pay out their screen-time reward once
             // per day (daily) or per week (weekly).
