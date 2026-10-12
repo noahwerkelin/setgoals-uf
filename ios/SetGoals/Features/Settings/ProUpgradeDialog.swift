@@ -61,27 +61,45 @@ struct UpgradeDialog: View {
     @State private var note: String?
 
     private var features: [String] {
-        var f = ["pro.feature.bonus", "pro.feature.coach", "pro.feature.parental",
+        var f = ["pro.feature.earning", "pro.feature.bonus", "pro.feature.coach", "pro.feature.parental",
                  "pro.feature.stats", "pro.feature.theme", "pro.feature.premium_badge"]
         if plan.isFamily { f.append("pro.feature.family") }
         return f
     }
 
     var body: some View {
-        AppDialog(title: L.t("pro.title"), description: L.t("pro.subtitle"), centered: true) {
-            VStack(alignment: .leading, spacing: 14) {
-                SparklesBadge(filled: true)
-                VStack(alignment: .leading, spacing: 10) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                VStack(spacing: 12) {
+                    Image(systemName: "crown")
+                        .font(.system(size: 32, weight: .light))
+                        .foregroundStyle(theme.primaryForeground)
+                        .frame(width: 64, height: 64)
+                        .background(theme.primary, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+                    Text(L.t("pro.title")).font(F.sans(28, .semibold)).foregroundStyle(theme.foreground)
+                    Text(L.t("pro.upgrade_subtitle")).font(F.sm).foregroundStyle(theme.mutedForeground)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity).padding(.top, 12)
+                Divider().overlay(theme.border)
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(L.t("pro.included")).font(F.xs).foregroundStyle(theme.mutedForeground)
                     ForEach(features, id: \.self) { k in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(theme.p.s600).padding(.top, 2)
-                            Text(L.t(k)).font(F.sm).foregroundStyle(theme.p.s900)
+                        HStack(alignment: .center, spacing: 12) {
+                            Image(systemName: featureIcon(k))
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(theme.primary)
+                                .frame(width: 34, height: 34)
+                                .background(theme.muted, in: RoundedRectangle(cornerRadius: R.sm, style: .continuous))
+                            Text(L.t(k)).font(F.sm).foregroundStyle(theme.foreground).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
-                planGrid
+                Divider().overlay(theme.border)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(L.t("pro.choose_plan")).font(F.xs).foregroundStyle(theme.mutedForeground)
+                    planGrid
+                }
                 Text(L.t("pro.store.billed_by_apple"))
                     .font(F.text11).foregroundStyle(theme.p.s600)
                     .multilineTextAlignment(.center).frame(maxWidth: .infinity)
@@ -94,7 +112,9 @@ struct UpgradeDialog: View {
                             .strokeBorder(theme.p.s200, lineWidth: 1))
                 }
             }
-        } footer: {
+            .padding(24)
+        }
+        .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 PrimaryButton(title: busy == "buy" ? L.t("pro.store.opening") : L.t("pro.store.buy_with_apple"),
                               busy: busy != nil) {
@@ -103,35 +123,59 @@ struct UpgradeDialog: View {
                 GhostButton(title: busy == "restore" ? L.t("pro.store.restoring") : L.t("pro.store.restore")) {
                     Task { await run("restore") }
                 }
+                .disabled(busy != nil)
             }
+            .padding(.horizontal, 24).padding(.vertical, 12)
+            .background(theme.card)
         }
+        .background(theme.card)
+        .presentationBackground(theme.card)
+        .presentationCornerRadius(R.xl3)
         .presentationDetents([.large])
     }
 
+    private func featureIcon(_ key: String) -> String {
+        switch key {
+        case "pro.feature.earning": return "slider.horizontal.3"
+        case "pro.feature.bonus": return "arrow.trianglehead.clockwise"
+        case "pro.feature.coach": return "bubble.left.and.bubble.right"
+        case "pro.feature.parental": return "checkmark.shield"
+        case "pro.feature.stats": return "chart.bar.xaxis"
+        case "pro.feature.theme": return "paintpalette"
+        case "pro.feature.family": return "person.2"
+        default: return "crown"
+        }
+    }
+
     private var planGrid: some View {
-        VStack(spacing: 8) {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
             ForEach(StoreKitService.Plan.allCases) { p in
                 let active = plan == p
                 Button { plan = p } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(L.t("pro.plan.\(p.rawValue)")).font(F.sans(14, .semibold))
-                                .foregroundStyle(theme.p.s900)
-                            Text(L.t("pro.price.\(p.rawValue)")).font(F.xs)
-                                .foregroundStyle(theme.p.s600)
-                        }
-                        Spacer()
-                        if active {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .top, spacing: 4) {
+                            Text(L.t("pro.plan.\(p.rawValue)")).font(F.xs)
+                                .foregroundStyle(theme.mutedForeground)
+                            Spacer(minLength: 0)
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(theme.primary)
+                                .foregroundStyle(theme.primary).opacity(active ? 1 : 0)
+                        }
+                        Text(L.t("pro.price.\(p.rawValue)")).font(F.sans(15, .semibold))
+                            .foregroundStyle(theme.foreground).fixedSize(horizontal: false, vertical: true)
+                        if p.rawValue.hasSuffix("yearly") {
+                            Text(L.t("pro.save_badge")).font(F.text11).foregroundStyle(theme.primary)
                         }
                     }
                     .padding(14)
-                    .background(active ? theme.p.s50 : theme.card,
+                    .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
+                    .background(active ? theme.secondary : theme.card,
                                 in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-                        .strokeBorder(active ? theme.p.s700.opacity(0.4) : Color.black.opacity(0.1), lineWidth: 1))
+                        .strokeBorder(active ? theme.primary : theme.border, lineWidth: 1))
                 }
+                .buttonStyle(.plain)
+                .disabled(busy != nil)
+                .accessibilityAddTraits(active ? .isSelected : [])
             }
         }
     }

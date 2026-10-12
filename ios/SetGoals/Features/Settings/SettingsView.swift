@@ -60,16 +60,26 @@ struct SettingsView: View {
         .sheet(isPresented: $stepsOpen) {
             SliderDialog(title: L.t("settings.steps_per_30"), initial: settings.stepsPer30,
                          min: 200, max: 3000, step: 100) { v in
-                settings.stepsPer30 = v
-                Task { try? await SupabaseAPI.updateSettings(["steps_per_30": .integer(v)]) }
+                guard settings.isPro, !isChild else { proOpen = true; return }
+                Task {
+                    do {
+                        try await SupabaseAPI.updateSettings(["steps_per_30": .integer(v)])
+                        settings.stepsPer30 = v
+                    } catch { await settings.load() }
+                }
             }
         }
         .sheet(isPresented: $capOpen) {
             SliderDialog(title: L.t("settings.daily_cap"), initial: settings.dailyCapHours,
                          min: 1, max: 8, step: 1, unit: L.t("settings.hours"),
                          unlimited: (24, L.t("parent.no_cap"))) { v in
-                settings.dailyCapHours = v
-                Task { try? await SupabaseAPI.updateSettings(["daily_cap_hours": .integer(v)]) }
+                guard settings.isPro, !isChild else { proOpen = true; return }
+                Task {
+                    do {
+                        try await SupabaseAPI.updateSettings(["daily_cap_hours": .integer(v)])
+                        settings.dailyCapHours = v
+                    } catch { await settings.load() }
+                }
             }
         }
         .sheet(item: Binding(get: { connectKind.map(IdentifiedString.init) },
@@ -216,12 +226,16 @@ struct SettingsView: View {
             row(L.t("settings.daily_goal"),
                 meta: "\(settings.dailyGoal.formatted()) \(L.t("settings.steps"))") { goalOpen = true }
             divider
-            row(L.t("settings.steps_per_30"), meta: settings.stepsPer30.formatted()) { stepsOpen = true }
+            row(L.t("settings.steps_per_30"), meta: settings.stepsPer30.formatted(), locked: !settings.isPro) {
+                if settings.isPro { stepsOpen = true } else { proOpen = true }
+            }
             divider
             row(L.t("settings.daily_cap"),
                 meta: settings.dailyCapHours >= 24
                     ? L.t("parent.no_cap")
-                    : "\(settings.dailyCapHours)\(L.t("settings.hours"))") { capOpen = true }
+                    : "\(settings.dailyCapHours)\(L.t("settings.hours"))", locked: !settings.isPro) {
+                if settings.isPro { capOpen = true } else { proOpen = true }
+            }
         }
     }
 
@@ -320,7 +334,7 @@ struct SettingsView: View {
         .rise()
     }
 
-    private func row(_ label: String, meta: String? = nil, danger: Bool = false,
+    private func row(_ label: String, meta: String? = nil, danger: Bool = false, locked: Bool = false,
                      action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
@@ -331,7 +345,10 @@ struct SettingsView: View {
                     if let meta {
                         Text(meta).font(F.sans(12, .medium)).lineLimit(1).truncationMode(.middle)
                     }
-                    Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold))
+                    if locked {
+                        Text(L.t("pro.badge")).font(F.sans(10, .semibold))
+                    }
+                    Image(systemName: locked ? "lock" : "chevron.right").font(.system(size: 12, weight: .semibold))
                 }
                 .foregroundStyle(danger ? theme.destructive : theme.p.s600)
             }

@@ -47,6 +47,10 @@ export const Route = createFileRoute("/settings")({
     meta: [
       { title: "Settings — SetGoals" },
       { name: "description", content: "Notifications, integrations, privacy, and account." },
+      { property: "og:title", content: "Settings — SetGoals" },
+      { property: "og:description", content: "Notifications, integrations, privacy, and account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,
@@ -256,12 +260,14 @@ function Page() {
             <Row
               label={t("settings.steps_per_30")}
               meta={settings.stepsPer30.toLocaleString()}
-              onClick={() => setStepsOpen(true)}
+              locked={!settings.isPro}
+              onClick={() => settings.isPro ? setStepsOpen(true) : setProOpen(true)}
             />
             <Row
               label={t("settings.daily_cap")}
               meta={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`}
-              onClick={() => setCapOpen(true)}
+              locked={!settings.isPro}
+              onClick={() => settings.isPro ? setCapOpen(true) : setProOpen(true)}
             />
           </Group>
         )}
@@ -397,6 +403,7 @@ function Page() {
         step={100}
         unit=""
         onSave={(v) => {
+          if (!settings.isPro) { setStepsOpen(false); setProOpen(true); return; }
           update("stepsPer30", v);
           toast.success(`${t("settings.steps_per_30")}: ${v.toLocaleString()}`);
         }}
@@ -415,6 +422,7 @@ function Page() {
         unit={t("settings.hours")}
         unlimited={{ sentinel: 24, label: t("parent.no_cap") }}
         onSave={(v) => {
+          if (!settings.isPro) { setCapOpen(false); setProOpen(true); return; }
           update("dailyCapHours", v);
           toast.success(`${t("settings.daily_cap")}: ${v >= 24 ? t("parent.no_cap") : `${v}${t("settings.hours")}`}`);
         }}
@@ -592,14 +600,14 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Row({ label, meta, onClick, danger }: { label: string; meta?: string; onClick?: () => void; danger?: boolean }) {
+function Row({ label, meta, onClick, danger, locked }: { label: string; meta?: string; onClick?: () => void; danger?: boolean; locked?: boolean }) {
   return (
-    <button onClick={onClick} className={`flex w-full items-center justify-between p-4 text-left transition-colors ${danger ? "hover:bg-destructive/10" : "hover:bg-sage-50/60"}`}>
+    <Button variant="ghost" onClick={onClick} className={`h-auto flex w-full items-center justify-between rounded-none p-4 text-left transition-colors ${danger ? "hover:bg-destructive/10" : "hover:bg-muted/60"}`}>
       <span className={`text-sm font-medium ${danger ? "text-destructive" : ""}`}>{label}</span>
       <span className={`flex items-center gap-1 text-xs font-medium ${danger ? "text-destructive" : "text-sage-600"}`}>
-        {meta} <ChevronRight className="size-4" />
+        {meta} {locked ? <><span className="text-[10px] text-primary">PRO</span><Lock className="size-4" /></> : <ChevronRight className="size-4" />}
       </span>
-    </button>
+    </Button>
   );
 }
 

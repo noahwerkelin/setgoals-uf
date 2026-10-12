@@ -16,6 +16,10 @@ export const Route = createFileRoute("/profile")({
     meta: [
       { title: "Profile — SetGoals" },
       { name: "description", content: "Your profile, streak, stats, and account." },
+      { property: "og:title", content: "Profile — SetGoals" },
+      { property: "og:description", content: "Your profile, streak, stats, and account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,

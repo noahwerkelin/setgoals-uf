@@ -56,6 +56,10 @@ export const Route = createFileRoute("/challenges")({
     meta: [
       { title: "Goals & Challenges — SetGoals" },
       { name: "description", content: "Daily challenges and step goals to earn more screen time." },
+      { property: "og:title", content: "Goals & Challenges — SetGoals" },
+      { property: "og:description", content: "Daily challenges and step goals to earn more screen time." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,

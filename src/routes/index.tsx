@@ -28,6 +28,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "SetGoals — Today" },
       { name: "description", content: "Your daily steps, earned screen time, and goals." },
+      { property: "og:title", content: "SetGoals — Today" },
+      { property: "og:description", content: "Your daily steps, earned screen time, and goals." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Home,

@@ -14,6 +14,10 @@ export const Route = createFileRoute("/coach")({
     meta: [
       { title: "AI Coach — SetGoals" },
       { name: "description", content: "Your wellness coach for goals, routes, and motivation." },
+      { property: "og:title", content: "AI Coach — SetGoals" },
+      { property: "og:description", content: "Your wellness coach for goals, routes, and motivation." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,
