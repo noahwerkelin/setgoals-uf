@@ -370,6 +370,8 @@ export type Database = {
           display_name: string
           email: string | null
           id: string
+          last_active_at: string | null
+          onboarding_completed: boolean
           region: string
           role: Database["public"]["Enums"]["user_role_kind"]
           updated_at: string
@@ -383,6 +385,8 @@ export type Database = {
           display_name?: string
           email?: string | null
           id: string
+          last_active_at?: string | null
+          onboarding_completed?: boolean
           region?: string
           role?: Database["public"]["Enums"]["user_role_kind"]
           updated_at?: string
@@ -396,6 +400,8 @@ export type Database = {
           display_name?: string
           email?: string | null
           id?: string
+          last_active_at?: string | null
+          onboarding_completed?: boolean
           region?: string
           role?: Database["public"]["Enums"]["user_role_kind"]
           updated_at?: string
@@ -683,6 +689,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_stats: {
+        Row: {
+          actual_device_screen_time_seconds: number | null
+          created_at: string
+          id: string
+          screen_time_bonus_seconds: number
+          screen_time_carried_over_seconds: number | null
+          screen_time_earned_seconds: number
+          screen_time_remaining_seconds: number | null
+          screen_time_used_seconds: number | null
+          stat_date: string
+          step_goal: number | null
+          steps: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_device_screen_time_seconds?: number | null
+          created_at?: string
+          id?: string
+          screen_time_bonus_seconds?: number
+          screen_time_carried_over_seconds?: number | null
+          screen_time_earned_seconds?: number
+          screen_time_remaining_seconds?: number | null
+          screen_time_used_seconds?: number | null
+          stat_date: string
+          step_goal?: number | null
+          steps?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_device_screen_time_seconds?: number | null
+          created_at?: string
+          id?: string
+          screen_time_bonus_seconds?: number
+          screen_time_carried_over_seconds?: number | null
+          screen_time_earned_seconds?: number
+          screen_time_remaining_seconds?: number | null
+          screen_time_used_seconds?: number | null
+          stat_date?: string
+          step_goal?: number | null
+          steps?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -778,6 +832,76 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_overview_daily: {
+        Args: { _from: string; _to?: string }
+        Returns: {
+          active_users: number
+          avg_earned_seconds: number
+          avg_steps: number
+          avg_used_seconds: number
+          day: string
+          goal_rate: number
+          new_users: number
+        }[]
+      }
+      admin_overview_totals: {
+        Args: never
+        Returns: {
+          active_1d: number
+          active_30d: number
+          active_7d: number
+          total_users: number
+        }[]
+      }
+      admin_user_history: {
+        Args: { _from?: string; _uid: string }
+        Returns: {
+          actual_device_screen_time_seconds: number | null
+          created_at: string
+          id: string
+          screen_time_bonus_seconds: number
+          screen_time_carried_over_seconds: number | null
+          screen_time_earned_seconds: number
+          screen_time_remaining_seconds: number | null
+          screen_time_used_seconds: number | null
+          stat_date: string
+          step_goal: number | null
+          steps: number
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "user_daily_stats"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_users: {
+        Args: {
+          _desc?: boolean
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _sort?: string
+        }
+        Returns: {
+          avg_daily_steps: number
+          avg_earned_seconds: number
+          avg_used_seconds: number
+          created_at: string
+          days_recorded: number
+          display_name: string
+          email: string
+          last_active_at: string
+          last_activity_date: string
+          step_goal: number
+          total_count: number
+          total_steps: number
+          user_id: string
+          username: string
+        }[]
+      }
       family_today: {
         Args: { _uid: string }
         Returns: {
@@ -796,6 +920,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: never; Returns: boolean }
       is_parent_of: { Args: { _child_user_id: string }; Returns: boolean }
       is_privileged_caller: { Args: never; Returns: boolean }
       leaderboard: {
@@ -832,6 +957,10 @@ export type Database = {
         }[]
       }
       pro_is_active: { Args: { _user_id: string }; Returns: boolean }
+      refresh_daily_stats: {
+        Args: { _day: string; _uid: string }
+        Returns: undefined
+      }
       username_available: { Args: { _username: string }; Returns: boolean }
     }
     Enums: {
