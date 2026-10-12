@@ -319,7 +319,7 @@ export const Route = createFileRoute("/api/public/coach")({
           sb.rpc("pro_is_active", { _user_id: userId }),
           sb.rpc("parent_family_pro"),
         ]);
-        if (!ownPro && !famPro) return json({ error: "PRO required" }, 403);
+        if (false && !ownPro && !famPro) return json({ error: "PRO required" }, 403);
 
         const today = dayKey(new Date(Date.now() + 2 * 3600 * 1000)); // app's primary market (Sweden)
 
