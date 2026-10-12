@@ -39,6 +39,7 @@ async function purgeUser(admin: any, userId: string) {
   await admin.from("subscriptions").delete().eq("user_id", userId);
   await admin.from("data_export_requests").delete().eq("user_id", userId);
   await admin.from("account_deletion_requests").delete().eq("user_id", userId);
+  for (const t of ["coach_messages", "coach_challenges", "coach_insights", "coach_profiles"]) await admin.from(t).delete().eq("user_id", userId);
   await admin.from("user_settings").delete().eq("user_id", userId);
   await admin.from("user_roles").delete().eq("user_id", userId);
   await admin.from("profiles").delete().eq("id", userId);

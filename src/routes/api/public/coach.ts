@@ -78,7 +78,7 @@ async function loadContext(sb: any, userId: string, today: string) {
   const since = addDays(today, -89);
   const [profileQ, settingsQ, streakQ, stepsQ, balanceQ, coachQ, challengesQ] = await Promise.all([
     sb.from("profiles").select("display_name, username").eq("id", userId).maybeSingle(),
-    sb.from("user_settings").select("steps_per_30, daily_cap_hours, daily_goal, units, role").eq("user_id", userId).maybeSingle(),
+    sb.from("user_settings").select("steps_per_30, daily_cap_hours, daily_goal, units").eq("user_id", userId).maybeSingle(),
     sb.from("streaks").select("count, best").eq("user_id", userId).maybeSingle(),
     sb.from("activity_steps").select("day, steps, distance_km").eq("user_id", userId).gte("day", since).lte("day", today),
     sb.from("earned_balances").select("day, earned_min, consumed_min").eq("user_id", userId).maybeSingle(),
@@ -162,7 +162,7 @@ async function loadContext(sb: any, userId: string, today: string) {
 
   return {
     name: profileQ.data?.display_name || profileQ.data?.username || null,
-    role: settings.role ?? "individual",
+    role: (await sb.from("user_roles").select("role").eq("user_id", userId)).data?.some((r: any) => r.role === "child") ? "child" : "individual",
     units: settings.units ?? "metric",
     goal,
     stepsPer30,
