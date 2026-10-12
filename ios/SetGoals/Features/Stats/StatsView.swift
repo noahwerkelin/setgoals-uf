@@ -99,13 +99,8 @@ struct StatsView: View {
         }
         .task {
             await HealthKitService.shared.refreshToday()
-            do {
-                history = try await SupabaseAPI.historyTotalsResult(days: 180)
-                syncError = HealthKitService.shared.syncError
-            } catch {
-                syncError = error.localizedDescription
-                history = await SupabaseAPI.historyTotals(days: 180)
-            }
+            await cache.load()
+            syncError = cache.error ?? HealthKitService.shared.syncError
         }
         .sheet(isPresented: $proOpen) {
             ProUpgradeDialog().environmentObject(theme).environmentObject(settings)
@@ -165,7 +160,7 @@ struct StatsView: View {
                 miniCard(L.t("stats.goal"), "\(goalPct)%", L.t("stats.goal_sub"))
             }
             HStack(spacing: 16) {
-                miniCard(L.t("stats.active"), "\(activeDays) / \(max(1, week.count))", L.t("stats.active_sub"))
+                miniCard(L.t("stats.active"), "\(activeDays) / \(daysSinceMonday)", L.t("stats.active_sub"))
                 miniCard(L.t("stats.best"),
                          (best?.steps ?? 0) > 0 ? best!.steps.formatted() : "—",
                          (best?.steps ?? 0) > 0 ? Self.weekdayLong(best!.day) : L.t("stats.no_data"))
@@ -537,5 +532,30 @@ struct Insights {
             msgs.append(L.t("insights.msg.quietest", ["d": worst]))
         }
         return Array(msgs.prefix(3))
+    }
+}
+
+
+/// Shared statistics cache, pre-loaded at app launch so the Stats page
+/// renders instantly instead of fetching on open.
+@MainActor
+final class StatsCache: ObservableObject {
+    static let shared = StatsCache()
+    @Published var history: [DayTotals] = []
+    @Published var error: String?
+    private var loading = false
+
+    func load() async {
+        guard !loading else { return }
+        loading = true
+        defer { loading = false }
+        do {
+            history = try await SupabaseAPI.historyTotalsResult(days: 180)
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+            let fallback = await SupabaseAPI.historyTotals(days: 180)
+            if !fallback.isEmpty { history = fallback }
+        }
     }
 }
