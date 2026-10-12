@@ -73,6 +73,10 @@ export function useEarnedBadges() {
 
 /** Mounted once at the app root: pre-loads badges and awards new ones in the background. */
 export function BadgeSyncRunner() {
+  const { user } = useAuth();
+  return user ? <BadgeSyncInner /> : null;
+}
+function BadgeSyncInner() {
   useEarnedBadges();
   useActivityBadgeSync();
   useStreakBadges();

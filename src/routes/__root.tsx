@@ -1,3 +1,4 @@
+import { BadgeSyncRunner } from "@/lib/badges";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -139,6 +140,7 @@ function RootComponent() {
               </main>
             </AuthGate>
             <Splash />
+            <BadgeSyncRunner />
           </SettingsProvider>
         </AuthProvider>
       </I18nProvider>
