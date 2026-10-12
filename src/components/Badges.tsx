@@ -103,10 +103,6 @@ export function Badges() {
     return map;
   }, [earnedRows]);
 
-  useActivityBadgeSync();
-  useStreakBadges();
-  useProBadge();
-  useUnlockerBadge();
 
   const groups = useMemo(() => {
     const map = new Map<string, BadgeDef[]>();
