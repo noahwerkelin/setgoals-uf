@@ -1,4 +1,4 @@
-import { Sparkles, Check, Calendar, RefreshCw, Crown, Apple } from "lucide-react";
+import { Sparkles, Check, Calendar, RefreshCw, Crown, Apple, SlidersHorizontal, Bot, ChartNoAxesCombined, Palette, ShieldCheck, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,19 +29,22 @@ function PlanGrid({ plan, onSelect }: { plan: SubPlan; onSelect: (p: SubPlan) =>
       {ALL_PLANS.map((p) => {
         const active = plan === p;
         return (
-          <button
+          <Button
             key={p}
+             variant="outline"
+             aria-pressed={active}
             onClick={() => onSelect(p)}
-            className={`rounded-2xl p-3 text-left ring-1 transition-colors ${
-              active ? "bg-sage-600 text-primary-foreground ring-sage-700/40" : "bg-card ring-black/10"
+             className={`relative h-auto min-h-24 flex-col items-start justify-center gap-1 whitespace-normal rounded-2xl p-4 text-left border transition-colors ${
+               active ? "bg-secondary text-foreground border-primary hover:bg-secondary" : "bg-card border-border hover:bg-muted"
             }`}
           >
-            <p className="text-xs uppercase tracking-wide opacity-80">{t(`pro.plan.${p}`)}</p>
-            <p className="text-sm font-semibold">{t(`pro.price.${p}`)}</p>
+             <span className="text-xs text-muted-foreground">{t(`pro.plan.${p}`)}</span>
+             <span className="text-base font-semibold">{t(`pro.price.${p}`)}</span>
+             {active && <Check className="absolute right-3 top-3 size-3.5 text-primary" />}
             {p.endsWith("yearly") && (
-              <p className={`text-[11px] ${active ? "text-white/80" : "text-sage-600"}`}>{t("pro.save_badge")}</p>
+               <span className="text-[11px] font-medium text-primary">{t("pro.save_badge")}</span>
             )}
-          </button>
+           </Button>
         );
       })}
     </div>
@@ -118,6 +121,7 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
   const [note, setNote] = useState<string | null>(null);
 
   const features = [
+    "pro.feature.earning",
     "pro.feature.bonus",
     "pro.feature.coach",
     "pro.feature.parental",
@@ -126,6 +130,7 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     "pro.feature.premium_badge",
     ...(isFamilyPlan(plan) ? ["pro.feature.family"] : []),
   ];
+  const featureIcons = [SlidersHorizontal, RefreshCw, Bot, ShieldCheck, ChartNoAxesCombined, Palette, Crown, Users];
 
   /** Hand a StoreKit result to the server, which is the only entitlement judge. */
   const grant = async (transactions: string[]) => {
@@ -184,25 +189,32 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <div className="mx-auto mb-2 grid size-12 place-items-center rounded-2xl bg-sage-600 text-primary-foreground">
-            <Sparkles className="size-6" />
+      <DialogContent className="max-h-[90dvh] overflow-y-auto gap-5 sm:max-w-lg">
+        <DialogHeader className="border-b border-border pb-5">
+          <div className="mx-auto mb-3 grid size-16 place-items-center rounded-2xl bg-primary text-primary-foreground">
+            <Crown className="size-8" strokeWidth={1.5} />
           </div>
-          <DialogTitle className="text-center">{t("pro.title")}</DialogTitle>
-          <DialogDescription className="text-center">{t("pro.subtitle")}</DialogDescription>
+          <DialogTitle className="text-center text-2xl">{t("pro.title")}</DialogTitle>
+          <DialogDescription className="text-center">{t("pro.upgrade_subtitle")}</DialogDescription>
         </DialogHeader>
 
-        <ul className="space-y-2.5 py-1">
-          {features.map((k) => (
-            <li key={k} className="flex items-start gap-2 text-sm">
-              <Check className="mt-0.5 size-4 shrink-0 text-sage-600" />
-              <span>{t(k)}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground">{t("pro.included")}</p>
+          <ul className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+            {features.map((k, i) => {
+              const Icon = featureIcons[i] ?? Check;
+              return <li key={k} className="flex items-start gap-2.5 text-sm leading-snug">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-primary"><Icon className="size-4" /></span>
+                <span className="self-center">{t(k)}</span>
+              </li>;
+            })}
+          </ul>
+        </div>
 
-        <PlanGrid plan={plan} onSelect={setPlan} />
+        <div className="space-y-3 border-t border-border pt-4">
+          <p className="text-xs font-semibold text-muted-foreground">{t("pro.choose_plan")}</p>
+          <PlanGrid plan={plan} onSelect={setPlan} />
+        </div>
 
         <p className="text-center text-[11px] leading-snug text-sage-600">
           {t("pro.store.billed_by_apple")}
