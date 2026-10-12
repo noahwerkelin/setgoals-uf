@@ -13,6 +13,10 @@ export const Route = createFileRoute("/stats")({
     meta: [
       { title: "Statistics — SetGoals" },
       { name: "description", content: "Daily, weekly, and monthly trends for steps and screen time." },
+      { property: "og:title", content: "Statistics — SetGoals" },
+      { property: "og:description", content: "Daily, weekly, and monthly trends for steps and screen time." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,

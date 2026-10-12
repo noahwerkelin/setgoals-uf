@@ -32,6 +32,10 @@ export const Route = createFileRoute("/parent")({
     meta: [
       { title: "Parent dashboard — SetGoals" },
       { name: "description", content: "Approve apps, set goals, and view your child's activity." },
+      { property: "og:title", content: "Parent dashboard — SetGoals" },
+      { property: "og:description", content: "Approve apps, set goals, and view your child's activity." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,

@@ -47,6 +47,10 @@ export const Route = createFileRoute("/settings")({
     meta: [
       { title: "Settings — SetGoals" },
       { name: "description", content: "Notifications, integrations, privacy, and account." },
+      { property: "og:title", content: "Settings — SetGoals" },
+      { property: "og:description", content: "Notifications, integrations, privacy, and account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,

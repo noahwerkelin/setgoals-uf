@@ -113,6 +113,10 @@ export const Route = createFileRoute("/map")({
     meta: [
       { title: "Map — SetGoals" },
       { name: "description", content: "Discover verified nearby trails, parks, and outdoor activities." },
+      { property: "og:title", content: "Map — SetGoals" },
+      { property: "og:description", content: "Discover verified nearby trails, parks, and outdoor activities." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: MapPage,
