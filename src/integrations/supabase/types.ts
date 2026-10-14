@@ -77,6 +77,27 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_pro_grants: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       children: {
         Row: {
           auth_user_id: string | null

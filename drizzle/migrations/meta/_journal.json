@@ -36,6 +36,13 @@
       "when": 1791849286294,
       "tag": "0004_user_daily_stats_and_admin_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791986368427,
+      "tag": "0005_admin_pro_grants",
+      "breakpoints": true
     }
   ]
 }
