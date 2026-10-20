@@ -23,9 +23,8 @@ struct HomeView: View {
     private var steps: Int { health.steps }
     private var capMin: Int { settings.hasCap ? settings.dailyCapHours * 60 : 24 * 60 }
     private var rolloverMin: Int {
-        guard settings.isPro, rolloverEnabled, settings.hasCap else { return 0 }
-        let usedYesterday = min(capMin, settings.earnedMin(from: yesterdaySteps))
-        return max(0, capMin - usedYesterday)
+        guard settings.isPro, settings.hasCap else { return 0 }
+        return settings.rolloverMin
     }
     private var baseEarned: Int { settings.earnedMin(from: steps) }
     /// Screen time earned today from steps, rollover and parent gifts.

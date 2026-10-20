@@ -8,7 +8,7 @@ import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
 import { initialsFromName } from "@/lib/avatar";
 import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
-import { useTodaySteps, useHistorySteps } from "@/lib/steps";
+import { useTodaySteps } from "@/lib/steps";
 import { BADGES, tierStyle } from "@/components/Badges";
 import { useEarnedBadges, useDailyBadgeCheck } from "@/lib/badges";
 import { loadProST, computeRolloverMin } from "@/lib/screentime";
