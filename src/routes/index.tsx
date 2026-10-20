@@ -88,10 +88,7 @@ function Home() {
   if (hour >= 12 && hour < 17) greetingKey = "home.greeting.afternoon";
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
-  const { data: hist } = useHistorySteps(2);
-  const yesterdaySteps = hist && hist.length >= 2 ? hist[hist.length - 2].steps : 0;
-  const proST = useMemo(() => loadProST(), []);
-  const rolloverMin = computeRolloverMin(yesterdaySteps, settings.stepsPer30, settings.dailyCapHours, proST, settings.isPro);
+  const rolloverMin = useRolloverMin(settings.isPro);
   const capMin = settings.dailyCapHours * 60;
   const bonusMin = useBonusMin();
   const baseEarned = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);

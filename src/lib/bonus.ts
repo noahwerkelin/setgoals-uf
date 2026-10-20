@@ -43,3 +43,32 @@ export function useBonusMin(): number {
 
   return bonus;
 }
+
+/** Saves the PRO rollover on/off choice to the account so every device agrees. */
+export async function saveRolloverPref(on: boolean) {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) return;
+  await supabase.from("user_settings").update({ st_rollover: on }).eq("user_id", uid);
+}
+
+/**
+ * Today's PRO rollover, computed once per local day by the backend from
+ * yesterday's earned + bonus + rollover - used, capped at the daily cap.
+ */
+export function useRolloverMin(isPro: boolean): number {
+  const [min, setMin] = useState(0);
+  const day = useDayKey();
+  useEffect(() => {
+    setMin(0);
+    if (!isPro) return;
+    let cancelled = false;
+    void supabase.rpc("claim_rollover", { _day: day }).then(({ data }) => {
+      if (!cancelled) setMin(typeof data === "number" ? data : 0);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [day, isPro]);
+  return min;
+}
