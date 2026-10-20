@@ -305,6 +305,8 @@ export type Database = {
           consumed_min: number
           day: string
           earned_min: number
+          rollover_applied_at: string | null
+          rollover_min: number
           updated_at: string
           user_id: string
         }
@@ -313,6 +315,8 @@ export type Database = {
           consumed_min?: number
           day?: string
           earned_min?: number
+          rollover_applied_at?: string | null
+          rollover_min?: number
           updated_at?: string
           user_id: string
         }
@@ -321,6 +325,8 @@ export type Database = {
           consumed_min?: number
           day?: string
           earned_min?: number
+          rollover_applied_at?: string | null
+          rollover_min?: number
           updated_at?: string
           user_id?: string
         }
@@ -794,6 +800,7 @@ export type Database = {
           pro_status: string
           push_on: boolean
           share_location: Database["public"]["Enums"]["share_location_mode"]
+          st_rollover: boolean
           steps_per_30: number
           theme_color: Database["public"]["Enums"]["theme_color"]
           units: Database["public"]["Enums"]["units_kind"]
@@ -817,6 +824,7 @@ export type Database = {
           pro_status?: string
           push_on?: boolean
           share_location?: Database["public"]["Enums"]["share_location_mode"]
+          st_rollover?: boolean
           steps_per_30?: number
           theme_color?: Database["public"]["Enums"]["theme_color"]
           units?: Database["public"]["Enums"]["units_kind"]
@@ -840,6 +848,7 @@ export type Database = {
           pro_status?: string
           push_on?: boolean
           share_location?: Database["public"]["Enums"]["share_location_mode"]
+          st_rollover?: boolean
           steps_per_30?: number
           theme_color?: Database["public"]["Enums"]["theme_color"]
           units?: Database["public"]["Enums"]["units_kind"]
@@ -923,6 +932,11 @@ export type Database = {
           username: string
         }[]
       }
+      claim_rollover: { Args: { _day: string }; Returns: number }
+      compute_rollover: {
+        Args: { _day: string; _uid: string }
+        Returns: number
+      }
       family_today: {
         Args: { _uid: string }
         Returns: {
@@ -980,6 +994,10 @@ export type Database = {
       pro_is_active: { Args: { _user_id: string }; Returns: boolean }
       refresh_daily_stats: {
         Args: { _day: string; _uid: string }
+        Returns: undefined
+      }
+      report_consumed: {
+        Args: { _day: string; _minutes: number }
         Returns: undefined
       }
       username_available: { Args: { _username: string }; Returns: boolean }
