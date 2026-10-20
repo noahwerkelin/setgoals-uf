@@ -1092,6 +1092,7 @@ function CategoryToggle({
 }
 
 import { loadProST, saveProST, DEFAULT_PRO_ST, type ProST } from "@/lib/screentime";
+import { saveRolloverPref } from "@/lib/bonus";
 
 
 function ProScreenTimeSection({
@@ -1111,6 +1112,7 @@ function ProScreenTimeSection({
   }, []);
 
   const save = (next: ProST) => {
+    if (next.rollover !== state.rollover) void saveRolloverPref(next.rollover);
     setState(next);
     saveProST(next);
   };

@@ -58,6 +58,7 @@ struct EarnedBalanceRow: Codable {
     var earned_min: Int
     var consumed_min: Int
     var bonus_min: Int
+    var rollover_min: Int?
 }
 
 struct StreakRow: Codable {
@@ -150,6 +151,35 @@ enum SupabaseAPI {
         return try? await supabase.from("earned_balances").select()
             .eq("user_id", value: uid).eq("day", value: todayKey)
             .single().execute().value
+    }
+
+    /// Today's PRO rollover. The backend computes it once per local day from
+    /// yesterday's earned + bonus + rollover minus measured usage.
+    static func claimRollover() async -> Int {
+        do {
+            let v: Int = try await supabase.rpc("claim_rollover", params: ["_day": todayKey])
+                .execute().value
+            return v
+        } catch { return 0 }
+    }
+
+    /// Sends Screen Time usage measured by Apple (today, plus yesterday's final
+    /// value kept at the midnight roll) to the backend.
+    static func reportConsumedUsage() async {
+        let today = ScreenTimeBudget.usedMin
+        _ = try? await supabase.rpc("report_consumed",
+            params: ["_day": AnyJSON.string(todayKey), "_minutes": .integer(today)]).execute()
+        if let prev = ScreenTimeBudget.previousDay {
+            _ = try? await supabase.rpc("report_consumed",
+                params: ["_day": AnyJSON.string(prev.day), "_minutes": .integer(prev.usedMin)]).execute()
+        }
+    }
+
+    /// Saves the PRO rollover on/off choice to the account.
+    static func saveRolloverPref(_ on: Bool) async {
+        guard let uid = await currentUserID() else { return }
+        _ = try? await supabase.from("user_settings").update(["st_rollover": on])
+            .eq("user_id", value: uid).execute()
     }
 
     static func streak() async throws -> StreakRow? {

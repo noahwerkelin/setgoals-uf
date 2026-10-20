@@ -6,7 +6,13 @@ import Combine
 final class ProSTStore: ObservableObject {
     static let shared = ProSTStore()
 
-    @Published var rollover: Bool { didSet { d.set(rollover, forKey: "st.rollover") } }
+    @Published var rollover: Bool {
+        didSet {
+            d.set(rollover, forKey: "st.rollover")
+            let on = rollover
+            Task { await SupabaseAPI.saveRolloverPref(on) }
+        }
+    }
     @Published var weekend2x: Bool { didSet { d.set(weekend2x, forKey: "st.weekend2x") } }
     @Published var splitCaps: Bool { didSet { d.set(splitCaps, forKey: "st.splitCaps") } }
     @Published var weekdayCap: Int { didSet { d.set(weekdayCap, forKey: "st.weekdayCap") } }

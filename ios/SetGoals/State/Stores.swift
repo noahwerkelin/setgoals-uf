@@ -21,6 +21,8 @@ final class SettingsStore: ObservableObject {
     @Published var proExpiresAt: String? = nil
     @Published var themeColor: ThemeColor = .sage
     @Published var bonusMin: Int = 0
+    /// PRO rollover for today, computed once per day by the backend.
+    @Published var rolloverMin: Int = 0
     @Published var anonymousLeaderboard: Bool = false
     @Published var shareLocation: String = "while_using"   // off | while_using | always
     @Published var pushOn: Bool = true
@@ -97,6 +99,9 @@ final class SettingsStore: ObservableObject {
         if let b = try? await SupabaseAPI.todayBalance(), let b {
             bonusMin = b.bonus_min
         }
+        // Upload measured Screen Time usage first so yesterday's leftover is exact.
+        await SupabaseAPI.reportConsumedUsage()
+        rolloverMin = isPro ? await SupabaseAPI.claimRollover() : 0
         if let st = try? await SupabaseAPI.streak(), let st {
             streakCount = st.count
             streakBest = st.best
