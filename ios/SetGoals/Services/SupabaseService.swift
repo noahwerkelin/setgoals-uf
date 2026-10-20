@@ -156,8 +156,11 @@ enum SupabaseAPI {
     /// Today's PRO rollover. The backend computes it once per local day from
     /// yesterday's earned + bonus + rollover minus measured usage.
     static func claimRollover() async -> Int {
-        (try? await supabase.rpc("claim_rollover", params: ["_day": todayKey])
-            .execute().value as Int) ?? 0
+        do {
+            let v: Int = try await supabase.rpc("claim_rollover", params: ["_day": todayKey])
+                .execute().value
+            return v
+        } catch { return 0 }
     }
 
     /// Sends Screen Time usage measured by Apple (today, plus yesterday's final
