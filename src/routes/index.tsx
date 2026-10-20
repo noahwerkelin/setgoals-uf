@@ -11,7 +11,7 @@ import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin, isIma
 import { useTodaySteps } from "@/lib/steps";
 import { BADGES, tierStyle } from "@/components/Badges";
 import { useEarnedBadges, useDailyBadgeCheck } from "@/lib/badges";
-import { loadProST, computeRolloverMin } from "@/lib/screentime";
+import { useRolloverMin } from "@/lib/bonus";
 import { useBonusMin } from "@/lib/bonus";
 import { useDayKey } from "@/lib/day";
 import { useFriends, friendsRankToday } from "@/lib/friends";
