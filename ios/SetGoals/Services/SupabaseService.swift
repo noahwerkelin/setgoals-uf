@@ -202,7 +202,30 @@ enum SupabaseAPI {
         ]).execute().value
     }
 
+    /// Goes through the app server: the database check is not callable by
+    /// signed-out users directly, which made every name look "taken".
+    static func redeemChildCode(_ code: String) async throws -> (email: String, password: String) {
+        var req = URLRequest(url: URL(string: "https://step-wise-life.lovable.app/api/public/redeem-child-code")!)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: ["code": code])
+        let (data, response) = try await URLSession.shared.data(for: req)
+        let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        guard (response as? HTTPURLResponse)?.statusCode == 200,
+              let e = obj?["email"] as? String, let p = obj?["password"] as? String
+        else { throw URLError(.badServerResponse) }
+        return (e, p)
+    }
+
     static func usernameAvailable(_ username: String) async throws -> Bool {
-        try await supabase.rpc("username_available", params: ["_username": username]).execute().value
+        var req = URLRequest(url: URL(string: "https://step-wise-life.lovable.app/api/public/username-available")!)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: ["username": username])
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard (response as? HTTPURLResponse)?.statusCode == 200,
+              let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let ok = obj["available"] as? Bool else { throw URLError(.badServerResponse) }
+        return ok
     }
 }

@@ -5,3 +5,4 @@
 - PRO screen-time rollover is computed only by the claim_rollover database function (once per user per local day, stored in its own column separate from bonus minutes); clients just display it, so all devices agree and it cannot be inflated.
 - The iOS onboarding owns all account entry (sign in, kid code, sign up) and AuthView reuses it in auth-only mode, so there is one sign-in implementation; onboarding is only marked complete after authentication.
 - Swift onboarding uses the shared PrimaryButton, F typography with bundled Albert Sans weights, and Theme tokens sourced from the web design system; declare font resources in both Info.plist and project.yml so Xcode generation cannot revert the visual match.
+- Signed-out iOS actions (username check, kid-code redeem) call public server routes that reuse the web server logic, because the underlying database functions are service-role only.

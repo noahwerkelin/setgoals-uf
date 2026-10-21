@@ -133,21 +133,22 @@ struct OnboardingView: View {
 
     // MARK: chrome
 
+    /// Web auth back pill: `rounded-full bg-card px-3 py-1.5 text-xs font-medium text-sage-700 ring-1 ring-black/5`
     private var topBar: some View {
         HStack(spacing: 14) {
-            Button(action: back) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .semibold))
+            if canGoBack {
+                Button(action: back) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.left").font(.system(size: 12, weight: .medium))
+                        Text(L.t("ob.back")).font(F.sans(12, .medium))
+                    }
                     .foregroundStyle(theme.p.s700)
-                    .frame(width: 40, height: 40)
-                    .background(theme.card, in: Circle())
-                    .overlay(Circle().strokeBorder(theme.ringBorder, lineWidth: 1))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(theme.card, in: Capsule())
+                    .overlay(Capsule().strokeBorder(theme.ringBorder, lineWidth: 1))
+                }
+                .buttonStyle(FlatPress())
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(L.t("ob.back"))
-            .opacity(canGoBack ? 1 : 0)
-            .disabled(!canGoBack)
-
             WalkerPath(progress: progress, steps: stepsTotal)
         }
         .frame(height: 44)
@@ -193,6 +194,7 @@ struct SlideLayout<Art: View, Middle: View, Footer: View>: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(title)
                             .font(F.xl3)
+                            .tracking(-0.6)
                             .foregroundStyle(theme.foreground)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(subtitle)
@@ -210,26 +212,20 @@ struct SlideLayout<Art: View, Middle: View, Footer: View>: View {
     }
 }
 
+/// Same look as every primary action in the app (shared `PrimaryButton`).
 struct OBPrimaryButton: View {
-    @EnvironmentObject var theme: Theme
     let title: String
     var busy = false
     var enabled = true
     let action: () -> Void
 
     var body: some View {
-        PrimaryButton(title: title, busy: busy, action: action)
-            .overlay(alignment: .leading) {
-                if busy {
-                    ProgressView().tint(theme.primaryForeground).padding(.leading, 16)
-                }
-            }
-            .disabled(!enabled)
-            .opacity(enabled ? 1 : 0.45)
-        .sensoryFeedback(.impact(weight: .light), trigger: busy)
+        PrimaryButton(title: title, busy: busy, enabled: enabled, action: action)
+            .sensoryFeedback(.impact(weight: .light), trigger: busy)
     }
 }
 
+/// `text-xs font-medium text-sage-700`
 struct OBTextButton: View {
     @EnvironmentObject var theme: Theme
     let title: String
@@ -239,7 +235,7 @@ struct OBTextButton: View {
             Text(title).font(F.sans(12, .medium)).foregroundStyle(theme.p.s700)
                 .frame(minHeight: 32)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(FlatPress())
     }
 }
 
@@ -293,6 +289,7 @@ struct NoteBox: View {
                         UIApplication.shared.open(url)
                     }
                 }
+                .buttonStyle(FlatPress())
                 .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900)
             }
         }
@@ -514,8 +511,7 @@ private struct AppsSlide: View {
         } bodyContent: {
             if !st.authorized {
                 NoteBox(text: L.t("ob.apps.need_auth"))
-                Button(L.t("ob.apps.go_auth")) { flow.go(.screenTime) }
-                    .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
+                SecondaryButton(title: L.t("ob.apps.go_auth")) { flow.go(.screenTime) }
             } else {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 12) {
@@ -529,14 +525,7 @@ private struct AppsSlide: View {
                             .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s950)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Button { showPicker = true } label: {
-                        Label(hasAny ? L.t("ob.apps.edit") : L.t("ob.apps.pick"), systemImage: "plus.app")
-                            .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
-                            .frame(maxWidth: .infinity, minHeight: 46)
-                            .background(theme.p.s100, in: Capsule())
-                            .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
+                    SecondaryButton(title: hasAny ? L.t("ob.apps.edit") : L.t("ob.apps.pick")) { showPicker = true }
                     Text(L.t("ob.apps.explain")).font(F.xs).foregroundStyle(theme.p.s600)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -610,18 +599,9 @@ struct ChoiceCard: View {
             .padding(20)
             .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
-            .shadow(color: theme.ringBorder, radius: 2, x: 0, y: 1)
         }
-        .buttonStyle(PressScale())
+        .buttonStyle(FlatPress())
         .sensoryFeedback(.impact(weight: .light), trigger: pressed)
-    }
-}
-
-struct PressScale: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
 

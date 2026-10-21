@@ -20,25 +20,57 @@ struct CardSurface<Content: View>: View {
     }
 }
 
-/// `rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground`
+/// Flat web-style press: no system highlight, tint, glass or shadow.
+struct FlatPress: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .contentShape(Capsule())
+            .opacity(configuration.isPressed ? 0.85 : 1)
+    }
+}
+
+/// `rounded-full bg-sage-600 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50`
 struct PrimaryButton: View {
     @EnvironmentObject var theme: Theme
     let title: String
     var busy: Bool = false
+    var enabled: Bool = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(F.sans(14, .semibold))
+                .lineLimit(1)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .foregroundStyle(theme.primaryForeground)
                 .background(theme.primary, in: Capsule())
         }
-        .buttonStyle(.plain)
-        .disabled(busy)
-        .opacity(busy ? 0.5 : 1)
+        .buttonStyle(FlatPress())
+        .disabled(busy || !enabled)
+        .opacity(busy || !enabled ? 0.5 : 1)
+    }
+}
+
+/// `rounded-full bg-sage-100 py-3 text-sm font-semibold text-sage-800 ring-1 ring-sage-200`
+struct SecondaryButton: View {
+    @EnvironmentObject var theme: Theme
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(F.sans(14, .semibold))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .foregroundStyle(theme.p.s900)
+                .background(theme.p.s100, in: Capsule())
+                .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
+        }
+        .buttonStyle(FlatPress())
     }
 }
 
