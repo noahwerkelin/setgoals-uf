@@ -27,9 +27,11 @@ struct OBField: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(F.sm)
+                .foregroundStyle(theme.foreground)
                 if secure {
                     Button(reveal ? L.t("ob.hide") : L.t("ob.show")) { reveal.toggle() }
                         .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
+                        .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 16).padding(.vertical, 14)
@@ -253,8 +255,8 @@ struct ChildCodeScreen: View {
         let ch = i < chars.count ? String(chars[i]) : ""
         let active = focused && i == min(chars.count, length - 1)
         return Text(ch)
-            .font(.system(.title2, design: .rounded, weight: .bold))
-            .foregroundStyle(theme.p.s950)
+            .font(F.sans(24, .semibold))
+            .foregroundStyle(theme.foreground)
             .frame(width: 34, height: 48)
             .background(theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -466,7 +468,7 @@ struct CelebrateScreen: View {
         VStack(spacing: 20) {
             FinishArt().padding(.horizontal, 24)
             Text(L.t("ob.done.title")).font(F.xl3).foregroundStyle(theme.p.s950)
-            Text(L.t("ob.done.sub")).font(F.base).foregroundStyle(theme.p.s600)
+            Text(L.t("ob.done.sub")).font(F.sm).foregroundStyle(theme.mutedForeground)
         }
         .multilineTextAlignment(.center)
         .onAppear { go += 1 }

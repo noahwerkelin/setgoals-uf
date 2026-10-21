@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Tailwind's type scale as used by the web app. Font family is
-/// "Albert Sans" (see README for adding the .ttf files to the bundle);
-/// falls back to the system font if not present.
+/// "Albert Sans", bundled and registered through UIAppFonts.
+/// The system fallback is only used if the font bundle is unavailable.
 enum F {
     static func sans(_ size: CGFloat, _ weight: Font.Weight) -> Font {
         if UIFont(name: "AlbertSans-Regular", size: size) != nil {
