@@ -12,9 +12,23 @@ struct SetGoalsApp: App {
         WindowGroup {
             ZStack {
                 if !onboarded {
+                    // Only marked complete once the user is signed in.
                     OnboardingView {
-                        onboarded = true
-                        Task { try? await SupabaseAPI.updateProfile(["onboarding_completed": .bool(true)]) }
+                        withAnimation(.easeOut(duration: 0.35)) { onboarded = true }
+                        Task {
+                            try? await SupabaseAPI.updateProfile(["onboarding_completed": .bool(true)])
+                            await settings.load()
+                            NearbyStore.shared.start()
+                            Task { await StatsCache.shared.load() }
+                            Task { await BadgeStore.shared.preload() }
+                            if HealthKitService.shared.isAvailable {
+                                await HealthKitService.shared.requestAuthorization()
+                            }
+                            await StreakSync.syncFromHealthKit()
+                            ScreenTimeService.shared.refreshAuthorization()
+                            ScreenTimeService.shared.refreshFromStore()
+                            ScreenTimeService.shared.scheduleDailyMonitoring()
+                        }
                     }
                         .environmentObject(theme)
                         .transition(.opacity)

@@ -173,12 +173,12 @@ struct OnboardingView: View {
 
 // MARK: - Shared slide layout
 
-struct SlideLayout<Art: View, Body: View, Footer: View>: View {
+struct SlideLayout<Art: View, Middle: View, Footer: View>: View {
     @EnvironmentObject var theme: Theme
     let title: String
     let subtitle: String
     @ViewBuilder var art: Art
-    @ViewBuilder var bodyContent: Body
+    @ViewBuilder var bodyContent: Middle
     @ViewBuilder var footer: Footer
 
     var body: some View {

@@ -30,7 +30,7 @@ struct WalkerPath: View {
                 }
                 Image(systemName: "figure.walk")
                     .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(theme.p.s800Fallback)
+                    .foregroundStyle(theme.p.s700)
                     .frame(width: 28, height: 28)
                     .background(theme.card, in: Circle())
                     .shadow(color: theme.p.s700.opacity(0.25), radius: 6, y: 3)
@@ -47,11 +47,6 @@ struct WalkerPath: View {
         .accessibilityElement()
         .accessibilityLabel(Text("\(Int(progress * 100))%"))
     }
-}
-
-extension SagePalette {
-    /// Darkest readable accent used for the walker glyph.
-    var s800Fallback: Color { s700 }
 }
 
 // MARK: - Background
