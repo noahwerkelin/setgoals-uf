@@ -401,7 +401,6 @@ private struct HealthSlide: View {
                         withAnimation { requested = true }
                     }
                 }
-                OBTextButton(title: L.t("ob.later")) { flow.go(.location) }
             } else {
                 OBPrimaryButton(title: L.t("ob.continue")) { flow.go(.location) }
             }
@@ -431,7 +430,6 @@ private struct LocationSlide: View {
         } footer: {
             if locator.status == .notDetermined {
                 OBPrimaryButton(title: L.t("ob.loc.cta")) { locator.request() }
-                OBTextButton(title: L.t("ob.loc.skip")) { flow.go(.screenTime) }
             } else {
                 OBPrimaryButton(title: L.t("ob.continue")) { flow.go(.screenTime) }
             }
