@@ -13,34 +13,35 @@ struct OBField: View {
     @State private var reveal = false
     @FocusState private var focused: Bool
 
+    /// Same as the web auth inputs: placeholder only,
+    /// `rounded-2xl bg-card px-4 py-3.5 text-sm ring-1 ring-black/5 focus:ring-sage-400`.
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
-            HStack {
-                Group {
-                    if secure && !reveal { SecureField("", text: $text) }
-                    else { TextField("", text: $text) }
-                }
-                .focused($focused)
-                .keyboardType(keyboard)
-                .textContentType(content)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .font(F.sm)
-                .foregroundStyle(theme.foreground)
-                if secure {
-                    Button(reveal ? L.t("ob.hide") : L.t("ob.show")) { reveal.toggle() }
-                        .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
-                        .buttonStyle(.plain)
+        HStack {
+            Group {
+                if secure && !reveal {
+                    SecureField("", text: $text, prompt: Text(label).foregroundStyle(theme.p.s500))
+                } else {
+                    TextField("", text: $text, prompt: Text(label).foregroundStyle(theme.p.s500))
                 }
             }
-            .padding(.horizontal, 16).padding(.vertical, 14)
-            .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-                .strokeBorder(error ? theme.destructive : focused ? theme.primary : theme.ringBorder,
-                              lineWidth: focused || error ? 1.5 : 1))
-            .animation(.easeOut(duration: 0.15), value: focused)
+            .focused($focused)
+            .keyboardType(keyboard)
+            .textContentType(content)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .font(F.sm)
+            .foregroundStyle(theme.foreground)
+            if secure {
+                Button(reveal ? L.t("ob.hide") : L.t("ob.show")) { reveal.toggle() }
+                    .font(F.sans(12, .medium)).foregroundStyle(theme.p.s700)
+                    .buttonStyle(FlatPress())
+            }
         }
+        .padding(.horizontal, 16).padding(.vertical, 14)
+        .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
+            .strokeBorder(error ? theme.destructive : focused ? theme.p.s300 : theme.ringBorder, lineWidth: 1))
+        .accessibilityLabel(label)
     }
 }
 
@@ -70,15 +71,19 @@ private struct ErrorText: View {
     }
 }
 
+/// Web auth badge: `rounded-full bg-sage-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-sage-700`.
+/// `icon` is kept for call sites but the app uses the same text badge everywhere.
 private struct AuthHeader: View {
     @EnvironmentObject var theme: Theme
     let icon: String
     var body: some View {
-        Image(systemName: icon).font(.system(size: 30, weight: .semibold))
-            .foregroundStyle(theme.primaryForeground)
-            .frame(width: 72, height: 72)
-            .background(theme.primary,
-                        in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+        Text("SetGoals")
+            .font(F.sans(10, .semibold))
+            .textCase(.uppercase)
+            .tracking(1.0)
+            .foregroundStyle(theme.p.s700)
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .background(theme.p.s100, in: Capsule())
     }
 }
 

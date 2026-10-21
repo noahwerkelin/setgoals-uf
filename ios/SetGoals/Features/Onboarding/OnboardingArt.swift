@@ -18,8 +18,7 @@ struct WalkerPath: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(theme.p.s200).frame(height: 6)
                 Capsule()
-                    .fill(LinearGradient(colors: [theme.p.s500, theme.p.s700],
-                                         startPoint: .leading, endPoint: .trailing))
+                    .fill(theme.primary)
                     .frame(width: max(6, w * progress + 14), height: 6)
                 ForEach(0..<steps, id: \.self) { i in
                     let x = w * Double(i) / Double(max(1, steps - 1))
@@ -29,11 +28,11 @@ struct WalkerPath: View {
                         .offset(x: x + 10)
                 }
                 Image(systemName: "figure.walk")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(theme.p.s700)
                     .frame(width: 28, height: 28)
                     .background(theme.card, in: Circle())
-                    .shadow(color: theme.p.s700.opacity(0.25), radius: 6, y: 3)
+                    .overlay(Circle().strokeBorder(theme.ringBorder, lineWidth: 1))
                     .offset(x: w * progress, y: bob ? -3 : 0)
             }
             .frame(height: 28)
@@ -159,9 +158,8 @@ struct LanguageArt: View {
         Text(t).font(F.sans(big ? 40 : 24, .bold))
             .foregroundStyle(big ? theme.primaryForeground : theme.p.s700)
             .padding(.horizontal, big ? 28 : 18).padding(.vertical, big ? 18 : 12)
-            .background(big ? theme.primary : theme.card,
-                        in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-            .shadow(color: theme.p.s700.opacity(0.18), radius: 12, y: 6)
+            .background(big ? theme.primary : theme.p.s100,
+                        in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
     }
 }
 
@@ -249,7 +247,7 @@ struct ScreenTimeArt: View {
             HStack(spacing: 24) {
                 ZStack(alignment: .topTrailing) {
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(LinearGradient(colors: [theme.p.s500, theme.p.s700], startPoint: .top, endPoint: .bottom))
+                        .fill(theme.primary)
                         .frame(width: 84, height: 84)
                         .overlay(Image(systemName: "play.fill").font(.system(size: 28)).foregroundStyle(theme.primaryForeground))
                         .saturation(minutes > 0 ? 1 : 0.1)
