@@ -6,7 +6,6 @@ extension L {
         "en": [
             "ob.back": "Back",
             "ob.continue": "Continue",
-            "ob.later": "Set up later",
             "ob.have_account": "I already have an account",
             "ob.open_settings": "Open Settings",
 
@@ -37,7 +36,6 @@ extension L {
             "ob.loc.cta": "Enable Location",
             "ob.loc.granted": "Location enabled",
             "ob.loc.denied": "Location is off. That's okay — you can still earn screen time. Turn it on anytime in Settings to use the map.",
-            "ob.loc.skip": "Not now",
 
             "ob.st.title": "Take control of your screen time.",
             "ob.st.sub": "SetGoals helps you earn access to selected apps by moving throughout the day.",
@@ -127,7 +125,6 @@ extension L {
         "sv": [
             "ob.back": "Tillbaka",
             "ob.continue": "Fortsätt",
-            "ob.later": "Ställ in senare",
             "ob.have_account": "Jag har redan ett konto",
             "ob.open_settings": "Öppna Inställningar",
 
@@ -158,7 +155,6 @@ extension L {
             "ob.loc.cta": "Aktivera plats",
             "ob.loc.granted": "Plats aktiverad",
             "ob.loc.denied": "Platsen är avstängd. Det är okej — du kan ändå tjäna skärmtid. Slå på den i Inställningar när du vill använda kartan.",
-            "ob.loc.skip": "Inte nu",
 
             "ob.st.title": "Ta kontroll över din skärmtid.",
             "ob.st.sub": "SetGoals hjälper dig att tjäna tillgång till valda appar genom att röra dig under dagen.",
