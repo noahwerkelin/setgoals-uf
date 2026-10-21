@@ -239,8 +239,9 @@ struct ChildCodeScreen: View {
                     if let s = UIPasteboard.general.string { code = s }
                 } label: {
                     Label(L.t("ob.child.paste"), systemImage: "doc.on.clipboard")
-                        .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
+                        .font(F.sans(12, .medium)).foregroundStyle(theme.p.s700)
                 }
+                .buttonStyle(FlatPress())
                 ErrorText(text: error)
                 if success { StatusPill(text: L.t("ob.child.success")) }
             }
@@ -419,9 +420,11 @@ struct SignUpScreen: View {
                 HStack(spacing: 6) {
                     Button(L.t("auth.accept_terms")) { legalDoc = .terms }
                         .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900).underline()
+                        .buttonStyle(FlatPress())
                     Text(L.t("ob.signup.and")).font(F.xs).foregroundStyle(theme.p.s700)
                     Button(L.t("auth.accept_privacy")) { legalDoc = .privacy }
                         .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900).underline()
+                        .buttonStyle(FlatPress())
                 }
             }
             Spacer(minLength: 0)
