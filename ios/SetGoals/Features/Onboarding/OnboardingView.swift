@@ -471,9 +471,6 @@ private struct ScreenTimeSlide: View {
                         withAnimation { failed = !st.authorized }
                     }
                 }
-                OBTextButton(title: L.t("ob.later")) {
-                    if postAuth { flow.finish(celebrate: false) } else { flow.go(.journey) }
-                }
             }
         }
         .onAppear { st.refreshAuthorization() }
@@ -561,11 +558,6 @@ private struct AppsSlide: View {
                 ScreenTimeService.shared.setSelection(selection, for: ScreenTimeRules.managedKey)
                 saved += 1
                 if postAuth { flow.finish(celebrate: false) } else { flow.go(.journey) }
-            }
-            if !st.authorized {
-                OBTextButton(title: L.t("ob.later")) {
-                    if postAuth { flow.finish(celebrate: false) } else { flow.go(.journey) }
-                }
             }
         }
         .familyActivityPicker(isPresented: $showPicker, selection: $selection)
