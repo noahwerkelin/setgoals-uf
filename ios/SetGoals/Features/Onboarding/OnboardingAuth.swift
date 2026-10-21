@@ -15,7 +15,7 @@ struct OBField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(.footnote.weight(.semibold)).foregroundStyle(theme.p.s700)
+            Text(label).font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
             HStack {
                 Group {
                     if secure && !reveal { SecureField("", text: $text) }
@@ -26,15 +26,15 @@ struct OBField: View {
                 .textContentType(content)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .font(.body)
+                .font(F.sm)
                 if secure {
                     Button(reveal ? L.t("ob.hide") : L.t("ob.show")) { reveal.toggle() }
-                        .font(.footnote.weight(.semibold)).foregroundStyle(theme.p.s700)
+                        .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
                 }
             }
-            .padding(.horizontal, 16).frame(minHeight: 54)
-            .background(theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .padding(.horizontal, 16).padding(.vertical, 14)
+            .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
                 .strokeBorder(error ? theme.destructive : focused ? theme.primary : theme.ringBorder,
                               lineWidth: focused || error ? 1.5 : 1))
             .animation(.easeOut(duration: 0.15), value: focused)
@@ -51,7 +51,7 @@ struct Hint: View {
             Image(systemName: ok == true ? "checkmark.circle.fill" : ok == false ? "xmark.circle.fill" : "circle")
             Text(text)
         }
-        .font(.caption.weight(.medium))
+        .font(F.sans(12, .medium))
         .foregroundStyle(ok == true ? theme.p.s700 : ok == false ? theme.destructive : theme.p.s500)
     }
 }
@@ -61,7 +61,7 @@ private struct ErrorText: View {
     let text: String?
     var body: some View {
         if let text {
-            Text(text).font(.footnote.weight(.medium)).foregroundStyle(theme.destructive)
+            Text(text).font(F.sans(12, .medium)).foregroundStyle(theme.destructive)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .transition(.opacity)
         }
@@ -75,10 +75,8 @@ private struct AuthHeader: View {
         Image(systemName: icon).font(.system(size: 30, weight: .semibold))
             .foregroundStyle(theme.primaryForeground)
             .frame(width: 72, height: 72)
-            .background(LinearGradient(colors: [theme.p.s500, theme.p.s700],
-                                       startPoint: .topLeading, endPoint: .bottomTrailing),
-                        in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .shadow(color: theme.p.s700.opacity(0.35), radius: 16, y: 10)
+            .background(theme.primary,
+                        in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
     }
 }
 
@@ -181,7 +179,7 @@ struct AccountTypeScreen: View {
                            desc: L.t("ob.type.kid_desc")) { flow.open(.child) }
                 ChoiceCard(icon: "figure.walk.circle", title: L.t("ob.type.adult"),
                            desc: L.t("ob.type.adult_desc")) { flow.open(.signUp) }
-                Text(L.t("ob.type.parent_note")).font(.footnote).foregroundStyle(theme.p.s600)
+                Text(L.t("ob.type.parent_note")).font(F.xs).foregroundStyle(theme.p.s600)
                     .fixedSize(horizontal: false, vertical: true).padding(.top, 4)
             }
         } footer: { EmptyView() }
@@ -234,7 +232,7 @@ struct ChildCodeScreen: View {
                     if let s = UIPasteboard.general.string { code = s }
                 } label: {
                     Label(L.t("ob.child.paste"), systemImage: "doc.on.clipboard")
-                        .font(.footnote.weight(.semibold)).foregroundStyle(theme.p.s700)
+                        .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
                 }
                 ErrorText(text: error)
                 if success { StatusPill(text: L.t("ob.child.success")) }
@@ -358,7 +356,7 @@ struct SignUpScreen: View {
                         Hint(text: L.t("ob.signup.user_rule"), ok: username.isEmpty ? nil : usernameValid)
                         Spacer()
                         switch avail {
-                        case .checking: Text(L.t("ob.signup.checking")).font(.caption).foregroundStyle(theme.p.s500)
+                        case .checking: Text(L.t("ob.signup.checking")).font(F.xs).foregroundStyle(theme.p.s500)
                         case .available: Hint(text: L.t("ob.signup.available"), ok: true)
                         case .taken: Hint(text: L.t("ob.signup.taken"), ok: false)
                         case .idle: EmptyView()
@@ -410,20 +408,20 @@ struct SignUpScreen: View {
             .accessibilityAddTraits(accepted ? .isSelected : [])
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(L.t("ob.signup.agree")).font(.footnote).foregroundStyle(theme.p.s700)
+                Text(L.t("ob.signup.agree")).font(F.xs).foregroundStyle(theme.p.s700)
                 HStack(spacing: 6) {
                     Button(L.t("auth.accept_terms")) { legalDoc = .terms }
-                        .font(.footnote.weight(.semibold)).foregroundStyle(theme.p.s900).underline()
-                    Text(L.t("ob.signup.and")).font(.footnote).foregroundStyle(theme.p.s700)
+                        .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900).underline()
+                    Text(L.t("ob.signup.and")).font(F.xs).foregroundStyle(theme.p.s700)
                     Button(L.t("auth.accept_privacy")) { legalDoc = .privacy }
-                        .font(.footnote.weight(.semibold)).foregroundStyle(theme.p.s900).underline()
+                        .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900).underline()
                 }
             }
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
+        .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
         .sensoryFeedback(.selection, trigger: accepted)
     }
 
@@ -467,8 +465,8 @@ struct CelebrateScreen: View {
     var body: some View {
         VStack(spacing: 20) {
             FinishArt().padding(.horizontal, 24)
-            Text(L.t("ob.done.title")).font(.largeTitle.weight(.bold)).foregroundStyle(theme.p.s950)
-            Text(L.t("ob.done.sub")).font(.body).foregroundStyle(theme.p.s600)
+            Text(L.t("ob.done.title")).font(F.xl3).foregroundStyle(theme.p.s950)
+            Text(L.t("ob.done.sub")).font(F.base).foregroundStyle(theme.p.s600)
         }
         .multilineTextAlignment(.center)
         .onAppear { go += 1 }

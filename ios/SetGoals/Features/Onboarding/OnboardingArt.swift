@@ -51,21 +51,13 @@ struct WalkerPath: View {
 
 // MARK: - Background
 
-/// Soft gradient with drifting blobs that shift position per slide.
+/// The same semantic background used throughout SetGoals.
 struct OnboardingBackdrop: View {
     @EnvironmentObject var theme: Theme
     let index: Int
 
     var body: some View {
-        ZStack {
-            LinearGradient(colors: [theme.p.s50, theme.p.s100], startPoint: .top, endPoint: .bottom)
-            Circle().fill(theme.p.s200.opacity(0.55)).frame(width: 340).blur(radius: 60)
-                .offset(x: index.isMultiple(of: 2) ? -120 : 130, y: -260 + CGFloat(index) * 18)
-            Circle().fill(theme.p.s300.opacity(0.35)).frame(width: 280).blur(radius: 70)
-                .offset(x: index.isMultiple(of: 2) ? 140 : -110, y: 260 - CGFloat(index) * 14)
-        }
-        .ignoresSafeArea()
-        .animation(.spring(response: 0.9, dampingFraction: 0.85), value: index)
+        theme.background.ignoresSafeArea()
     }
 }
 
@@ -79,13 +71,11 @@ struct ArtCard<Content: View>: View {
             .frame(maxWidth: .infinity)
             .frame(height: 230)
             .background(
-                RoundedRectangle(cornerRadius: 36, style: .continuous)
-                    .fill(LinearGradient(colors: [theme.card, theme.p.s100],
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+                RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
+                    .fill(theme.card)
             )
-            .overlay(RoundedRectangle(cornerRadius: 36, style: .continuous)
+            .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
                 .strokeBorder(theme.ringBorder, lineWidth: 1))
-            .shadow(color: theme.p.s700.opacity(0.12), radius: 24, y: 14)
             .accessibilityHidden(true)
     }
 }
