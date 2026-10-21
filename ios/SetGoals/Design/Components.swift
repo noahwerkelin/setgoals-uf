@@ -36,6 +36,7 @@ struct PrimaryButton: View {
                 .foregroundStyle(theme.primaryForeground)
                 .background(theme.primary, in: Capsule())
         }
+        .buttonStyle(.plain)
         .disabled(busy)
         .opacity(busy ? 0.5 : 1)
     }

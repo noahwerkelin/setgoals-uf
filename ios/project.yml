@@ -20,6 +20,11 @@ targets:
       path: SetGoals/Info.plist
       properties:
         CFBundleDisplayName: SetGoals
+        UIAppFonts:
+          - AlbertSans-Regular.ttf
+          - AlbertSans-Medium.ttf
+          - AlbertSans-SemiBold.ttf
+          - AlbertSans-Bold.ttf
         CFBundleURLTypes:
           - CFBundleURLName: app.setgoals.auth
             CFBundleURLSchemes:

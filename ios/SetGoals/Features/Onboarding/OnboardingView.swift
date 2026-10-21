@@ -40,6 +40,9 @@ struct OnboardingView: View {
             }
             .frame(maxWidth: 520)
         }
+        .font(F.sm)
+        .foregroundStyle(theme.foreground)
+        .tint(theme.primary)
         .id(lang)
         .onAppear {
             if authOnly { step = .journey }
@@ -137,9 +140,10 @@ struct OnboardingView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(theme.p.s700)
                     .frame(width: 40, height: 40)
-                    .background(theme.card.opacity(0.9), in: Circle())
+                    .background(theme.card, in: Circle())
                     .overlay(Circle().strokeBorder(theme.ringBorder, lineWidth: 1))
             }
+            .buttonStyle(.plain)
             .accessibilityLabel(L.t("ob.back"))
             .opacity(canGoBack ? 1 : 0)
             .disabled(!canGoBack)
@@ -186,13 +190,13 @@ struct SlideLayout<Art: View, Middle: View, Footer: View>: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 24) {
                     art.rise()
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text(title)
                             .font(F.xl3)
                             .foregroundStyle(theme.foreground)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(subtitle)
-                            .font(F.base).foregroundStyle(theme.mutedForeground)
+                            .font(F.sm).foregroundStyle(theme.mutedForeground)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .rise(delay: 0.08)
@@ -232,9 +236,10 @@ struct OBTextButton: View {
     let action: () -> Void
     var body: some View {
         Button(action: action) {
-            Text(title).font(F.sans(12, .medium)).foregroundStyle(theme.mutedForeground)
+            Text(title).font(F.sans(12, .medium)).foregroundStyle(theme.p.s700)
                 .frame(minHeight: 32)
         }
+        .buttonStyle(.plain)
     }
 }
 
@@ -248,8 +253,8 @@ struct BenefitList: View {
                     Image(systemName: icon).font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(theme.p.s700)
                         .frame(width: 36, height: 36)
-                        .background(theme.p.s100, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    Text(text).font(F.sans(14, .medium)).foregroundStyle(theme.p.s900)
+                        .background(theme.secondary, in: RoundedRectangle(cornerRadius: R.lg, style: .continuous))
+                    Text(text).font(F.sm).foregroundStyle(theme.foreground)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -344,13 +349,13 @@ private struct LanguageSlide: View {
         } label: {
             HStack(spacing: 14) {
                 Text(flag).font(.system(size: 28))
-                Text(name).font(F.sans(16, .semibold)).foregroundStyle(theme.p.s950)
+                Text(name).font(F.sans(14, .semibold)).foregroundStyle(theme.foreground)
                 Spacer()
                 Image(systemName: on ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 24)).foregroundStyle(on ? theme.primary : theme.p.s300)
                     .scaleEffect(on ? 1.1 : 1)
             }
-            .padding(.horizontal, 20).frame(minHeight: 60)
+            .padding(.horizontal, 20).frame(minHeight: 56)
             .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
                 .strokeBorder(on ? theme.primary : theme.ringBorder, lineWidth: on ? 2 : 1))
@@ -531,6 +536,7 @@ private struct AppsSlide: View {
                             .background(theme.p.s100, in: Capsule())
                             .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
                     }
+                    .buttonStyle(.plain)
                     Text(L.t("ob.apps.explain")).font(F.xs).foregroundStyle(theme.p.s600)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -604,6 +610,7 @@ struct ChoiceCard: View {
             .padding(20)
             .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
+            .shadow(color: theme.ringBorder, radius: 2, x: 0, y: 1)
         }
         .buttonStyle(PressScale())
         .sensoryFeedback(.impact(weight: .light), trigger: pressed)

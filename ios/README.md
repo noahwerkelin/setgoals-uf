@@ -31,10 +31,10 @@ Swift Package dependency (`supabase-swift`) resolves on first build.
 
 ### Fonts
 
-The web app uses **Albert Sans**. Download the family, drop the `.ttf` files
-into `SetGoals/Resources/Fonts/`, and add them under `UIAppFonts` in
-`Info.plist`. `F.sans()` falls back to the system font when they are absent,
-which is the one place the UI will not match the web exactly.
+The web app's **Albert Sans** Regular, Medium, SemiBold, and Bold fonts are
+bundled in `SetGoals/Resources/Fonts/` with their license and registered in
+both `Info.plist` and `project.yml`. Regenerate the Xcode project after pulling
+these resources so the app includes them. No manual font download is needed.
 
 ## Structure
 
