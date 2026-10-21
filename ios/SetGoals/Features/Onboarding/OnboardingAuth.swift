@@ -275,11 +275,10 @@ struct ChildCodeScreen: View {
     private func connect() async {
         busy = true; error = nil
         do {
-            // Validated by the existing backend function; it returns the
-            // child's sign-in only for a real, unused invitation code.
-            let creds: [String: String] = try await supabase
-                .rpc("redeem_child_code", params: ["_code": code]).execute().value
-            guard let e = creds["email"], let p = creds["password"] else { throw URLError(.badServerResponse) }
+            // Same server logic as the web app; it returns the child's
+            // sign-in only for a real, unused invitation code.
+            let creds = try await SupabaseAPI.redeemChildCode(code)
+            let e = creds.email, p = creds.password
             try await AuthStore.shared.signIn(email: e, password: p)
             withAnimation(.spring) { success = true }
             // Child devices authorize as `.child` so the parent stays the
