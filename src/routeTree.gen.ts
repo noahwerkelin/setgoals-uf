@@ -25,6 +25,7 @@ import { Route as ApiPublicCoachRouteImport } from './routes/api/public/coach'
 import { Route as ApiPublicDeleteAccountRouteImport } from './routes/api/public/delete-account'
 import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
 import { Route as ApiPublicNearbyActivitiesRouteImport } from './routes/api/public/nearby-activities'
+import { Route as ApiPublicUsernameAvailableRouteImport } from './routes/api/public/username-available'
 import { Route as ApiPublicPaymentsAppleNotificationsRouteImport } from './routes/api/public/payments/apple-notifications'
 
 const IndexRoute = IndexRouteImport.update({
@@ -108,6 +109,12 @@ const ApiPublicNearbyActivitiesRoute =
     path: '/api/public/nearby-activities',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicUsernameAvailableRoute =
+  ApiPublicUsernameAvailableRouteImport.update({
+    id: '/api/public/username-available',
+    path: '/api/public/username-available',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsAppleNotificationsRoute =
   ApiPublicPaymentsAppleNotificationsRouteImport.update({
     id: '/api/public/payments/apple-notifications',
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
+  '/api/public/username-available': typeof ApiPublicUsernameAvailableRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRoutesByTo {
@@ -151,6 +159,7 @@ export interface FileRoutesByTo {
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
+  '/api/public/username-available': typeof ApiPublicUsernameAvailableRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRoutesById {
@@ -171,6 +180,7 @@ export interface FileRoutesById {
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
+  '/api/public/username-available': typeof ApiPublicUsernameAvailableRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 export interface FileRouteTypes {
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
+    | '/api/public/username-available'
     | '/api/public/payments/apple-notifications'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
+    | '/api/public/username-available'
     | '/api/public/payments/apple-notifications'
   id:
     | '__root__'
@@ -230,6 +242,7 @@ export interface FileRouteTypes {
     | '/api/public/delete-account'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
+    | '/api/public/username-available'
     | '/api/public/payments/apple-notifications'
   fileRoutesById: FileRoutesById
 }
@@ -250,6 +263,7 @@ export interface RootRouteChildren {
   ApiPublicDeleteAccountRoute: typeof ApiPublicDeleteAccountRoute
   ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
   ApiPublicNearbyActivitiesRoute: typeof ApiPublicNearbyActivitiesRoute
+  ApiPublicUsernameAvailableRoute: typeof ApiPublicUsernameAvailableRoute
   ApiPublicPaymentsAppleNotificationsRoute: typeof ApiPublicPaymentsAppleNotificationsRoute
 }
 
@@ -367,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNearbyActivitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/username-available': {
+      id: '/api/public/username-available'
+      path: '/api/public/username-available'
+      fullPath: '/api/public/username-available'
+      preLoaderRoute: typeof ApiPublicUsernameAvailableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/apple-notifications': {
       id: '/api/public/payments/apple-notifications'
       path: '/api/public/payments/apple-notifications'
@@ -394,6 +415,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDeleteAccountRoute: ApiPublicDeleteAccountRoute,
   ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
   ApiPublicNearbyActivitiesRoute: ApiPublicNearbyActivitiesRoute,
+  ApiPublicUsernameAvailableRoute: ApiPublicUsernameAvailableRoute,
   ApiPublicPaymentsAppleNotificationsRoute:
     ApiPublicPaymentsAppleNotificationsRoute,
 }
