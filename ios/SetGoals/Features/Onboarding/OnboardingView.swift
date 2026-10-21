@@ -188,12 +188,11 @@ struct SlideLayout<Art: View, Middle: View, Footer: View>: View {
                     art.rise()
                     VStack(alignment: .leading, spacing: 10) {
                         Text(title)
-                            .font(.system(.largeTitle, design: .default, weight: .bold))
-                            .tracking(-0.6)
-                            .foregroundStyle(theme.p.s950)
+                            .font(F.xl3)
+                            .foregroundStyle(theme.foreground)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(subtitle)
-                            .font(.body).foregroundStyle(theme.p.s600)
+                            .font(F.base).foregroundStyle(theme.mutedForeground)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .rise(delay: 0.08)
@@ -215,20 +214,14 @@ struct OBPrimaryButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if busy { ProgressView().tint(theme.primaryForeground) }
-                Text(title).font(.headline)
+        PrimaryButton(title: title, busy: busy, action: action)
+            .overlay(alignment: .leading) {
+                if busy {
+                    ProgressView().tint(theme.primaryForeground).padding(.leading, 16)
+                }
             }
-            .foregroundStyle(theme.primaryForeground)
-            .frame(maxWidth: .infinity, minHeight: 56)
-            .background(
-                LinearGradient(colors: [theme.p.s600, theme.p.s700], startPoint: .top, endPoint: .bottom),
-                in: Capsule())
-            .shadow(color: theme.p.s700.opacity(enabled ? 0.3 : 0), radius: 14, y: 8)
-        }
-        .disabled(busy || !enabled)
-        .opacity(enabled ? 1 : 0.45)
+            .disabled(!enabled)
+            .opacity(enabled ? 1 : 0.45)
         .sensoryFeedback(.impact(weight: .light), trigger: busy)
     }
 }
@@ -239,7 +232,7 @@ struct OBTextButton: View {
     let action: () -> Void
     var body: some View {
         Button(action: action) {
-            Text(title).font(.subheadline.weight(.medium)).foregroundStyle(theme.p.s700)
+            Text(title).font(F.sans(12, .medium)).foregroundStyle(theme.mutedForeground)
                 .frame(minHeight: 32)
         }
     }
@@ -256,7 +249,7 @@ struct BenefitList: View {
                         .foregroundStyle(theme.p.s700)
                         .frame(width: 36, height: 36)
                         .background(theme.p.s100, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    Text(text).font(.subheadline.weight(.medium)).foregroundStyle(theme.p.s900)
+                    Text(text).font(F.sans(14, .medium)).foregroundStyle(theme.p.s900)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -273,7 +266,7 @@ struct StatusPill: View {
             Image(systemName: ok ? "checkmark.circle.fill" : "info.circle.fill")
             Text(text).fixedSize(horizontal: false, vertical: true)
         }
-        .font(.footnote.weight(.semibold))
+        .font(F.sans(12, .semibold))
         .foregroundStyle(ok ? theme.p.s700 : theme.p.s900)
         .padding(.horizontal, 12).padding(.vertical, 8)
         .background(ok ? theme.p.s100 : theme.p.s200, in: Capsule())
@@ -287,7 +280,7 @@ struct NoteBox: View {
     var settingsButton = false
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(text).font(.footnote).foregroundStyle(theme.p.s700)
+            Text(text).font(F.xs).foregroundStyle(theme.p.s700)
                 .fixedSize(horizontal: false, vertical: true)
             if settingsButton {
                 Button(L.t("ob.open_settings")) {
@@ -295,12 +288,12 @@ struct NoteBox: View {
                         UIApplication.shared.open(url)
                     }
                 }
-                .font(.footnote.weight(.semibold)).foregroundStyle(theme.p.s900)
+                .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900)
             }
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
+        .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
     }
 }
 
@@ -313,7 +306,6 @@ private struct WelcomeSlide: View {
             WelcomeArt()
         } bodyContent: { EmptyView() } footer: {
             OBPrimaryButton(title: L.t("ob.welcome.cta")) { flow.go(.language) }
-            OBTextButton(title: L.t("ob.have_account")) { flow.open(.signIn) }
         }
     }
 }
@@ -352,15 +344,15 @@ private struct LanguageSlide: View {
         } label: {
             HStack(spacing: 14) {
                 Text(flag).font(.system(size: 28))
-                Text(name).font(.title3.weight(.semibold)).foregroundStyle(theme.p.s950)
+                Text(name).font(F.sans(16, .semibold)).foregroundStyle(theme.p.s950)
                 Spacer()
                 Image(systemName: on ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 24)).foregroundStyle(on ? theme.primary : theme.p.s300)
                     .scaleEffect(on ? 1.1 : 1)
             }
-            .padding(.horizontal, 18).frame(minHeight: 68)
-            .background(theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .padding(.horizontal, 20).frame(minHeight: 60)
+            .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
                 .strokeBorder(on ? theme.primary : theme.ringBorder, lineWidth: on ? 2 : 1))
         }
         .buttonStyle(.plain)
@@ -518,7 +510,7 @@ private struct AppsSlide: View {
             if !st.authorized {
                 NoteBox(text: L.t("ob.apps.need_auth"))
                 Button(L.t("ob.apps.go_auth")) { flow.go(.screenTime) }
-                    .font(.subheadline.weight(.semibold)).foregroundStyle(theme.p.s900)
+                    .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
             } else {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 12) {
@@ -529,26 +521,26 @@ private struct AppsSlide: View {
                                                         "c": "\(total.categoryTokens.count)",
                                                         "w": "\(total.webDomainTokens.count)"])
                              : L.t("ob.apps.none"))
-                            .font(.headline).foregroundStyle(theme.p.s950)
+                            .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s950)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Button { showPicker = true } label: {
                         Label(hasAny ? L.t("ob.apps.edit") : L.t("ob.apps.pick"), systemImage: "plus.app")
-                            .font(.subheadline.weight(.semibold)).foregroundStyle(theme.p.s900)
+                            .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
                             .frame(maxWidth: .infinity, minHeight: 46)
                             .background(theme.p.s100, in: Capsule())
                             .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
                     }
-                    Text(L.t("ob.apps.explain")).font(.footnote).foregroundStyle(theme.p.s600)
+                    Text(L.t("ob.apps.explain")).font(F.xs).foregroundStyle(theme.p.s600)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(18)
-                .background(theme.card, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
+                .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
             }
         } footer: {
             if st.authorized && !hasAny {
-                Text(L.t("ob.apps.need_one")).font(.footnote).foregroundStyle(theme.p.s600)
+                Text(L.t("ob.apps.need_one")).font(F.xs).foregroundStyle(theme.p.s600)
             }
             OBPrimaryButton(title: L.t("ob.apps.cta"), enabled: st.authorized && hasAny) {
                 // Saved into the same shared rules the shields and the monitor
@@ -596,24 +588,22 @@ struct ChoiceCard: View {
         Button { pressed += 1; action() } label: {
             HStack(spacing: 16) {
                 Image(systemName: icon).font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(theme.primaryForeground)
-                    .frame(width: 56, height: 56)
-                    .background(LinearGradient(colors: [theme.p.s500, theme.p.s700],
-                                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                                in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .foregroundStyle(theme.p.s700)
+                    .frame(width: 44, height: 44)
+                    .background(theme.secondary,
+                                in: RoundedRectangle(cornerRadius: R.lg, style: .continuous))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.headline).foregroundStyle(theme.p.s950)
-                    Text(desc).font(.subheadline).foregroundStyle(theme.p.s600)
+                    Text(title).font(F.sans(14, .semibold)).foregroundStyle(theme.p.s950)
+                    Text(desc).font(F.xs).foregroundStyle(theme.p.s600)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(theme.p.s500)
             }
-            .padding(18)
-            .background(theme.card, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
-            .shadow(color: theme.p.s700.opacity(0.08), radius: 14, y: 8)
+            .padding(20)
+            .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous).strokeBorder(theme.ringBorder, lineWidth: 1))
         }
         .buttonStyle(PressScale())
         .sensoryFeedback(.impact(weight: .light), trigger: pressed)
