@@ -19,6 +19,10 @@ enum ScreenTimeRules {
         static let selections = "rules.selections"  // [String: Data] encoded FamilyActivitySelection
     }
 
+    /// Selection made on the onboarding "Choose apps" step. It is always
+    /// treated as "only with earned time" and merged into the restricted set.
+    static let managedKey = "managed"
+
     /// Category keys, same order/ids as the settings rows.
     static let categoryKeys = [
         "cat.social", "cat.games", "cat.entertainment", "cat.creativity",
@@ -72,7 +76,9 @@ enum ScreenTimeRules {
         var apps = Set<ApplicationToken>()
         var cats = Set<ActivityCategoryToken>()
         var webs = Set<WebDomainToken>()
-        for key in categoryKeys where isAlwaysAllowed(key) == alwaysAllowed {
+        let keys = categoryKeys.filter { isAlwaysAllowed($0) == alwaysAllowed }
+            + (alwaysAllowed ? [] : [managedKey])
+        for key in keys {
             let s = selection(for: key)
             apps.formUnion(s.applicationTokens)
             cats.formUnion(s.categoryTokens)

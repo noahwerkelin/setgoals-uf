@@ -132,16 +132,22 @@ final class AuthStore: ObservableObject {
         try await supabase.auth.signIn(email: email, password: password)
     }
 
-    func signUp(email: String, password: String, displayName: String, username: String, birthday: String?) async throws {
-        try await supabase.auth.signUp(
-            email: email,
-            password: password,
-            data: [
-                "display_name": .string(displayName),
-                "username": .string(username),
-                "birthday": birthday.map { AnyJSON.string($0) } ?? .null,
-            ]
-        )
+    /// Returns true when the account is signed in right away, false when the
+    /// user first has to confirm their email.
+    @discardableResult
+    func signUp(email: String, password: String, displayName: String, username: String, birthday: String?,
+                termsAcceptedAt: Date? = nil) async throws -> Bool {
+        var data: [String: AnyJSON] = [
+            "display_name": .string(displayName),
+            "username": .string(username),
+            "birthday": birthday.map { AnyJSON.string($0) } ?? .null,
+        ]
+        if let termsAcceptedAt {
+            data["terms_accepted_at"] = .string(ISO8601DateFormatter().string(from: termsAcceptedAt))
+            data["terms_version"] = .string("2026-10")
+        }
+        let res = try await supabase.auth.signUp(email: email, password: password, data: data)
+        return res.session != nil
     }
 
     func resetPassword(email: String) async throws {
