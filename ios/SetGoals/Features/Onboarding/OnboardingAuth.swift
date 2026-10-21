@@ -439,9 +439,15 @@ struct SignUpScreen: View {
         avail = .checking
         try? await Task.sleep(for: .milliseconds(400))   // debounce
         guard !Task.isCancelled else { return }
-        let ok = (try? await SupabaseAPI.usernameAvailable(username)) ?? false
-        guard !Task.isCancelled else { return }
-        withAnimation { avail = ok ? .available : .taken }
+        do {
+            let ok = try await SupabaseAPI.usernameAvailable(username)
+            guard !Task.isCancelled else { return }
+            withAnimation { avail = ok ? .available : .taken; error = nil }
+        } catch {
+            guard !Task.isCancelled else { return }
+            // A network problem is not "taken" — say so and let them retry.
+            withAnimation { avail = .idle; self.error = L.t("auth.username_check_failed") }
+        }
     }
 
     private func submit() async {
