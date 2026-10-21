@@ -4,3 +4,4 @@
 - The iOS AI coach goes through one authenticated server route that reads data via RLS as the caller; the model may only propose actions (goal, challenge, navigation) that the app applies after user confirmation, so AI output can never change settings or grant screen time.
 - PRO screen-time rollover is computed only by the claim_rollover database function (once per user per local day, stored in its own column separate from bonus minutes); clients just display it, so all devices agree and it cannot be inflated.
 - The iOS onboarding owns all account entry (sign in, kid code, sign up) and AuthView reuses it in auth-only mode, so there is one sign-in implementation; onboarding is only marked complete after authentication.
+- The iOS onboarding primary-action wrapper reuses the shared PrimaryButton and design tokens, so onboarding controls remain consistent with the rest of the app.

@@ -26,7 +26,7 @@ struct OBField: View {
                 .textContentType(content)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .font(F.base)
+                .font(F.sm)
                 if secure {
                     Button(reveal ? L.t("ob.hide") : L.t("ob.show")) { reveal.toggle() }
                         .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
