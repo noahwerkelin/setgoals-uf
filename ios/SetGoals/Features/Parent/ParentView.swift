@@ -12,10 +12,18 @@ struct ParentView: View {
     @StateObject private var pst = ProSTStore.shared
     @Binding var tab: AppTab
 
-    enum ParentTab: Hashable { case personal, children }
-
-    var initialSection: ParentTab = .personal
-    @State private var section: ParentTab = .personal
+    @ObservedObject private var screenTime = ScreenTimeService.shared
+    @ObservedObject private var health = HealthKitService.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var selectedChildID: UUID?
+    @State private var family: [FamilyMember] = []
+    @State private var loadingFamily = true
+    @State private var familyError = false
+    @State private var confirmation: String?
+    @State private var showSettings = false
+    @State private var selectionRevision = 0
+    @State private var authorizationError = false
 
     @State private var children: [ChildRow] = []
     @State private var today: [UUID: ChildDayStats] = [:]
@@ -28,9 +36,11 @@ struct ParentView: View {
     @State private var gifting: ChildRow?
     @State private var editingChildST: ChildRow?
     @State private var editingMyST = false
-    /// Which category row is choosing its apps in Apple's picker.
-    @State private var pickerKey: String?
-    @State private var pickerSelection = FamilyActivitySelection()
+    @State private var pickerMode: PickerMode?
+    private enum PickerMode: String, Identifiable {
+        case earned, always
+        var id: String { rawValue }
+    }
     @State private var showPro = false
 
     private var isIndividual: Bool { settings.role == "individual" }
@@ -40,48 +50,55 @@ struct ParentView: View {
 
     var body: some View {
         AppShell(tab: $tab) {
-            PageHeader(eyebrow: isIndividual ? L.t("screentime.eyebrow") : L.t("parent.eyebrow"),
-                       title: isIndividual ? L.t("screentime.title") : L.t("parent.title")) {
-                ZStack {
-                    Circle().fill(theme.p.s100)
-                    Image(systemName: isIndividual ? "clock" : "shield")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(theme.p.s700)
+            PageHeader(title: L.t("nav.screenTime")) {
+                Button { showSettings = true } label: {
+                    Image(systemName: "gearshape").font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(theme.primary).frame(width: 44, height: 44)
+                        .background(theme.secondary, in: Circle())
                 }
-                .frame(width: 40, height: 40)
+                .buttonStyle(FlatPress())
+                .accessibilityLabel(L.t("profile.settings"))
             }
 
-            VStack(spacing: 24) {
-                if canManageChildren {
-                    SegmentedTabs(selection: $section, items: [
-                        (.personal, L.t("parent.tab.personal")),
-                        (.children, L.t("parent.tab.children")),
-                    ])
-                }
-
-                if !canManageChildren || section == .personal {
-                    myScreenTimeCard
-                    categoriesSection
-                    if !isChild {
-                        ProScreenTimeSection(isPro: settings.isPro) { showPro = true }
-                    }
-                } else {
+            VStack(alignment: .leading, spacing: 28) {
+                Text(L.t("dashboard.subtitle")).font(F.sm).foregroundStyle(theme.mutedForeground)
+                myScreenTimeCard
+                categoriesSection
+                if !isChild {
+                    ProScreenTimeSection(isPro: settings.isPro) { showPro = true }
                     childrenSection
+                } else {
+                    MyTasksCard()
                 }
             }
             .padding(.horizontal, 24)
         }
         .task {
-            section = canManageChildren ? initialSection : .personal
-            await reload()
+            screenTime.refreshAuthorization()
+            screenTime.refreshFromStore()
+            if canManageChildren { await reload() }
         }
 
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                screenTime.refreshAuthorization()
+                screenTime.refreshFromStore()
+                if canManageChildren { Task { await reload() } }
+            }
+        }
+        .fullScreenCover(isPresented: $showSettings) {
+            SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings)
+        }
+        .sheet(item: $pickerMode) { mode in
+            NativeScreenTimePicker(alwaysAllowed: mode == .always) { selectionRevision += 1 }
+        }
         .sheet(isPresented: $showPro) { ProUpgradeDialog() }
         .sheet(isPresented: $editingMyST) {
             ParentScreenTimeDialog(title: L.t("parent.my_screentime"),
                                    stepsPer30: settings.stepsPer30,
                                    dailyCapHours: settings.dailyCapHours) { steps, cap in
                 Task {
+                    guard settings.isPro, !isChild else { return }
                     settings.stepsPer30 = steps
                     settings.dailyCapHours = cap
                     try? await SupabaseAPI.updateSettings([
@@ -111,153 +128,201 @@ struct ParentView: View {
             DeleteChildDialog(child: c) { await reload() }
         }
         .sheet(item: $gifting) { c in
-            GiftScreenTimeDialog(child: c) { await reload() }
+            GiftScreenTimeDialog(child: c) {
+                confirmation = L.t("dashboard.bonus_confirmed", ["name": c.name])
+                await reload()
+            }
         }
     }
 
     // MARK: - Personal
 
     private var myScreenTimeCard: some View {
-        CardSurface(padding: 20) {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: R.md, style: .continuous).fill(theme.p.s100)
-                        Image(systemName: "clock").font(.system(size: 15)).foregroundStyle(theme.p.s700)
+        CardSurface(padding: 24, backgroundColor: theme.secondary) {
+            VStack(alignment: .leading, spacing: 20) {
+                Label(L.t("dashboard.personal"), systemImage: "hourglass")
+                    .font(F.lg).foregroundStyle(theme.foreground)
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: 20) {
+                        balanceStat(L.t("dashboard.earned"), screenTime.allowanceMin)
+                        balanceStat(L.t("dashboard.remaining"), screenTime.remainingMin)
                     }
-                    .frame(width: 36, height: 36)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L.t("parent.my_screentime")).font(F.sans(14, .semibold))
-                            .foregroundStyle(theme.p.s950)
-                        Text(L.t("parent.my_screentime_sub")).font(F.xs).foregroundStyle(theme.p.s600)
+                    VStack(alignment: .leading, spacing: 16) {
+                        balanceStat(L.t("dashboard.earned"), screenTime.allowanceMin)
+                        balanceStat(L.t("dashboard.remaining"), screenTime.remainingMin)
                     }
-                    Spacer(minLength: 0)
                 }
-                HStack(spacing: 12) {
-                    ParentStat(label: L.t("parent.steps_per_30"), value: settings.stepsPer30.formatted())
-                    ParentStat(label: L.t("parent.daily_cap"),
-                               value: settings.dailyCapHours >= 24
-                                   ? L.t("parent.no_cap")
-                                   : "\(settings.dailyCapHours)\(L.t("settings.hours"))")
+                ProgressView(value: Double(health.steps % max(1, settings.stepsPer30)),
+                             total: Double(max(1, settings.stepsPer30)))
+                    .tint(theme.primary)
+                Text(L.t("dashboard.conversion", ["steps": L.number(settings.stepsPer30)]))
+                    .font(F.xs).foregroundStyle(theme.mutedForeground)
+                HStack {
+                    Text(L.t("dashboard.limit")).font(F.sm)
+                    Spacer()
+                    Text(settings.hasCap ? L.duration(settings.dailyCapHours * 60) : L.t("parent.no_cap"))
+                        .font(F.sans(14, .semibold))
                 }
+                .foregroundStyle(theme.foreground)
                 if isChild {
-                    Text(L.t("parent.child_locked"))
-                        .font(F.text11).foregroundStyle(theme.p.s600)
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: R.md, style: .continuous)
-                            .stroke(theme.p.s200, lineWidth: 1))
+                    Text(L.t("parent.child_locked")).font(F.xs).foregroundStyle(theme.mutedForeground)
                 } else {
-                    Button { editingMyST = true } label: {
-                        Text(L.t("parent.edit_screentime"))
-                            .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
-                            .frame(maxWidth: .infinity).padding(.vertical, 10)
-                            .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
+                    Button {
+                        if settings.isPro { editingMyST = true } else { showPro = true }
+                    } label: {
+                        Label(L.t("parent.edit_screentime"), systemImage: settings.isPro ? "slider.horizontal.3" : "lock.fill")
+                            .font(F.sans(14, .semibold)).foregroundStyle(theme.primary)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .background(theme.card, in: Capsule())
                     }
+                    .buttonStyle(FlatPress())
                 }
             }
         }
     }
 
+    private func balanceStat(_ title: String, _ minutes: Int) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(F.xs).foregroundStyle(theme.mutedForeground)
+            Text(L.t("home2.minutes", ["n": L.number(minutes)]))
+                .font(F.xl2).tabularNums().foregroundStyle(theme.primary)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private var categoriesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "iphone").font(.system(size: 11, weight: .semibold))
-                Text(L.t("parent.apps"))
+        VStack(alignment: .leading, spacing: 16) {
+            Label(L.t("dashboard.apps"), systemImage: "iphone")
+                .font(F.lg).foregroundStyle(theme.foreground)
+            if isChild {
+                Text(L.t("dashboard.remote")).font(F.xs).foregroundStyle(theme.mutedForeground)
+            } else {
+                selectionRow(alwaysAllowed: false)
+                selectionRow(alwaysAllowed: true)
             }
-            .eyebrow(theme.p.s600)
-            .padding(.horizontal, 4)
+            if authorizationError {
+                Text(L.t("dashboard.authorization_error")).font(F.xs).foregroundStyle(theme.mutedForeground)
+            }
+        }
+        .id(selectionRevision)
+    }
 
-            Text(L.t("stmode.hint")).font(F.text11).foregroundStyle(theme.p.s600).padding(.horizontal, 4)
-
-            VStack(spacing: 0) {
-                ForEach(Array(ScreenTimeCategories.keys.enumerated()), id: \.element) { i, key in
-                    if i > 0 { Divider().background(theme.p.s100) }
-                    HStack(spacing: 12) {
-                        Button { if !isChild { pickerKey = key } } label: {
-                            Text(L.t(key)).font(F.sm).foregroundStyle(theme.p.s900).lineLimit(1)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(isChild)
-                        Spacer(minLength: 8)
-                        CategoryToggle(
-                            isAlways: pst.alwaysAllow[key] ?? true,
-                            enabled: !isChild
-                        ) { next in
-                            pst.alwaysAllow[key] = next
-                            ScreenTimeService.shared.setPolicy(alwaysAllow: next, for: key)
-                        }
-                    }
-                    .padding(16)
+    private func selectionRow(alwaysAllowed: Bool) -> some View {
+        let selected = alwaysAllowed ? ScreenTimeRules.alwaysAllowed : ScreenTimeRules.restricted
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(L.t(alwaysAllowed ? "dashboard.always" : "dashboard.earned_only"))
+                .font(F.sans(14, .semibold)).foregroundStyle(theme.foreground)
+            Text(L.t("dashboard.selection", [
+                "apps": L.number(selected.applicationTokens.count),
+                "categories": L.number(selected.categoryTokens.count),
+                "websites": L.number(selected.webDomainTokens.count),
+            ])).font(F.xs).foregroundStyle(theme.mutedForeground)
+            SecondaryButton(title: L.t("dashboard.choose")) {
+                Task {
+                    screenTime.refreshAuthorization()
+                    if !screenTime.authorized { await screenTime.requestAuthorization() }
+                    guard screenTime.authorized else { authorizationError = true; return }
+                    authorizationError = false
+                    pickerMode = alwaysAllowed ? .always : .earned
                 }
             }
-            .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
-                .stroke(.black.opacity(0.05), lineWidth: 1))
-        }
-        .familyActivityPicker(
-            isPresented: Binding(get: { pickerKey != nil }, set: { if !$0 { pickerKey = nil } }),
-            selection: $pickerSelection
-        )
-        .onChange(of: pickerSelection) { _, new in
-            if let key = pickerKey { ScreenTimeService.shared.setSelection(new, for: key) }
-        }
-        .onChange(of: pickerKey) { _, key in
-            if let key { pickerSelection = ScreenTimeService.shared.selection(for: key) }
         }
     }
 
     // MARK: - Children
 
     private var childrenSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(L.t("parent.children")).eyebrow(theme.p.s600).padding(.horizontal, 4)
-
+        VStack(alignment: .leading, spacing: 20) {
+            Label(L.t("dashboard.family"), systemImage: "figure.2.and.child.holdinghands")
+                .font(F.lg).foregroundStyle(theme.foreground)
             TaskNotificationsCard()
-
-            if children.isEmpty {
-                Text(L.t("parent.child.empty"))
-                    .font(F.xs).foregroundStyle(theme.p.s600)
-                    .frame(maxWidth: .infinity).padding(20)
-                    .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
-                        .stroke(.black.opacity(0.05), lineWidth: 1))
+            if let confirmation {
+                Label(confirmation, systemImage: "checkmark.circle.fill")
+                    .font(F.sm).foregroundStyle(theme.primary)
             }
-
-            ForEach(Array(children.enumerated()), id: \.element.id) { i, c in
-                childCard(c).rise(delay: Double(i) * 0.06)
-            }
-
-            if children.count >= Self.maxChildren {
-                Text(L.t("parent.child.limit_reached", ["max": "\(Self.maxChildren)"]))
-                    .font(F.xs).foregroundStyle(theme.p.s600)
-                    .frame(maxWidth: .infinity).padding(16)
-                    .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
-                        .stroke(theme.p.s200, lineWidth: 1))
+            if loadingFamily && children.isEmpty {
+                ProgressView().tint(theme.primary).frame(maxWidth: .infinity)
+            } else if familyError {
+                Text(L.t("dashboard.load_error")).font(F.sm).foregroundStyle(theme.mutedForeground)
+                SecondaryButton(title: L.t("dashboard.retry")) { Task { await reload() } }
+            } else if children.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Image(systemName: "figure.2.and.child.holdinghands")
+                        .font(.system(size: 36)).foregroundStyle(theme.primary)
+                    Text(L.t("dashboard.empty_title")).font(F.xl2).foregroundStyle(theme.foreground)
+                    Text(L.t("dashboard.empty_desc")).font(F.sm).foregroundStyle(theme.mutedForeground)
+                    PrimaryButton(title: L.t("parent.add_child")) { creatingChild = true }
+                }
             } else {
-                Button { creatingChild = true } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus").font(.system(size: 14, weight: .semibold))
-                        Text(L.t("parent.add_child")).font(F.sans(14, .medium))
+                FamilyCircleView(children: children, selectedID: $selectedChildID) { id in
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85)) {
+                        selectedChildID = selectedChildID == id ? nil : id
                     }
-                    .foregroundStyle(theme.p.s700)
-                    .frame(maxWidth: .infinity).padding(16)
-                    .background(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
-                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
-                        .foregroundStyle(theme.p.s300))
+                }
+                ForEach(children) { child in
+                    childPreview(child)
+                    if selectedChildID == child.id {
+                        childCard(child).transition(.opacity)
+                    }
+                }
+                if children.count < Self.maxChildren {
+                    PrimaryButton(title: L.t("parent.add_child")) { creatingChild = true }
+                } else {
+                    Text(L.t("parent.child.limit_reached", ["max": "\(Self.maxChildren)"]))
+                        .font(F.xs).foregroundStyle(theme.mutedForeground)
                 }
             }
         }
+    }
+
+    private func childPreview(_ child: ChildRow) -> some View {
+        let member = family.first { $0.member_id == child.id.uuidString.lowercased() || $0.member_id.lowercased() == child.id.uuidString.lowercased() }
+        return Button {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85)) {
+                selectedChildID = selectedChildID == child.id ? nil : child.id
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    AvatarBubble(avatar: child.avatar, name: child.name, size: 44)
+                    Text(child.name).font(F.sans(16, .semibold)).foregroundStyle(theme.foreground)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    Image(systemName: selectedChildID == child.id ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(theme.primary)
+                }
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 16) {
+                        childMetric(L.t("dashboard.steps"), member.map { L.number($0.steps) })
+                        childMetric(L.t("dashboard.earned"), member?.earned_min.map { L.t("home2.minutes", ["n": L.number($0)]) })
+                    }
+                    VStack(alignment: .leading, spacing: 12) {
+                        childMetric(L.t("dashboard.steps"), member.map { L.number($0.steps) })
+                        childMetric(L.t("dashboard.earned"), member?.earned_min.map { L.t("home2.minutes", ["n": L.number($0)]) })
+                    }
+                }
+            }
+            .padding(16).background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2))
+            .overlay(RoundedRectangle(cornerRadius: R.xl2).strokeBorder(theme.border, lineWidth: 1))
+        }
+        .buttonStyle(FlatPress())
+        .accessibilityLabel(L.t(selectedChildID == child.id ? "dashboard.collapse" : "dashboard.manage", ["name": child.name]))
+    }
+
+    private func childMetric(_ title: String, _ value: String?) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(F.xs).foregroundStyle(theme.mutedForeground)
+            Text(value ?? L.t("dashboard.unavailable")).font(F.sans(14, .medium)).foregroundStyle(theme.foreground)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func childCard(_ c: ChildRow) -> some View {
         let stats = c.auth_user_id.flatMap { today[$0] } ?? ChildDayStats()
         let usedH = stats.usedMin / 60
         let usedM = stats.usedMin % 60
-        return CardSurface(padding: 20) {
-            VStack(alignment: .leading, spacing: 16) {
+        return VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 12) {
                     AvatarBubble(avatar: c.avatar, name: c.name, size: 44)
                     VStack(alignment: .leading, spacing: 2) {
@@ -321,8 +386,8 @@ struct ParentView: View {
                 ChildTasksSection(childID: c.id, childName: c.name, parentID: parentID,
                                   canAssign: c.auth_user_id != nil && parentID != nil)
 
+                Text(L.t("dashboard.remote")).font(F.xs).foregroundStyle(theme.mutedForeground)
                 invitationBlock(c)
-            }
         }
     }
 
@@ -438,13 +503,27 @@ struct ParentView: View {
     }
 
     private func reload() async {
+        guard canManageChildren else { return }
+        loadingFamily = true
+        defer { loadingFamily = false }
         parentID = await SupabaseAPI.currentUserID()
-        children = (try? await SupabaseAPI.children()) ?? []
-        let ids = children.compactMap(\.auth_user_id)
-        let activity = await SupabaseAPI.childActivity(ids)
-        today = activity.today
-        week = activity.week
+        do {
+            async let childRows = SupabaseAPI.children()
+            async let members = SupabaseAPI.familyToday()
+            children = try await childRows
+            family = try await members
+            familyError = false
+            let activity = await SupabaseAPI.childActivity(children.compactMap(\.auth_user_id))
+            today = activity.today
+            week = activity.week
+            if let selectedChildID, !children.contains(where: { $0.id == selectedChildID }) {
+                self.selectedChildID = nil
+            }
+        } catch {
+            familyError = true
+        }
     }
+
 }
 
 // MARK: - Stat tile
@@ -635,33 +714,7 @@ struct ProScreenTimeSection: View {
                         .stroke(theme.p.s200, lineWidth: 1))
                 }
 
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "clock").font(.system(size: 12)).foregroundStyle(theme.p.s700)
-                        Text(L.t("pro.st.cat_limits")).font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900)
-                        Spacer(minLength: 0)
-                    }
-                    Text(L.t("pro.st.cat_limits_sub")).font(F.text11).foregroundStyle(theme.p.s600)
-                    ForEach(ScreenTimeCategories.keys, id: \.self) { key in
-                        let v = pst.catLimits[key] ?? 0
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Text(L.t(key)).font(F.sans(11, .medium)).foregroundStyle(theme.p.s700)
-                                Spacer()
-                                Text(v == 0 ? L.t("pro.st.no_limit") : "\(v) min")
-                                    .font(F.sans(11, .medium)).tabularNums().foregroundStyle(theme.p.s700)
-                            }
-                            Slider(value: Binding(
-                                get: { Double(v) },
-                                set: { pst.catLimits[key] = Int($0.rounded()) }
-                            ), in: 0...240, step: 15).tint(theme.primary)
-                        }
-                    }
-                }
-                .padding(16)
-                .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-                    .stroke(theme.p.s200, lineWidth: 1))
+
             }
             .opacity(isPro ? 1 : 0.6)
             .allowsHitTesting(isPro)
