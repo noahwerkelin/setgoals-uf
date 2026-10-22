@@ -85,11 +85,20 @@ final class BadgeStore: ObservableObject {
     static let shared = BadgeStore()
     /// Most recently earned first.
     @Published private(set) var ordered: [String] = []
+    /// badge id -> original earned date.
+    @Published private(set) var earnedAt: [String: Date] = [:]
     var earned: Set<String> { Set(ordered) }
     private var syncing = false
 
     func reload() async {
-        ordered = await SupabaseAPI.earnedBadgesOrdered()
+        let rows = await SupabaseAPI.earnedBadgeRows()
+        ordered = rows.map(\.badge_id)
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let plain = ISO8601DateFormatter()
+        var map: [String: Date] = [:]
+        for r in rows { if let d = iso.date(from: r.earned_at) ?? plain.date(from: r.earned_at) { map[r.badge_id] = d } }
+        earnedAt = map
     }
 
     /// Load cached badges, then award anything new in the background.
