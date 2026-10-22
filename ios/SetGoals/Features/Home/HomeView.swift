@@ -261,13 +261,9 @@ struct HomeView: View {
 
     @ViewBuilder private var familySection: some View {
         FamilyCard(rows: family, onAddChild: {
-            NavIntent.shared.parentSection = .children
-            NavIntent.shared.openParent = true
-            tab = .profile
+            tab = .screenTime
         }, onView: {
-            NavIntent.shared.parentSection = .children
-            NavIntent.shared.openParent = true
-            tab = .profile
+            tab = .screenTime
         })
         if isChild { MyTasksCard() }
     }
