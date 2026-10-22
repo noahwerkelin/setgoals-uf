@@ -18,6 +18,7 @@ struct SetGoalsApp: App {
                         Task {
                             try? await SupabaseAPI.updateProfile(["onboarding_completed": .bool(true)])
                             await settings.load()
+                            await FriendsStore.shared.preload()
                             NearbyStore.shared.start()
                             Task { await StatsCache.shared.load() }
                             Task { await BadgeStore.shared.preload() }
@@ -47,6 +48,7 @@ struct SetGoalsApp: App {
             .preferredColorScheme(.light)
             .task {
                 await auth.bootstrap()
+                if auth.signedIn { await FriendsStore.shared.preload() }
                 // Keep Apple's Screen Time rules in step with the category
                 // pills the user sees.
                 ScreenTimeRules.policies = ProSTStore.shared.alwaysAllow

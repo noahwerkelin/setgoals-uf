@@ -8,6 +8,8 @@ struct ProgressRing<Content: View>: View {
     let progress: Double
     var size: CGFloat = 224
     var stroke: CGFloat = 14
+    var trackColor: Color? = nil
+    var ringColor: Color? = nil
     @ViewBuilder var content: Content
 
     @State private var animated: Double = 0
@@ -15,10 +17,10 @@ struct ProgressRing<Content: View>: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(theme.p.s100, lineWidth: stroke)
+                .stroke(trackColor ?? theme.p.s100, lineWidth: stroke)
             Circle()
                 .trim(from: 0, to: max(0, min(1, animated)))
-                .stroke(theme.p.s600, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+                .stroke(ringColor ?? theme.p.s600, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             content
         }

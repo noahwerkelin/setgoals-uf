@@ -1,4 +1,6 @@
 # Tasks
+- [x] Update Swift Home ring colors, minutes, step hierarchy, restore the original daily quote, and place Friends last.
+- [x] Preload and share friends data at app entry; source checks passed, but native visual and loading-speed verification requires Xcode.
 - [x] Align Swift onboarding with the web project's font, semantic colors, and control styling; bundle missing Albert Sans weights.
 - [x] Verify font registration, English/Swedish glyphs, and unchanged setup flow in source; native appearance remains unverified without Xcode.
 - [x] Match Swift onboarding controls and surfaces to SetGoals; remove the welcome sign-in shortcut.

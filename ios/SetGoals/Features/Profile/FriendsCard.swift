@@ -4,7 +4,8 @@ import SwiftUI
 /// username search dialog. `rounded-3xl bg-card p-5 ring-1 ring-black/5`.
 struct FriendsCard: View {
     @EnvironmentObject var theme: Theme
-    @State private var friends: [FriendRow] = []
+    @ObservedObject private var store = FriendsStore.shared
+    private var friends: [FriendRow] { store.friends }
     @State private var showAdd = false
 
     var body: some View {
@@ -81,15 +82,13 @@ struct FriendsCard: View {
                 }
             }
         }
-        .rise(delay: 0.15)
-        .task { await load() }
         .sheet(isPresented: $showAdd) {
             AddFriendSheet(existing: friends) { Task { await load() } }
                 .environmentObject(theme)
         }
     }
 
-    private func load() async { friends = (try? await SupabaseAPI.friends()) ?? [] }
+    private func load() async { await store.refresh() }
 }
 
 struct AddFriendSheet: View {
