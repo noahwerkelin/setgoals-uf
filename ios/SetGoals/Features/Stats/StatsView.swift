@@ -7,6 +7,7 @@ struct StatsView: View {
     @EnvironmentObject var settings: SettingsStore
     @ObservedObject var health = HealthKitService.shared
     @Binding var tab: AppTab
+    var embedded = false
 
     @ObservedObject private var cache = StatsCache.shared
     private var history: [DayTotals] { cache.history }
@@ -87,23 +88,34 @@ struct StatsView: View {
     }
 
     var body: some View {
-        AppShell(tab: $tab) {
-            PageHeader(eyebrow: L.t("stats.eyebrow"), title: L.t("stats.title")) { EmptyView() }
-            VStack(spacing: 20) {
-                weekCard
-                cardsGrid
-                trendCard
-                proCard
+        Group {
+            if embedded {
+                statisticsContent
+            } else {
+                AppShell(tab: $tab) {
+                    PageHeader(eyebrow: L.t("stats.eyebrow"), title: L.t("stats.title")) { EmptyView() }
+                    statisticsContent.padding(.horizontal, 24)
+                }
             }
-            .padding(.horizontal, 24)
-        }
-        .task {
-            await HealthKitService.shared.refreshToday()
-            await cache.load()
-            syncError = cache.error ?? HealthKitService.shared.syncError
         }
         .sheet(isPresented: $proOpen) {
             ProUpgradeDialog().environmentObject(theme).environmentObject(settings)
+        }
+    }
+
+    private var statisticsContent: some View {
+        VStack(spacing: 20) {
+            if embedded {
+                Text(L.t("stats.title")).font(F.lg).foregroundStyle(theme.foreground)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            weekCard
+            cardsGrid
+            trendCard
+            proCard
+            if cache.error != nil || health.syncError != nil {
+                Text(L.t("stats.no_data")).font(F.xs).foregroundStyle(theme.mutedForeground)
+            }
         }
     }
 

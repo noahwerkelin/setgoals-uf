@@ -24,14 +24,14 @@ struct AppShell<Content: View>: View {
 }
 
 enum AppTab: String, CaseIterable {
-    case home, map, challenges, coach, profile
+    case home, map, challenges, screenTime, profile
 
     var icon: String {
         switch self {
         case .home: return "house"
         case .map: return "map"
         case .challenges: return "trophy"
-        case .coach: return "sparkles"
+        case .screenTime: return "hourglass"
         case .profile: return "person"
         }
     }

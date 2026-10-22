@@ -7,9 +7,6 @@ import Supabase
 final class NavIntent {
     static let shared = NavIntent()
     var challengesTab: ChallengesView.Tab = .goals
-    /// Which tab ParentView should open on, and whether it should open at all.
-    var parentSection: ParentView.ParentTab = .personal
-    var openParent = false
 
     /// Reads the pending tab once, then falls back to the default.
     func consumeChallengesTab() -> ChallengesView.Tab {
@@ -17,59 +14,51 @@ final class NavIntent {
         return challengesTab
     }
 
-    func consumeParentSection() -> ParentView.ParentTab {
-        defer { parentSection = .personal }
-        return parentSection
-    }
+
 }
 
 
-/// 1:1 port of `src/routes/profile.tsx`.
-/// Hero (ProfileAura + avatar + name) → Today → Progress → Manage.
+/// Native personal dashboard: profile identity followed by cached statistics.
 struct ProfileView: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
     @ObservedObject var health = HealthKitService.shared
     @Binding var tab: AppTab
 
-    @ObservedObject private var badgeStore = BadgeStore.shared
-    private var earned: Set<String> { badgeStore.earned }
     @State private var photoItem: PhotosPickerItem?
     @State private var uploading = false
     @State private var showSettings = false
-    @State private var showParent = false
-    @State private var showStats = false
+    @State private var showCoach = false
 
     private var stepsToday: Int { health.steps }
     private var isChild: Bool { settings.role == "child" }
     /// A linked child's picture is chosen by their parent and synced down.
     private var avatarLocked: Bool { settings.linkedChild }
     private var displayName: String {
-        settings.displayName.isEmpty ? (settings.username.isEmpty ? "You" : settings.username) : settings.displayName
+        settings.displayName.isEmpty ? (settings.username.isEmpty ? L.t("dashboard.you") : settings.username) : settings.displayName
     }
     private var earnedMin: Int { settings.earnedMin(from: stepsToday) }
 
     var body: some View {
         AppShell(tab: $tab) {
-            PageHeader(title: L.t("profile.title")) { EmptyView() }
+            PageHeader(title: L.t("profile.title")) {
+                Button { showSettings = true } label: {
+                    Image(systemName: "gearshape").font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(theme.primary)
+                        .frame(width: 44, height: 44)
+                        .background(theme.secondary, in: Circle())
+                }
+                .buttonStyle(FlatPress())
+                .accessibilityLabel(L.t("profile.settings"))
+            }
             VStack(spacing: 24) {
                 hero
-                todaySection
-                progressSection
-                manageSection
+                StatsView(tab: $tab, embedded: true)
+                SecondaryButton(title: L.t("dashboard.coach")) { showCoach = true }
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 32)
         }
-        .onAppear {
-            // Deep link from Home ("Add child" / family card) opens the
-            // children screen-time page instead of just the profile.
-            if NavIntent.shared.openParent {
-                NavIntent.shared.openParent = false
-                showParent = true
-            }
-        }
-
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
             Task { await handlePick(item) }
@@ -77,13 +66,18 @@ struct ProfileView: View {
         .fullScreenCover(isPresented: $showSettings) {
             SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings)
         }
-        .fullScreenCover(isPresented: $showParent) {
-            ParentView(tab: $tab, initialSection: NavIntent.shared.consumeParentSection())
+        .fullScreenCover(isPresented: $showCoach) {
+            CoachView(tab: $tab)
                 .environmentObject(theme).environmentObject(settings)
-        }
-
-        .fullScreenCover(isPresented: $showStats) {
-            StatsView(tab: $tab).environmentObject(theme).environmentObject(settings)
+                .overlay(alignment: .topTrailing) {
+                    Button { showCoach = false } label: {
+                        Image(systemName: "xmark").frame(width: 44, height: 44)
+                            .foregroundStyle(theme.primary).background(theme.card, in: Circle())
+                    }
+                    .accessibilityLabel(L.t("settings.cancel"))
+                    .padding(.trailing, 24)
+                }
+                .onChange(of: tab) { _, _ in showCoach = false }
         }
     }
 
@@ -91,15 +85,35 @@ struct ProfileView: View {
 
     private var hero: some View {
         ZStack {
-            ProfileAura(
-                activity: Double(stepsToday) / Double(max(1, settings.dailyGoal)),
-                screen: Double(earnedMin) / Double(max(1, (settings.hasCap ? settings.dailyCapHours : 3) * 60))
-            )
+            LinearGradient(colors: [theme.secondary, theme.accent, theme.card],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
             VStack(spacing: 12) {
-                avatarButton
+                if avatarLocked {
+                    avatarButton
+                } else {
+                    PhotosPicker(selection: $photoItem, matching: .images) {
+                        avatarButton.overlay(alignment: .bottomTrailing) {
+                            Image(systemName: "pencil").font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(theme.primaryForeground)
+                                .frame(width: 32, height: 32).background(theme.primary, in: Circle())
+                        }
+                    }
+                    .buttonStyle(FlatPress())
+                    .accessibilityLabel(L.t("profile.change_photo"))
+                    .disabled(uploading)
+                }
                 VStack(spacing: 2) {
-                    Text(displayName).font(F.sans(18, .semibold)).foregroundStyle(theme.foreground)
-                    Text("@\(settings.username)").font(F.xs).foregroundStyle(theme.p.s600)
+                    Text(displayName).font(F.xl2).foregroundStyle(theme.foreground)
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                    Text("@\(settings.username)").font(F.sm).foregroundStyle(theme.mutedForeground)
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                    if settings.isPro {
+                        Label(L.t("pro.badge"), systemImage: "crown.fill")
+                            .font(F.sans(11, .semibold)).foregroundStyle(theme.primary)
+                            .padding(.horizontal, 12).padding(.vertical, 5)
+                            .background(theme.card.opacity(0.8), in: Capsule())
+                            .padding(.top, 6)
+                    }
                 }
                 if avatarLocked {
                     Text(L.t("profile.photo_parent_managed"))
@@ -140,172 +154,15 @@ struct ProfileView: View {
 
     private var avatarButton: some View {
         ZStack {
-            AvatarBubble(avatar: settings.avatar, name: displayName, size: 96)
+            AvatarBubble(avatar: settings.avatar, name: displayName, size: 112)
             if uploading {
-                Circle().fill(Color.black.opacity(0.3))
-                    .overlay(ProgressView().tint(.white))
-                    .frame(width: 96, height: 96)
+                Circle().fill(theme.foreground.opacity(0.3))
+                    .overlay(ProgressView().tint(theme.primaryForeground))
+                    .frame(width: 112, height: 112)
             }
         }
         .overlay(Circle().strokeBorder(theme.card, lineWidth: 4))
         .shadow(color: theme.p.s950.opacity(0.10), radius: 12, x: 0, y: 8)
-    }
-
-    // MARK: Today
-
-    private var todaySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionLabel(L.t("profile.section.today"))
-
-            HStack(spacing: 12) {
-                mini(label: L.t("profile.mini.steps"), value: stepsToday.formatted(.number.grouping(.automatic)))
-                mini(label: L.t("profile.mini.earned"), value: SettingsStore.formatScreenMin(earnedMin))
-            }
-
-            CardSurface(radius: R.xl3, padding: 20) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 16) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-                                .fill(settings.streakCount > 0 ? Color(hex: "#FFEDD5") : theme.p.s100)
-                            Image(systemName: "flame.fill").font(.system(size: 22))
-                                .foregroundStyle(settings.streakCount > 0 ? Color(hex: "#EA580C") : theme.p.s600)
-                        }
-                        .frame(width: 56, height: 56)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(L.t("profile.streak.title")).eyebrow(theme.p.s600)
-                            Text("\(settings.streakCount)")
-                                .font(F.sans(24, .semibold)).tabularNums()
-                                .foregroundStyle(theme.foreground)
-                            Text(streakLabel).font(F.xs).foregroundStyle(theme.p.s600)
-                        }
-                        Spacer()
-                        Text(L.t("profile.streak.best", ["n": "\(settings.streakBest)"]))
-                            .eyebrow(theme.p.s600)
-                            .multilineTextAlignment(.trailing)
-                    }
-
-                    Text(statusText)
-                        .font(F.xs)
-                        .foregroundStyle(statusColors.fg)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(statusColors.bg, in: RoundedRectangle(cornerRadius: R.sm, style: .continuous))
-                }
-            }
-        }
-        .rise(delay: 0.06)
-    }
-
-    private var streakLabel: String {
-        switch settings.streakCount {
-        case 0: return L.t("profile.streak.zero")
-        case 1: return L.t("profile.streak.day")
-        default: return L.t("profile.streak.days", ["n": "\(settings.streakCount)"])
-        }
-    }
-
-    private var statusText: String {
-        if settings.goalMetToday { return L.t("profile.streak.active") }
-        return settings.streakCount > 0 ? L.t("profile.streak.at_risk") : L.t("profile.streak.zero")
-    }
-
-    private var statusColors: (bg: Color, fg: Color) {
-        if settings.goalMetToday { return (theme.p.s100, theme.p.s700) }
-        if settings.streakCount > 0 { return (Color(hex: "#FFFBEB"), Color(hex: "#B45309")) }
-        return (theme.p.s50, theme.p.s600)
-    }
-
-    // MARK: Progress
-
-    private var progressSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionLabel(L.t("profile.section.progress"))
-            ProfileBadgeStrip(earned: earned) {
-                NavIntent.shared.challengesTab = .badges
-                tab = .challenges
-            }
-            FriendsCard()
-        }
-        .rise(delay: 0.12)
-    }
-
-    // MARK: Manage
-
-    private var manageSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionLabel(L.t("profile.section.manage"))
-            VStack(spacing: 0) {
-                row("chart.bar", L.t("profile.row.stats"), L.t("profile.row.stats_sub")) { showStats = true }
-                if !isChild {
-                    divider
-                    row("shield", L.t("profile.row.screentime"), L.t("profile.row.screentime_sub")) {
-                        NavIntent.shared.parentSection = .personal
-                        showParent = true
-                    }
-                    divider
-                    row("person.2", L.t("profile.row.children"), L.t("profile.row.children_sub")) {
-                        NavIntent.shared.parentSection = .children
-                        showParent = true
-                    }
-
-                }
-                divider
-                row("gearshape", L.t("profile.row.settings"), L.t("profile.row.settings_sub")) { showSettings = true }
-            }
-            .background(theme.card)
-            .clipShape(RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
-                .strokeBorder(theme.ringBorder, lineWidth: 1))
-        }
-        .rise(delay: 0.18)
-    }
-
-    private var divider: some View { Rectangle().fill(Color.black.opacity(0.05)).frame(height: 1) }
-
-    private func row(_ icon: String, _ label: String, _ subtitle: String,
-                     action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: R.sm, style: .continuous).fill(theme.p.s100)
-                    Image(systemName: icon).font(.system(size: 14)).foregroundStyle(theme.p.s700)
-                }
-                .frame(width: 36, height: 36)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(label).font(F.sans(14, .semibold)).foregroundStyle(theme.foreground)
-                    Text(subtitle).font(F.xs).foregroundStyle(theme.p.s600)
-                }
-                Spacer()
-                Image(systemName: "chevron.right").font(.system(size: 13)).foregroundStyle(theme.p.s600)
-            }
-            .padding(16)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func sectionLabel(_ s: String) -> some View {
-        Text(s)
-            .font(F.sans(11, .semibold))
-            .textCase(.uppercase)
-            .tracking(1.3)                    // tracking-[0.12em]
-            .foregroundStyle(theme.p.s600)
-            .padding(.horizontal, 4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func mini(label: String, value: String) -> some View {
-        VStack(spacing: 2) {
-            Text(value).font(F.sans(18, .semibold)).tabularNums().foregroundStyle(theme.foreground)
-            Text(label).eyebrow(theme.p.s600)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(16)
-        .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-            .strokeBorder(theme.ringBorder, lineWidth: 1))
     }
 
     // MARK: Avatar upload — square-crop + compress, stored inline like the web.

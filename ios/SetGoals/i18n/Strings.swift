@@ -13,6 +13,7 @@ enum L {
 
     static func t(_ key: String, _ vars: [String: String] = [:]) -> String {
         var s = onboardingStrings[lang]?[key]
+            ?? screenTimeStrings[lang]?[key]
             ?? pages[lang]?[key]
             ?? dict[lang]?[key]
             ?? extra[lang]?[key]
@@ -22,6 +23,7 @@ enum L {
             ?? homeStrings[lang]?[key]
             ?? legalStrings[lang]?[key]
             ?? onboardingStrings["en"]?[key]
+            ?? screenTimeStrings["en"]?[key]
             ?? pages["en"]?[key]
             ?? dict["en"]?[key]
             ?? extra["en"]?[key]

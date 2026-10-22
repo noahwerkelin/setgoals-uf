@@ -7,3 +7,6 @@
 - The iOS onboarding owns all account entry (sign in, kid code, sign up) and AuthView reuses it in auth-only mode, so there is one sign-in implementation; onboarding is only marked complete after authentication.
 - Swift onboarding uses the shared PrimaryButton, F typography with bundled Albert Sans weights, and Theme tokens sourced from the web design system; declare font resources in both Info.plist and project.yml so Xcode generation cannot revert the visual match.
 - Signed-out iOS actions (username check, kid-code redeem) call public server routes that reuse the web server logic, because the underlying database functions are service-role only.
+
+- Native Profile embeds StatsView's shared cached content without a second AppShell or view-entry fetch; Screen Time replaces the Coach tab while Profile retains Coach access, preserving five navigation destinations.
+- Native app selection uses draft FamilyActivityPicker sheets for separate Always Allowed/Earned Only policies; consolidate legacy tokens only on explicit Save and retain dormant per-category limit storage so old settings are not destroyed.

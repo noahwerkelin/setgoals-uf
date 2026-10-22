@@ -1,4 +1,10 @@
 # Tasks
+- [x] Redesign native Profile with inline cached statistics and Settings at top-right.
+- [x] Replace Coach bottom tab with a role-aware Screen Time dashboard and preserve Coach access.
+- [x] Add expandable Family Circle using existing child management, rewards and tasks.
+- [x] Replace custom category rows with native pickers; remove per-category cap controls.
+- [x] Verify bilingual strings, navigation and source consistency with parser/source review.
+- [ ] Validate native appearance, picker/shield behavior and parent/child flows; blocked by unavailable Xcode and Apple-device runtime.
 - [x] Update Swift Home ring colors, minutes, step hierarchy, restore the original daily quote, and place Friends last.
 - [x] Preload and share friends data at app entry; source checks passed, but native visual and loading-speed verification requires Xcode.
 - [x] Align Swift onboarding with the web project's font, semantic colors, and control styling; bundle missing Albert Sans weights.

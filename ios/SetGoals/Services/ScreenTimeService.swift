@@ -162,6 +162,13 @@ final class ScreenTimeService: ObservableObject {
         ScreenTimeRules.selection(for: key)
     }
 
+    func replaceSelection(_ selection: FamilyActivitySelection, alwaysAllowed: Bool) {
+        guard authorized else { return }
+        ScreenTimeRules.replaceSelection(selection, alwaysAllowed: alwaysAllowed)
+        refreshFromStore()
+        restartMonitoring()
+    }
+
     /// Kept for existing call sites: the ledger stays the source of truth, this
     /// only forces a re-evaluation of the shields.
     func apply(remainingMin: Int) {

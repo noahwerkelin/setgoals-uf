@@ -45,7 +45,6 @@ struct SetGoalsApp: App {
                         .transition(.opacity)
                 }
             }
-            .preferredColorScheme(.light)
             .task {
                 await auth.bootstrap()
                 if auth.signedIn { await FriendsStore.shared.preload() }
@@ -100,7 +99,7 @@ struct RootView: View {
             case .profile: ProfileView(tab: $tab)
             case .map: ActivityMapView(tab: $tab)
             case .challenges: ChallengesView(tab: $tab, initialTab: NavIntent.shared.consumeChallengesTab())
-            case .coach: CoachView(tab: $tab)
+            case .screenTime: ParentView(tab: $tab)
             }
 
         }

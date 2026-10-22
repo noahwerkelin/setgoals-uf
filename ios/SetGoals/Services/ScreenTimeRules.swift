@@ -22,6 +22,7 @@ enum ScreenTimeRules {
     /// Selection made on the onboarding "Choose apps" step. It is always
     /// treated as "only with earned time" and merged into the restricted set.
     static let managedKey = "managed"
+    static let alwaysKey = "always"
 
     /// Category keys, same order/ids as the settings rows.
     static let categoryKeys = [
@@ -70,6 +71,19 @@ enum ScreenTimeRules {
         return !(s.applicationTokens.isEmpty && s.categoryTokens.isEmpty && s.webDomainTokens.isEmpty)
     }
 
+    /// Consolidate a policy's legacy selections only after an explicit Save.
+    /// The other policy, its opaque tokens and old stored limits are untouched.
+    static func replaceSelection(_ selection: FamilyActivitySelection, alwaysAllowed: Bool) {
+        var raw = rawSelections
+        let keys = categoryKeys.filter { isAlwaysAllowed($0) == alwaysAllowed }
+            + [alwaysAllowed ? alwaysKey : managedKey]
+        for key in keys { raw.removeValue(forKey: key) }
+        let key = alwaysAllowed ? alwaysKey : managedKey
+        guard let data = try? JSONEncoder().encode(selection) else { return }
+        raw[key] = data
+        rawSelections = raw
+    }
+
     // MARK: resolved token sets
 
     private static func union(where alwaysAllowed: Bool) -> FamilyActivitySelection {
@@ -77,7 +91,7 @@ enum ScreenTimeRules {
         var cats = Set<ActivityCategoryToken>()
         var webs = Set<WebDomainToken>()
         let keys = categoryKeys.filter { isAlwaysAllowed($0) == alwaysAllowed }
-            + (alwaysAllowed ? [] : [managedKey])
+            + [alwaysAllowed ? alwaysKey : managedKey]
         for key in keys {
             let s = selection(for: key)
             apps.formUnion(s.applicationTokens)
