@@ -3,13 +3,10 @@ import UIKit
 import Supabase
 import FamilyControls
 
-/// 1:1 port of `src/routes/parent.tsx` — Personal / Children tabs, category
-/// permissions, PRO screen-time rules, child cards, weekly summary, tasks,
-/// gifting and invitation codes.
+/// Unified native Screen Time dashboard; existing family APIs and restrictions remain authoritative.
 struct ParentView: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
-    @StateObject private var pst = ProSTStore.shared
     @Binding var tab: AppTab
 
     @ObservedObject private var screenTime = ScreenTimeService.shared
@@ -43,7 +40,6 @@ struct ParentView: View {
     }
     @State private var showPro = false
 
-    private var isIndividual: Bool { settings.role == "individual" }
     private var isChild: Bool { settings.role == "child" }
     private var canManageChildren: Bool { !isChild }
     private static let maxChildren = 5
@@ -320,8 +316,7 @@ struct ParentView: View {
 
     private func childCard(_ c: ChildRow) -> some View {
         let stats = c.auth_user_id.flatMap { today[$0] } ?? ChildDayStats()
-        let usedH = stats.usedMin / 60
-        let usedM = stats.usedMin % 60
+        
         return VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 12) {
                     AvatarBubble(avatar: c.avatar, name: c.name, size: 44)
@@ -330,15 +325,15 @@ struct ParentView: View {
                         Text(Self.ageLabel(c.birthday)).font(F.xs).foregroundStyle(theme.p.s600)
                     }
                     Spacer(minLength: 0)
-                    circleButton("pencil") { editing = c }
-                    circleButton("trash") { deleting = c }
+                    circleButton("pencil", label: L.t("dashboard.child_settings")) { editing = c }
+                    circleButton("trash", label: L.t("parent.child.delete")) { deleting = c }
                 }
 
                 HStack(spacing: 12) {
                     ParentStat(label: L.t("parent.steps"), value: stats.steps.formatted())
                     ParentStat(label: L.t("parent.child.daily_goal"), value: c.daily_goal.formatted())
                     ParentStat(label: L.t("parent.used_screentime"),
-                               value: usedH > 0 ? "\(usedH)\(L.t("settings.hours")) \(usedM)m" : "\(usedM)m")
+                               value: L.duration(stats.usedMin))
                 }
 
                 WeeklySummary(week: c.auth_user_id.flatMap { week[$0] } ?? [:])
@@ -457,15 +452,17 @@ struct ParentView: View {
             .stroke(theme.p.s200, lineWidth: 1))
     }
 
-    private func circleButton(_ icon: String, action: @escaping () -> Void) -> some View {
+    private func circleButton(_ icon: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             ZStack {
                 Circle().fill(theme.p.s100)
                 Image(systemName: icon).font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(theme.p.s700)
             }
-            .frame(width: 32, height: 32)
+            .frame(width: 44, height: 44)
         }
+        .buttonStyle(FlatPress())
+        .accessibilityLabel(label)
     }
 
     private func smallButton(_ icon: String, _ title: String, primary: Bool = false,

@@ -5,6 +5,7 @@ import FamilyControls
 struct NativeScreenTimePicker: View {
     @EnvironmentObject var theme: Theme
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var settings: SettingsStore
     let alwaysAllowed: Bool
     let onSave: () -> Void
     @State private var draft: FamilyActivitySelection
@@ -27,7 +28,7 @@ struct NativeScreenTimePicker: View {
                     ToolbarItem(placement: .confirmationAction) {
                         Button(L.t("settings.save")) {
                             // The child cannot change the parent's policy on this device.
-                            guard SettingsStore.shared.role != "child" else { dismiss(); return }
+                            guard settings.role != "child" else { dismiss(); return }
                             ScreenTimeService.shared.replaceSelection(draft, alwaysAllowed: alwaysAllowed)
                             onSave()
                             dismiss()

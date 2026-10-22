@@ -18,8 +18,7 @@ final class NavIntent {
 }
 
 
-/// 1:1 port of `src/routes/profile.tsx`.
-/// Hero (ProfileAura + avatar + name) → Today → Progress → Manage.
+/// Native personal dashboard: profile identity followed by cached statistics.
 struct ProfileView: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
@@ -89,7 +88,20 @@ struct ProfileView: View {
             LinearGradient(colors: [theme.secondary, theme.accent, theme.card],
                            startPoint: .topLeading, endPoint: .bottomTrailing)
             VStack(spacing: 12) {
-                avatarButton
+                if avatarLocked {
+                    avatarButton
+                } else {
+                    PhotosPicker(selection: $photoItem, matching: .images) {
+                        avatarButton.overlay(alignment: .bottomTrailing) {
+                            Image(systemName: "pencil").font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(theme.primaryForeground)
+                                .frame(width: 32, height: 32).background(theme.primary, in: Circle())
+                        }
+                    }
+                    .buttonStyle(FlatPress())
+                    .accessibilityLabel(L.t("profile.change_photo"))
+                    .disabled(uploading)
+                }
                 VStack(spacing: 2) {
                     Text(displayName).font(F.xl2).foregroundStyle(theme.foreground)
                         .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
