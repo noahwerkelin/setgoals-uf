@@ -316,7 +316,7 @@ struct ParentView: View {
 
     private func childCard(_ c: ChildRow) -> some View {
         let stats = c.auth_user_id.flatMap { today[$0] } ?? ChildDayStats()
-        
+
         return VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 12) {
                     AvatarBubble(avatar: c.avatar, name: c.name, size: 44)
