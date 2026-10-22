@@ -1,26 +1,29 @@
 import SwiftUI
 
-/// 1:1 port of `src/routes/index.tsx` (Today).
+/// Today dashboard: header, main progress card, family, friends, recent wins.
 struct HomeView: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
     @ObservedObject var health = HealthKitService.shared
     @ObservedObject var screenTime = ScreenTimeService.shared
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Binding var tab: AppTab
 
     @AppStorage("st.rollover") private var rolloverEnabled = false
 
     @State private var family: [FamilyMember] = []
-    @State private var friendsRank: Int = 0
-    @State private var friendsTotal: Int = 0
+    @State private var friendsBoard: [LeaderboardEntry] = []
+    @State private var friendCount: Int = 0
+    @State private var friendsLoaded = false
+    @State private var myID: UUID?
+    @State private var showAddFriend = false
     @ObservedObject private var badgeStore = BadgeStore.shared
-    private var earnedBadges: [String] { badgeStore.ordered }
-    @State private var yesterdaySteps = 0
     @State private var rewardFailed = false
 
     private var goal: Int { settings.dailyGoal > 0 ? settings.dailyGoal : 8000 }
     private var steps: Int { health.steps }
+    private var isChild: Bool { settings.role == "child" }
     private var capMin: Int { settings.hasCap ? settings.dailyCapHours * 60 : 24 * 60 }
     private var rolloverMin: Int {
         guard settings.isPro, settings.hasCap else { return 0 }
@@ -38,29 +41,20 @@ struct HomeView: View {
     /// Challenge screen time actually granted today.
     private var challengeRewardMin: Int { screenTime.rewardMin }
     private var ringProgress: Double { min(1, Double(steps) / Double(max(goal, 1))) }
+    private var goalReached: Bool { steps >= goal }
 
     var body: some View {
         AppShell(tab: $tab) {
             header
-            VStack(spacing: 24) {
-                ringCard
-                statsRow
-                if settings.role != "child" && settings.isPro && rolloverMin > 0 { rolloverCard }
-                quoteCard
-                RecentWins(earned: earnedBadges) { tab = .challenges }
-                FamilyCard(rows: family) {
-                    NavIntent.shared.parentSection = .children
-                    NavIntent.shared.openParent = true
-                    tab = .profile
-                }
-                MyTasksCard()
-                TaskNotificationsCard()
-                LeaderboardTile(rank: friendsRank, total: friendsTotal) {
-                    NavIntent.shared.challengesTab = .lb
+            VStack(spacing: 20) {
+                mainCard
+                familySection
+                friendsCard
+                RecentWins(earned: badgeStore.ordered, dates: badgeStore.earnedAt) {
+                    NavIntent.shared.challengesTab = .badges
                     tab = .challenges
                 }
-
-
+                TaskNotificationsCard()
             }
             .padding(.horizontal, 24)
         }
@@ -69,9 +63,11 @@ struct HomeView: View {
             screenTime.setBaseAllowance(new)
         }
         .onChange(of: scenePhase) { _, phase in
-            // Keep the app in sync with Apple's Screen Time state whenever it
-            // comes back to the foreground.
             if phase == .active { screenTime.refreshFromStore() }
+        }
+        .sheet(isPresented: $showAddFriend) {
+            AddFriendSheet(existing: []) { Task { await loadFriends() } }
+                .environmentObject(theme)
         }
     }
 
@@ -81,13 +77,7 @@ struct HomeView: View {
         screenTime.refreshAuthorization()
         screenTime.setBaseAllowance(baseAllowanceMin)
         family = (try? await SupabaseAPI.familyToday()) ?? []
-        let hist = await SupabaseAPI.historyFilled(days: 2)
-        yesterdaySteps = hist.count >= 2 ? hist[hist.count - 2].steps : 0
-        let friends = (try? await SupabaseAPI.leaderboard(scope: "friends")) ?? []
-        friendsTotal = friends.count
-        if let me = await SupabaseAPI.currentUserID() {
-            friendsRank = friends.first(where: { $0.user_id == me })?.rank ?? 0
-        }
+        await loadFriends()
         // Pay out any challenge rewards completed since the last visit.
         let week = await SupabaseAPI.weekTotals()
         screenTime.setBaseAllowance(baseAllowanceMin)
@@ -96,20 +86,32 @@ struct HomeView: View {
         screenTime.refreshFromStore()
     }
 
+    private func loadFriends() async {
+        myID = await SupabaseAPI.currentUserID()
+        friendCount = ((try? await SupabaseAPI.friends()) ?? []).count
+        friendsBoard = (try? await SupabaseAPI.leaderboard(scope: "friends")) ?? []
+        friendsLoaded = true
+    }
+
+    private var anim: Animation? { reduceMotion ? nil : .easeOut(duration: 0.3) }
+
     // MARK: header
 
     private var header: some View {
-        HStack(alignment: .bottom) {
+        HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(Self.dateLine())
                     .font(F.sans(14, .medium)).foregroundStyle(theme.p.s600)
-                Text("\(Self.greeting()), \(settings.displayName.isEmpty ? "Lukas" : settings.displayName)")
+                Text(L.t("home2.greeting", ["g": Self.greeting(), "name": displayName]))
                     .font(F.xl2).tracking(-0.4).foregroundStyle(theme.foreground)
+                    .lineLimit(2).minimumScaleFactor(0.8)
             }
-            Spacer()
+            Spacer(minLength: 12)
             Button { tab = .profile } label: {
-                AvatarBubble(avatar: settings.avatar, name: settings.displayName.isEmpty ? settings.username : settings.displayName, size: 40)
+                AvatarBubble(avatar: settings.avatar, name: displayName, size: 44)
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L.t("nav.profile"))
         }
         .padding(.horizontal, 24)
         .padding(.top, 40)
@@ -117,137 +119,195 @@ struct HomeView: View {
         .rise()
     }
 
-    // MARK: ring
+    private var displayName: String {
+        settings.displayName.isEmpty ? settings.username : settings.displayName
+    }
 
-    private var ringCard: some View {
-        CardSurface(radius: 28, padding: 32) {
-            VStack(spacing: 24) {
-                ProgressRing(progress: ringProgress) {
-                    VStack(spacing: 4) {
-                        Text(steps.formatted())
-                            .font(F.sans(36, .semibold)).tabularNums()
-                            .foregroundStyle(theme.foreground)
-                        Text(L.t("home.steps_of", ["goal": goal.formatted()]))
-                            .font(F.sans(14, .medium)).foregroundStyle(theme.p.s600)
+    // MARK: main card
+
+    private var mainCard: some View {
+        CardSurface(radius: R.xl3, padding: 20) {
+            VStack(alignment: .leading, spacing: 16) {
+                streakPill
+                Text(L.t("home2.steps_of", ["s": L.number(steps), "g": L.number(goal)]))
+                    .font(F.sans(22, .semibold)).tracking(-0.3).tabularNums()
+                    .foregroundStyle(theme.foreground)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .contentTransition(.numericText())
+                    .animation(anim, value: steps)
+
+                HStack(alignment: .center, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        stat(L.t("home2.earned"), L.duration(earnedMin), theme.foreground)
+                        if remainingMin <= 0 {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L.t("home2.remaining")).font(F.sans(12, .medium)).foregroundStyle(theme.p.s600)
+                                Text(L.t("home2.time_up")).font(F.sans(15, .semibold)).foregroundStyle(theme.destructive)
+                            }
+                        } else {
+                            stat(L.t("home2.remaining"), L.duration(remainingMin), theme.p.s700)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    ProgressRing(progress: ringProgress, size: 112, stroke: 10) {
+                        VStack(spacing: 0) {
+                            if goalReached {
+                                Image(systemName: "checkmark").font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(theme.p.s700)
+                            }
+                            Text("\(Int((Double(steps) / Double(max(goal, 1)) * 100).rounded()))%")
+                                .font(F.sans(20, .semibold)).tabularNums()
+                                .foregroundStyle(theme.foreground)
+                        }
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(L.t("home2.ring_a11y", ["p": "\(Int(ringProgress * 100))"]))
                 }
-                HStack(spacing: 0) {
-                    metric(L.t("home.earned"),
-                           L.t("home.earned_of", [
-                               "e": SettingsStore.formatScreenMin(earnedMin),
-                               "c": SettingsStore.formatScreenMin(capMin),
-                           ]),
-                           theme.foreground)
-                    Rectangle().fill(theme.p.s950.opacity(0.05)).frame(width: 1)
-                    metric(L.t("home.remaining"), SettingsStore.formatScreenMin(remainingMin), theme.p.s600)
-                }
+
                 if challengeRewardMin > 0 {
-                    Text(L.t("home.challenge_reward", ["m": SettingsStore.formatScreenMin(challengeRewardMin)]))
-                        .font(F.sans(11, .semibold))
-                        .foregroundStyle(theme.p.s700)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(theme.p.s100, in: Capsule())
-                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
-                        .padding(.top, -8)
+                    bonusRow("gift.fill", L.t("home2.challenge_bonus"), "+\(L.duration(challengeRewardMin))")
                 } else if rewardFailed {
                     Text(L.t("home.challenge_reward_failed"))
-                        .font(F.sans(11, .semibold))
-                        .foregroundStyle(theme.p.s700)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(theme.p.s100, in: Capsule())
-                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
-                        .padding(.top, -8)
+                        .font(F.xs).foregroundStyle(theme.p.s700)
                 }
                 if settings.bonusMin > 0 {
-                    Text(L.t("home.bonus_gift", ["m": SettingsStore.formatScreenMin(settings.bonusMin)]))
-                        .font(F.sans(11, .semibold))
-                        .foregroundStyle(theme.p.s700)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(theme.p.s100, in: Capsule())
-                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
-                        .padding(.top, -8)
+                    bonusRow("heart.fill", L.t("home2.parent_gift"), "+\(L.duration(settings.bonusMin))")
+                }
+                if !isChild && settings.isPro && rolloverMin > 0 {
+                    bonusRow("arrow.uturn.forward", L.t("home2.rollover"), "+\(L.duration(rolloverMin))")
+                }
+
+                Rectangle().fill(theme.border).frame(height: 1)
+
+                HStack(spacing: 12) {
+                    let d = settings.formatDistance(health.distanceKm)
+                    miniStat("shoeprints.fill", L.t("home2.distance"), d.0, d.1)
+                    if !isChild {
+                        Rectangle().fill(theme.border).frame(width: 1, height: 32)
+                        miniStat("flame", L.t("home2.energy"), L.number(health.calories), "kcal")
+                    }
                 }
             }
-            .frame(maxWidth: .infinity)
         }
         .rise(delay: 0.06)
     }
 
-    private func metric(_ label: String, _ value: String, _ color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text(label).eyebrow(theme.p.s600)
-            Text(value).font(F.sans(18, .medium)).tabularNums().foregroundStyle(color)
+    private var streakPill: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "flame.fill").font(.system(size: 11, weight: .semibold))
+            Text(settings.streakCount > 0
+                 ? L.t("home2.streak", ["n": "\(settings.streakCount)"])
+                 : L.t("home2.streak_none"))
+                .font(F.sans(11, .semibold))
+            if goalReached {
+                Text("·").font(F.sans(11, .semibold))
+                Text(L.t("home2.goal_reached")).font(F.sans(11, .semibold))
+            }
+        }
+        .foregroundStyle(theme.p.s700)
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(theme.p.s100, in: Capsule())
+        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
+    }
+
+    private func stat(_ label: String, _ value: String, _ color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(F.sans(12, .medium)).foregroundStyle(theme.p.s600)
+            Text(value).font(F.sans(18, .semibold)).tabularNums().foregroundStyle(color)
                 .lineLimit(1).minimumScaleFactor(0.7)
+                .contentTransition(.numericText())
+                .animation(anim, value: value)
         }
-        .frame(maxWidth: .infinity)
     }
 
-    // MARK: stats
-
-    private var statsRow: some View {
-        let d = settings.formatDistance(health.distanceKm)
-        return HStack(spacing: 16) {
-            if settings.role != "child" {
-                StatTile(systemImage: "flame", label: L.t("home.energy"),
-                         value: "\(health.calories)", unit: "kcal")
-            }
-            StatTile(systemImage: "shoeprints.fill", label: L.t("home.distance"),
-                     value: d.0, unit: d.1)
+    private func bonusRow(_ icon: String, _ label: String, _ value: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon).font(.system(size: 12)).foregroundStyle(theme.p.s700)
+            Text(label).font(F.sans(13, .medium)).foregroundStyle(theme.p.s900)
+            Spacer(minLength: 8)
+            Text(value).font(F.sans(13, .semibold)).tabularNums().foregroundStyle(theme.p.s700)
         }
-        .rise(delay: 0.12)
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.lg, style: .continuous))
     }
 
-    private var rolloverCard: some View {
-        HStack(spacing: 12) {
+    private func miniStat(_ icon: String, _ label: String, _ value: String, _ unit: String) -> some View {
+        HStack(spacing: 10) {
             ZStack {
-                RoundedRectangle(cornerRadius: R.xl2, style: .continuous).fill(theme.p.s600)
-                Image(systemName: "sparkles").font(.system(size: 18))
-                    .foregroundStyle(theme.primaryForeground)
+                RoundedRectangle(cornerRadius: R.sm, style: .continuous).fill(theme.p.s100)
+                Image(systemName: icon).font(.system(size: 12)).foregroundStyle(theme.p.s700)
             }
-            .frame(width: 40, height: 40)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L.t("home.bonus_eyebrow"))
-                    .font(F.sans(10, .semibold)).textCase(.uppercase).tracking(1.2)
-                    .foregroundStyle(theme.p.s700)
-                Text(L.t("home.bonus_text", ["n": "\(rolloverMin)"]))
-                    .font(F.sans(14, .medium)).foregroundStyle(theme.p.s900)
+            .frame(width: 28, height: 28)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(label).font(F.sans(11, .medium)).foregroundStyle(theme.p.s600)
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(value).font(F.sans(15, .semibold)).tabularNums().foregroundStyle(theme.foreground)
+                    Text(unit).font(F.sans(11, .regular)).foregroundStyle(theme.p.s600)
+                }
             }
-            Spacer(minLength: 0)
         }
-        .padding(16)
-        .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
-                .strokeBorder(theme.p.s200, lineWidth: 1)
-        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: family
+
+    @ViewBuilder private var familySection: some View {
+        FamilyCard(rows: family, onAddChild: {
+            NavIntent.shared.parentSection = .children
+            NavIntent.shared.openParent = true
+            tab = .profile
+        }, onView: {
+            NavIntent.shared.parentSection = .children
+            NavIntent.shared.openParent = true
+            tab = .profile
+        })
+        if isChild { MyTasksCard() }
+    }
+
+    // MARK: friends
+
+    private var friendsCard: some View {
+        let top = Array(friendsBoard.prefix(3))
+        let me = friendsBoard.first { $0.user_id == myID }
+        return CardSurface(radius: R.xl3, padding: 20) {
+            VStack(alignment: .leading, spacing: 14) {
+                sectionTitle("person.2.fill", L.t("home2.friends"))
+                if friendsLoaded && friendCount == 0 {
+                    emptyState(L.t("home2.no_friends"), L.t("home2.no_friends_sub"))
+                    PrimaryButton(title: L.t("home2.add_friend")) { showAddFriend = true }
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(top) { row in lbRow(row, isMe: row.user_id == myID) }
+                        if let me, me.rank > 3 {
+                            Rectangle().fill(theme.border).frame(height: 1)
+                            lbRow(me, isMe: true)
+                        }
+                    }
+                }
+                linkButton(L.t("home2.view_friends")) {
+                    NavIntent.shared.challengesTab = .lb
+                    tab = .challenges
+                }
+            }
+        }
         .rise(delay: 0.18)
     }
 
-    // MARK: quote
-
-    private var quoteCard: some View {
-        let q = Quotes.today()
-        return VStack(alignment: .leading, spacing: 0) {
-            Text(L.t("home.quote_eyebrow"))
-                .font(F.sans(10, .medium)).textCase(.uppercase).tracking(1.2)
-                .foregroundStyle(.white.opacity(0.7))
-            Text("\"\(q.text)\"")
-                .font(F.sans(17, .medium))
-                .foregroundStyle(.white)
-                .padding(.top, 8)
-            Text("— \(q.author)")
-                .font(F.xs).foregroundStyle(.white.opacity(0.8))
-                .padding(.top, 8)
+    private func lbRow(_ r: LeaderboardEntry, isMe: Bool) -> some View {
+        HStack(spacing: 12) {
+            Text("\(r.rank)").font(F.sans(13, .semibold)).tabularNums()
+                .foregroundStyle(theme.p.s600).frame(width: 20)
+            AvatarBubble(avatar: isMe ? settings.avatar : r.avatar_url,
+                         name: r.display_name.isEmpty ? r.username : r.display_name, size: 32)
+            Text(isMe ? L.t("home2.you") : (r.display_name.isEmpty ? "@\(r.username)" : r.display_name))
+                .font(F.sans(14, .medium)).foregroundStyle(theme.foreground).lineLimit(1)
+            Spacer(minLength: 8)
+            Text("\(L.number(r.total_steps)) \(L.t("home2.steps_unit"))")
+                .font(F.sans(13, .medium)).tabularNums().foregroundStyle(theme.p.s700)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(24)
-        .background(theme.p.s600, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
-                .strokeBorder(theme.p.s700.opacity(0.4), lineWidth: 1)
-        )
-        .rise(delay: 0.21)
+        .padding(.horizontal, isMe ? 10 : 0).padding(.vertical, isMe ? 6 : 0)
+        .background(isMe ? theme.p.s100 : .clear, in: RoundedRectangle(cornerRadius: R.lg, style: .continuous))
     }
 
     // MARK: helpers
@@ -271,14 +331,70 @@ struct HomeView: View {
 
     static func dateLine() -> String {
         let f = DateFormatter()
-        f.locale = Locale(identifier: L.lang == "sv" ? "sv_SE" : "en_US")
+        f.locale = L.locale
         f.setLocalizedDateFormatFromTemplate("EEEE MMM d")
         let s = f.string(from: Date())
         return s.prefix(1).uppercased() + s.dropFirst()
     }
 }
 
-// MARK: - Shared pieces
+// MARK: - Shared card pieces
+
+extension View {
+    func sectionTitle(_ icon: String, _ title: String) -> some View { SectionTitle(icon: icon, title: title) }
+    func emptyState(_ title: String, _ sub: String) -> some View { EmptyStateText(title: title, sub: sub) }
+    func linkButton(_ title: String, _ action: @escaping () -> Void) -> some View { CardLinkButton(title: title, action: action) }
+}
+
+struct SectionTitle: View {
+    @EnvironmentObject var theme: Theme
+    let icon: String
+    let title: String
+    var body: some View {
+        HStack(spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: R.sm, style: .continuous).fill(theme.p.s100)
+                Image(systemName: icon).font(.system(size: 12)).foregroundStyle(theme.p.s700)
+            }
+            .frame(width: 28, height: 28)
+            Text(title).font(F.sans(14, .semibold)).foregroundStyle(theme.foreground)
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+struct EmptyStateText: View {
+    @EnvironmentObject var theme: Theme
+    let title: String
+    let sub: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(F.sans(14, .medium)).foregroundStyle(theme.p.s900)
+            if !sub.isEmpty { Text(sub).font(F.xs).foregroundStyle(theme.p.s600) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Full-width secondary link at the bottom of a Home card.
+struct CardLinkButton: View {
+    @EnvironmentObject var theme: Theme
+    let title: String
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Text(title).font(F.sans(13, .semibold))
+                Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
+            }
+            .frame(maxWidth: .infinity).padding(.vertical, 10)
+            .foregroundStyle(theme.p.s900)
+            .background(theme.p.s100, in: Capsule())
+            .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
+        }
+        .buttonStyle(FlatPress())
+    }
+}
 
 struct AvatarBubble: View {
     @EnvironmentObject var theme: Theme
@@ -309,197 +425,108 @@ struct AvatarBubble: View {
     }
 }
 
-/// `RecentWins` — last six unlocked badges, or an empty-state nudge.
+/// Three most recently earned badges, or an empty-state nudge.
 struct RecentWins: View {
     @EnvironmentObject var theme: Theme
     /// Badge ids ordered by `earned_at`, most recent first.
     let earned: [String]
+    var dates: [String: Date] = [:]
     var onOpen: () -> Void
 
     private var items: [BadgeDef] {
-        earned.compactMap { id in BADGES.first { $0.id == id } }.prefix(6).map { $0 }
+        Array(earned.compactMap { id in BADGES.first { $0.id == id } }.prefix(3))
     }
-    private let cols = [GridItem(.flexible(), spacing: 12),
-                        GridItem(.flexible(), spacing: 12),
-                        GridItem(.flexible(), spacing: 12)]
 
+    private func dateText(_ id: String) -> String {
+        guard let d = dates[id] else { return "" }
+        let f = DateFormatter()
+        f.locale = L.locale
+        f.setLocalizedDateFormatFromTemplate("MMM d")
+        return f.string(from: d)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(L.t("home.recent_wins"))
-                    .font(F.sans(11, .semibold)).textCase(.uppercase).tracking(1.2)
-                    .foregroundStyle(theme.p.s600)
-                Spacer()
-                Button(action: onOpen) {
-                    Text(L.t("home.recent_wins.view_all"))
-                        .font(F.sans(11, .semibold)).textCase(.uppercase).tracking(1.2)
-                        .foregroundStyle(theme.p.s700)
-                }
-            }
-            .padding(.horizontal, 4)
-
-            if items.isEmpty {
-                Button(action: onOpen) {
-                    HStack(alignment: .top, spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: R.xl2, style: .continuous).fill(theme.p.s600)
-                            Image(systemName: "sparkles").font(.system(size: 18))
-                                .foregroundStyle(theme.primaryForeground)
-                        }
-                        .frame(width: 40, height: 40)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(L.t("home.recent_wins.empty_title"))
-                                .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
-                            Text(L.t("home.recent_wins.empty_desc"))
-                                .font(F.xs).foregroundStyle(theme.p.s700)
-                                .multilineTextAlignment(.leading)
-                            HStack(spacing: 4) {
-                                Text(L.t("home.recent_wins.cta")).font(F.sans(11, .semibold))
-                                Image(systemName: "chevron.right").font(.system(size: 9, weight: .semibold))
-                            }
-                            .foregroundStyle(theme.p.s900)
-                            .padding(.top, 4)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    .padding(20)
-                    .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
-                            .strokeBorder(theme.p.s200, lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-            } else {
-                LazyVGrid(columns: cols, spacing: 12) {
-                    ForEach(items) { b in
-                        Button(action: onOpen) {
-                            VStack(spacing: 8) {
-                                BadgeMedal(badge: b, earned: true, size: 48)
+        CardSurface(radius: R.xl3, padding: 20) {
+            VStack(alignment: .leading, spacing: 14) {
+                SectionTitle(icon: "rosette", title: L.t("home2.recent_wins"))
+                if items.isEmpty {
+                    EmptyStateText(title: L.t("home2.no_badges"), sub: L.t("home2.no_badges_sub"))
+                } else {
+                    HStack(alignment: .top, spacing: 10) {
+                        ForEach(items) { b in
+                            VStack(spacing: 6) {
+                                BadgeMedal(badge: b, earned: true, size: 44)
                                 Text(b.name)
-                                    .font(F.sans(10, .semibold))
+                                    .font(F.sans(11, .semibold))
                                     .multilineTextAlignment(.center).lineLimit(2)
                                     .foregroundStyle(theme.foreground)
+                                Text(dateText(b.id))
+                                    .font(F.sans(10, .regular)).foregroundStyle(theme.p.s600)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(12)
-                            .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-                                    .strokeBorder(theme.ringBorder, lineWidth: 1)
-                            )
                         }
-                        .buttonStyle(.plain)
+                        ForEach(0..<(3 - items.count), id: \.self) { _ in Color.clear.frame(maxWidth: .infinity) }
                     }
                 }
+                CardLinkButton(title: L.t("home2.view_all"), action: onOpen)
             }
         }
         .rise(delay: 0.24)
     }
 }
 
+/// Role-aware family card: children preview, parent for kids, or add-child.
 struct FamilyCard: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
     let rows: [FamilyMember]
     var onAddChild: () -> Void
+    var onView: () -> Void
 
     private var isChild: Bool { settings.role == "child" }
-    private var members: [FamilyMember] {
-        rows.filter { isChild || $0.relation == "child" || $0.is_self }
-    }
-    private var hasChildren: Bool { rows.contains { $0.relation == "child" } }
+    private var children: [FamilyMember] { rows.filter { $0.relation == "child" } }
+    private var parent: FamilyMember? { rows.first { $0.relation == "parent" && !$0.is_self } }
 
     var body: some View {
-        CardSurface {
-            if !isChild && !hasChildren {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(L.t("home.family")).font(F.sans(14, .semibold))
-                        .foregroundStyle(theme.foreground)
-                    Text(L.t("home.family.empty")).font(F.xs)
-                        .foregroundStyle(theme.p.s600).padding(.top, 8)
-                    Button(action: onAddChild) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus").font(.system(size: 14, weight: .semibold))
-                            Text(L.t("home.family.add_child")).font(F.sans(14, .semibold))
-                        }
-                        .frame(maxWidth: .infinity).padding(.vertical, 12)
-                        .foregroundStyle(theme.primaryForeground)
-                        .background(theme.p.s600, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-                    }
-                    .padding(.top, 16)
-                }
-            } else {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Text(L.t("home.family")).font(F.sans(14, .semibold))
-                            .foregroundStyle(theme.foreground)
-                        Spacer()
-                        Text(L.t("home.today")).eyebrow(theme.p.s600)
-                    }
-                    if members.isEmpty {
-                        Text(L.t("home.family.empty")).font(F.xs).foregroundStyle(theme.p.s600)
-                    }
-                    ForEach(members) { m in
-                        HStack {
-                            HStack(spacing: 12) {
-                                AvatarBubble(avatar: m.is_self ? settings.avatar : m.avatar,
-                                             name: m.name, size: 36)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(m.is_self ? L.t("home.family.you") : m.name)
-                                        .font(F.sans(14, .medium)).foregroundStyle(theme.foreground)
-                                    Text(L.t(m.relation == "parent" ? "home.family.parent" : "home.family.child"))
-                                        .font(F.sans(10, .regular)).textCase(.uppercase).tracking(0.8)
-                                        .foregroundStyle(theme.p.s600)
-                                }
+        CardSurface(radius: R.xl3, padding: 20) {
+            VStack(alignment: .leading, spacing: 14) {
+                SectionTitle(icon: "figure.2.and.child.holdinghands", title: L.t("home2.family"))
+                if isChild {
+                    if let p = parent {
+                        HStack(spacing: 12) {
+                            AvatarBubble(avatar: p.avatar, name: p.name, size: 36)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(p.name).font(F.sans(14, .medium)).foregroundStyle(theme.foreground)
+                                Text(L.t("home2.your_parent")).font(F.sans(11, .regular)).foregroundStyle(theme.p.s600)
                             }
-                            Spacer()
-                            Text(m.steps.formatted())
-                                .font(F.sans(14, .medium)).tabularNums()
-                                .foregroundStyle(theme.foreground)
+                            Spacer(minLength: 0)
+                        }
+                    }
+                } else if children.isEmpty {
+                    EmptyStateText(title: L.t("home2.no_children"), sub: "")
+                    PrimaryButton(title: L.t("home2.add_child"), action: onAddChild)
+                } else {
+                    VStack(spacing: 12) {
+                        ForEach(children) { c in
+                            HStack(spacing: 12) {
+                                AvatarBubble(avatar: c.avatar, name: c.name, size: 36)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(c.name).font(F.sans(14, .medium)).foregroundStyle(theme.foreground).lineLimit(1)
+                                    Text("\(L.number(c.steps)) \(L.t("home2.steps_unit"))")
+                                        .font(F.sans(12, .regular)).tabularNums().foregroundStyle(theme.p.s600)
+                                }
+                                Spacer(minLength: 8)
+                                Text(L.duration(c.earned_min ?? 0))
+                                    .font(F.sans(14, .semibold)).tabularNums().foregroundStyle(theme.p.s700)
+                            }
                         }
                     }
                 }
-            }
-        }
-        .rise(delay: 0.27)
-    }
-}
-
-struct LeaderboardTile: View {
-    @EnvironmentObject var theme: Theme
-    let rank: Int
-    let total: Int
-    var onOpen: () -> Void
-
-    var body: some View {
-        Button(action: onOpen) {
-            CardSurface {
-                HStack {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: R.lg, style: .continuous).fill(theme.p.s100)
-                            Image(systemName: "bolt.fill").font(.system(size: 15))
-                                .foregroundStyle(theme.p.s700)
-                        }
-                        .frame(width: 36, height: 36)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(L.t("home.leaderboards")).font(F.sans(14, .semibold))
-                                .foregroundStyle(theme.foreground)
-                            Text(total == 0
-                                 ? L.t("home.lb_sub.empty")
-                                 : L.t("home.lb_sub", ["rank": "\(rank)", "total": "\(total)"]))
-                                .font(F.xs).foregroundStyle(theme.p.s600)
-                        }
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.system(size: 14))
-                        .foregroundStyle(theme.p.s600)
+                if isChild ? parent != nil : !children.isEmpty {
+                    CardLinkButton(title: L.t("home2.view_family"), action: onView)
                 }
             }
         }
-        .buttonStyle(.plain)
-        .rise(delay: 0.3)
+        .rise(delay: 0.12)
     }
 }
