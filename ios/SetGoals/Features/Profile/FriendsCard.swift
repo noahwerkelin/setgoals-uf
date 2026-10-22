@@ -92,7 +92,7 @@ struct FriendsCard: View {
     private func load() async { friends = (try? await SupabaseAPI.friends()) ?? [] }
 }
 
-private struct AddFriendSheet: View {
+struct AddFriendSheet: View {
     @EnvironmentObject var theme: Theme
     @Environment(\.dismiss) private var dismiss
     let existing: [FriendRow]

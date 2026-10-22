@@ -23,6 +23,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ApiPublicCoachRouteImport } from './routes/api/public/coach'
 import { Route as ApiPublicDeleteAccountRouteImport } from './routes/api/public/delete-account'
+import { Route as ApiPublicFamilyTodayRouteImport } from './routes/api/public/family-today'
 import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
 import { Route as ApiPublicNearbyActivitiesRouteImport } from './routes/api/public/nearby-activities'
 import { Route as ApiPublicRedeemChildCodeRouteImport } from './routes/api/public/redeem-child-code'
@@ -99,6 +100,11 @@ const ApiPublicDeleteAccountRoute = ApiPublicDeleteAccountRouteImport.update({
   path: '/api/public/delete-account',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicFamilyTodayRoute = ApiPublicFamilyTodayRouteImport.update({
+  id: '/api/public/family-today',
+  path: '/api/public/family-today',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicIngestStepsRoute = ApiPublicIngestStepsRouteImport.update({
   id: '/api/public/ingest-steps',
   path: '/api/public/ingest-steps',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/stats': typeof StatsRoute
   '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
+  '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/redeem-child-code': typeof ApiPublicRedeemChildCodeRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsRoute
   '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
+  '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/redeem-child-code': typeof ApiPublicRedeemChildCodeRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/stats': typeof StatsRoute
   '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
+  '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
   '/api/public/nearby-activities': typeof ApiPublicNearbyActivitiesRoute
   '/api/public/redeem-child-code': typeof ApiPublicRedeemChildCodeRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/public/coach'
     | '/api/public/delete-account'
+    | '/api/public/family-today'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
     | '/api/public/redeem-child-code'
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/public/coach'
     | '/api/public/delete-account'
+    | '/api/public/family-today'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
     | '/api/public/redeem-child-code'
@@ -252,6 +263,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/public/coach'
     | '/api/public/delete-account'
+    | '/api/public/family-today'
     | '/api/public/ingest-steps'
     | '/api/public/nearby-activities'
     | '/api/public/redeem-child-code'
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   StatsRoute: typeof StatsRoute
   ApiPublicCoachRoute: typeof ApiPublicCoachRoute
   ApiPublicDeleteAccountRoute: typeof ApiPublicDeleteAccountRoute
+  ApiPublicFamilyTodayRoute: typeof ApiPublicFamilyTodayRoute
   ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
   ApiPublicNearbyActivitiesRoute: typeof ApiPublicNearbyActivitiesRoute
   ApiPublicRedeemChildCodeRoute: typeof ApiPublicRedeemChildCodeRoute
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicDeleteAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/family-today': {
+      id: '/api/public/family-today'
+      path: '/api/public/family-today'
+      fullPath: '/api/public/family-today'
+      preLoaderRoute: typeof ApiPublicFamilyTodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/ingest-steps': {
       id: '/api/public/ingest-steps'
       path: '/api/public/ingest-steps'
@@ -434,6 +454,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatsRoute: StatsRoute,
   ApiPublicCoachRoute: ApiPublicCoachRoute,
   ApiPublicDeleteAccountRoute: ApiPublicDeleteAccountRoute,
+  ApiPublicFamilyTodayRoute: ApiPublicFamilyTodayRoute,
   ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
   ApiPublicNearbyActivitiesRoute: ApiPublicNearbyActivitiesRoute,
   ApiPublicRedeemChildCodeRoute: ApiPublicRedeemChildCodeRoute,
