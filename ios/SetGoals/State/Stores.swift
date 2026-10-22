@@ -123,7 +123,12 @@ final class AuthStore: ObservableObject {
         loading = false
         Task {
             for await change in supabase.auth.authStateChanges {
-                await MainActor.run { self.signedIn = change.session != nil }
+                self.signedIn = change.session != nil
+                if self.signedIn {
+                    await FriendsStore.shared.preload()
+                } else {
+                    FriendsStore.shared.clear()
+                }
             }
         }
     }

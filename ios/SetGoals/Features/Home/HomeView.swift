@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Today dashboard: header, main progress card, family, friends, recent wins.
+/// Today dashboard: header, progress, quote, family, recent wins, friends.
 struct HomeView: View {
     @EnvironmentObject var theme: Theme
     @EnvironmentObject var settings: SettingsStore
@@ -13,10 +13,7 @@ struct HomeView: View {
     @AppStorage("st.rollover") private var rolloverEnabled = false
 
     @State private var family: [FamilyMember] = []
-    @State private var friendsBoard: [LeaderboardEntry] = []
-    @State private var friendCount: Int = 0
-    @State private var friendsLoaded = false
-    @State private var myID: UUID?
+    @ObservedObject private var friendsStore = FriendsStore.shared
     @State private var showAddFriend = false
     @ObservedObject private var badgeStore = BadgeStore.shared
     @State private var rewardFailed = false
@@ -48,13 +45,14 @@ struct HomeView: View {
             header
             VStack(spacing: 20) {
                 mainCard
+                quoteCard
                 familySection
-                friendsCard
                 RecentWins(earned: badgeStore.ordered, dates: badgeStore.earnedAt) {
                     NavIntent.shared.challengesTab = .badges
                     tab = .challenges
                 }
                 TaskNotificationsCard()
+                friendsCard
             }
             .padding(.horizontal, 24)
         }
@@ -63,10 +61,13 @@ struct HomeView: View {
             screenTime.setBaseAllowance(new)
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { screenTime.refreshFromStore() }
+            if phase == .active {
+                screenTime.refreshFromStore()
+                Task { await friendsStore.refresh() }
+            }
         }
         .sheet(isPresented: $showAddFriend) {
-            AddFriendSheet(existing: []) { Task { await loadFriends() } }
+            AddFriendSheet(existing: friendsStore.friends) { Task { await friendsStore.refresh() } }
                 .environmentObject(theme)
         }
     }
@@ -77,20 +78,12 @@ struct HomeView: View {
         screenTime.refreshAuthorization()
         screenTime.setBaseAllowance(baseAllowanceMin)
         family = (try? await SupabaseAPI.familyToday()) ?? []
-        await loadFriends()
         // Pay out any challenge rewards completed since the last visit.
         let week = await SupabaseAPI.weekTotals()
         screenTime.setBaseAllowance(baseAllowanceMin)
         let claim = await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
         rewardFailed = claim.failed
         screenTime.refreshFromStore()
-    }
-
-    private func loadFriends() async {
-        myID = await SupabaseAPI.currentUserID()
-        friendCount = ((try? await SupabaseAPI.friends()) ?? []).count
-        friendsBoard = (try? await SupabaseAPI.leaderboard(scope: "friends")) ?? []
-        friendsLoaded = true
     }
 
     private var anim: Animation? { reduceMotion ? nil : .easeOut(duration: 0.3) }
@@ -126,31 +119,29 @@ struct HomeView: View {
     // MARK: main card
 
     private var mainCard: some View {
-        CardSurface(radius: R.xl3, padding: 20) {
+        CardSurface(radius: R.xl3, padding: 20, backgroundColor: theme.p.s100) {
             VStack(alignment: .leading, spacing: 16) {
                 streakPill
-                Text(L.t("home2.steps_of", ["s": L.number(steps), "g": L.number(goal)]))
-                    .font(F.sans(22, .semibold)).tracking(-0.3).tabularNums()
-                    .foregroundStyle(theme.foreground)
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                    .contentTransition(.numericText())
-                    .animation(anim, value: steps)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L.number(steps))
+                        .font(F.xl4).tabularNums()
+                        .foregroundStyle(theme.p.s700)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .contentTransition(.numericText())
+                        .animation(anim, value: steps)
+                    Text(L.t("home2.daily_goal", ["g": L.number(goal)]))
+                        .font(F.sans(12, .regular)).foregroundStyle(theme.p.s700)
+                }
 
                 HStack(alignment: .center, spacing: 16) {
                     VStack(alignment: .leading, spacing: 14) {
-                        stat(L.t("home2.earned"), L.duration(earnedMin), theme.foreground)
-                        if remainingMin <= 0 {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(L.t("home2.remaining")).font(F.sans(12, .medium)).foregroundStyle(theme.p.s600)
-                                Text(L.t("home2.time_up")).font(F.sans(15, .semibold)).foregroundStyle(theme.destructive)
-                            }
-                        } else {
-                            stat(L.t("home2.remaining"), L.duration(remainingMin), theme.p.s700)
-                        }
+                        stat(L.t("home2.earned"), L.duration(earnedMin), theme.p.s700)
+                        stat(L.t("home2.remaining"), L.t("home2.minutes", ["n": L.number(max(0, remainingMin))]), theme.p.s700)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                    ProgressRing(progress: ringProgress, size: 112, stroke: 10) {
+                    ProgressRing(progress: ringProgress, size: 112, stroke: 10,
+                                 trackColor: theme.p.s200, ringColor: theme.p.s700) {
                         VStack(spacing: 0) {
                             if goalReached {
                                 Image(systemName: "checkmark").font(.system(size: 14, weight: .bold))
@@ -158,7 +149,7 @@ struct HomeView: View {
                             }
                             Text("\(Int((Double(steps) / Double(max(goal, 1)) * 100).rounded()))%")
                                 .font(F.sans(20, .semibold)).tabularNums()
-                                .foregroundStyle(theme.foreground)
+                                .foregroundStyle(theme.p.s700)
                         }
                     }
                     .accessibilityElement(children: .ignore)
@@ -213,7 +204,7 @@ struct HomeView: View {
 
     private func stat(_ label: String, _ value: String, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(F.sans(12, .medium)).foregroundStyle(theme.p.s600)
+            Text(label).font(F.sans(12, .medium)).foregroundStyle(theme.p.s700)
             Text(value).font(F.sans(18, .semibold)).tabularNums().foregroundStyle(color)
                 .lineLimit(1).minimumScaleFactor(0.7)
                 .contentTransition(.numericText())
@@ -224,7 +215,7 @@ struct HomeView: View {
     private func bonusRow(_ icon: String, _ label: String, _ value: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon).font(.system(size: 12)).foregroundStyle(theme.p.s700)
-            Text(label).font(F.sans(13, .medium)).foregroundStyle(theme.p.s900)
+            Text(label).font(F.sans(13, .medium)).foregroundStyle(theme.p.s700)
             Spacer(minLength: 8)
             Text(value).font(F.sans(13, .semibold)).tabularNums().foregroundStyle(theme.p.s700)
         }
@@ -240,10 +231,10 @@ struct HomeView: View {
             }
             .frame(width: 28, height: 28)
             VStack(alignment: .leading, spacing: 0) {
-                Text(label).font(F.sans(11, .medium)).foregroundStyle(theme.p.s600)
+                Text(label).font(F.sans(11, .medium)).foregroundStyle(theme.p.s700)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(value).font(F.sans(15, .semibold)).tabularNums().foregroundStyle(theme.foreground)
-                    Text(unit).font(F.sans(11, .regular)).foregroundStyle(theme.p.s600)
+                    Text(value).font(F.sans(15, .semibold)).tabularNums().foregroundStyle(theme.p.s700)
+                    Text(unit).font(F.sans(11, .regular)).foregroundStyle(theme.p.s700)
                 }
             }
         }
@@ -251,6 +242,22 @@ struct HomeView: View {
     }
 
     // MARK: family
+
+    private var quoteCard: some View {
+        let quote = Quotes.today()
+        return CardSurface(radius: R.xl3, padding: 20, backgroundColor: theme.primary) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L.t("home2.quote"))
+                    .font(F.sans(10, .medium)).textCase(.uppercase)
+                    .foregroundStyle(theme.primaryForeground.opacity(0.8))
+                Text("“\(quote.text)”")
+                    .font(F.sans(18, .medium)).foregroundStyle(theme.primaryForeground)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("— \(quote.author)")
+                    .font(F.xs).foregroundStyle(theme.primaryForeground.opacity(0.8))
+            }
+        }
+    }
 
     @ViewBuilder private var familySection: some View {
         FamilyCard(rows: family, onAddChild: {
@@ -268,17 +275,17 @@ struct HomeView: View {
     // MARK: friends
 
     private var friendsCard: some View {
-        let top = Array(friendsBoard.prefix(3))
-        let me = friendsBoard.first { $0.user_id == myID }
+        let top = Array(friendsStore.board.prefix(3))
+        let me = friendsStore.board.first { $0.user_id == friendsStore.userID }
         return CardSurface(radius: R.xl3, padding: 20) {
             VStack(alignment: .leading, spacing: 14) {
                 sectionTitle("person.2.fill", L.t("home2.friends"))
-                if friendsLoaded && friendCount == 0 {
+                if friendsStore.loaded && friendsStore.friends.isEmpty {
                     emptyState(L.t("home2.no_friends"), L.t("home2.no_friends_sub"))
                     PrimaryButton(title: L.t("home2.add_friend")) { showAddFriend = true }
                 } else {
                     VStack(spacing: 10) {
-                        ForEach(top) { row in lbRow(row, isMe: row.user_id == myID) }
+                        ForEach(top) { row in lbRow(row, isMe: row.user_id == friendsStore.userID) }
                         if let me, me.rank > 3 {
                             Rectangle().fill(theme.border).frame(height: 1)
                             lbRow(me, isMe: true)
@@ -291,7 +298,6 @@ struct HomeView: View {
                 }
             }
         }
-        .rise(delay: 0.18)
     }
 
     private func lbRow(_ r: LeaderboardEntry, isMe: Bool) -> some View {

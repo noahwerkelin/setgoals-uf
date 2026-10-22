@@ -5,13 +5,14 @@ struct CardSurface<Content: View>: View {
     @EnvironmentObject var theme: Theme
     var radius: CGFloat = R.xl3
     var padding: CGFloat = 20
+    var backgroundColor: Color? = nil
     @ViewBuilder var content: Content
 
     var body: some View {
         content
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.card, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .background(backgroundColor ?? theme.card, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .strokeBorder(theme.ringBorder, lineWidth: 1)
