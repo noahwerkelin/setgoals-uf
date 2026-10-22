@@ -75,6 +75,8 @@ struct FamilyMember: Codable, Identifiable {
     let steps: Int
     let relation: String
     let is_self: Bool
+    /// Step-earned screen time today (minutes); 0 when unknown.
+    var earned_min: Int? = nil
     var id: String { member_id }
 }
 
@@ -188,8 +190,14 @@ enum SupabaseAPI {
             .single().execute().value
     }
 
+    /// The database function is service-role only, so go through the app server.
     static func familyToday() async throws -> [FamilyMember] {
-        try await supabase.rpc("family_today").execute().value
+        let token = try await supabase.auth.session.accessToken
+        var req = URLRequest(url: URL(string: "https://step-wise-life.lovable.app/api/public/family-today?day=\(todayKey)")!)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else { return [] }
+        return try JSONDecoder().decode([FamilyMember].self, from: data)
     }
 
     /// Top 10 for the scope plus the caller's own row (with their true rank)
