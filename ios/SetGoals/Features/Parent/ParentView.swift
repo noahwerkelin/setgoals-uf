@@ -59,13 +59,10 @@ struct ParentView: View {
             VStack(alignment: .leading, spacing: 28) {
                 Text(L.t("dashboard.subtitle")).font(F.sm).foregroundStyle(theme.mutedForeground)
                 myScreenTimeCard
+                if !isChild { childrenSection }
                 categoriesSection
-                if !isChild {
-                    ProScreenTimeSection(isPro: settings.isPro) { showPro = true }
-                    childrenSection
-                } else {
-                    MyTasksCard()
-                }
+                if isChild { MyTasksCard() }
+                if !isChild { ProScreenTimeSection(isPro: settings.isPro) { showPro = true } }
             }
             .padding(.horizontal, 24)
         }
@@ -86,7 +83,7 @@ struct ParentView: View {
             SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings)
         }
         .sheet(item: $pickerMode) { mode in
-            NativeScreenTimePicker(alwaysAllowed: mode == .always) { selectionRevision += 1 }
+            NativeScreenTimePicker(alwaysAllowed: false) { selectionRevision += 1 }
         }
         .sheet(isPresented: $showPro) { ProUpgradeDialog() }
         .sheet(isPresented: $editingMyST) {
@@ -134,10 +131,9 @@ struct ParentView: View {
     // MARK: - Personal
 
     private var myScreenTimeCard: some View {
-        CardSurface(padding: 24, backgroundColor: theme.secondary) {
-            VStack(alignment: .leading, spacing: 20) {
-                Label(L.t("dashboard.personal"), systemImage: "hourglass")
-                    .font(F.lg).foregroundStyle(theme.foreground)
+        CardSurface {
+            VStack(alignment: .leading, spacing: 16) {
+                sectionHeader(L.t("dashboard.personal"), icon: "hourglass")
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: 20) {
                         balanceStat(L.t("dashboard.earned"), screenTime.allowanceMin)
@@ -152,24 +148,28 @@ struct ParentView: View {
                              total: Double(max(1, settings.stepsPer30)))
                     .tint(theme.primary)
                 Text(L.t("dashboard.conversion", ["steps": L.number(settings.stepsPer30)]))
-                    .font(F.xs).foregroundStyle(theme.mutedForeground)
+                    .font(F.xs).foregroundStyle(theme.p.s600)
                 HStack {
-                    Text(L.t("dashboard.limit")).font(F.sm)
+                    Text(L.t("dashboard.limit")).font(F.sans(12, .semibold))
                     Spacer()
                     Text(settings.hasCap ? L.duration(settings.dailyCapHours * 60) : L.t("parent.no_cap"))
-                        .font(F.sans(14, .semibold))
+                        .font(F.sans(12, .semibold)).tabularNums()
                 }
-                .foregroundStyle(theme.foreground)
+                .foregroundStyle(theme.p.s900)
                 if isChild {
                     Text(L.t("parent.child_locked")).font(F.xs).foregroundStyle(theme.mutedForeground)
                 } else {
                     Button {
                         if settings.isPro { editingMyST = true } else { showPro = true }
                     } label: {
-                        Label(L.t("parent.edit_screentime"), systemImage: settings.isPro ? "slider.horizontal.3" : "lock.fill")
-                            .font(F.sans(14, .semibold)).foregroundStyle(theme.primary)
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(theme.card, in: Capsule())
+                            HStack(spacing: 6) {
+                            Image(systemName: settings.isPro ? "slider.horizontal.3" : "lock.fill").font(.system(size: 12, weight: .semibold))
+                            Text(L.t("parent.edit_screentime")).font(F.sans(14, .semibold))
+                        }
+                        .foregroundStyle(theme.p.s900)
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .background(theme.p.s100, in: Capsule())
+                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
                     }
                     .buttonStyle(FlatPress())
                 }
@@ -179,59 +179,63 @@ struct ParentView: View {
 
     private func balanceStat(_ title: String, _ minutes: Int) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(F.xs).foregroundStyle(theme.mutedForeground)
+            Text(title).font(F.sans(12, .medium)).foregroundStyle(theme.p.s600)
             Text(L.t("home2.minutes", ["n": L.number(minutes)]))
-                .font(F.xl2).tabularNums().foregroundStyle(theme.primary)
+                .font(F.sans(20, .medium)).tabularNums().foregroundStyle(theme.foreground)
                 .fixedSize(horizontal: true, vertical: false)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var categoriesSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Label(L.t("dashboard.apps"), systemImage: "iphone")
-                .font(F.lg).foregroundStyle(theme.foreground)
-            if isChild {
-                Text(L.t("dashboard.remote")).font(F.xs).foregroundStyle(theme.mutedForeground)
-            } else {
-                selectionRow(alwaysAllowed: false)
-                selectionRow(alwaysAllowed: true)
+    private func sectionHeader(_ title: String, icon: String) -> some View {
+        HStack(spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: R.lg, style: .continuous).fill(theme.p.s100)
+                Image(systemName: icon).font(.system(size: 13)).foregroundStyle(theme.p.s700)
             }
-            if authorizationError {
-                Text(L.t("dashboard.authorization_error")).font(F.xs).foregroundStyle(theme.mutedForeground)
-            }
+            .frame(width: 28, height: 28)
+            Text(title).font(F.sans(14, .semibold)).foregroundStyle(theme.p.s950)
         }
-        .id(selectionRevision)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 
-    private func selectionRow(alwaysAllowed: Bool) -> some View {
-        let selected = alwaysAllowed ? ScreenTimeRules.alwaysAllowed : ScreenTimeRules.restricted
-        return VStack(alignment: .leading, spacing: 8) {
-            Text(L.t(alwaysAllowed ? "dashboard.always" : "dashboard.earned_only"))
-                .font(F.sans(14, .semibold)).foregroundStyle(theme.foreground)
-            Text(L.t("dashboard.selection", [
-                "apps": L.number(selected.applicationTokens.count),
-                "categories": L.number(selected.categoryTokens.count),
-                "websites": L.number(selected.webDomainTokens.count),
-            ])).font(F.xs).foregroundStyle(theme.mutedForeground)
-            SecondaryButton(title: L.t("dashboard.choose")) {
-                Task {
-                    screenTime.refreshAuthorization()
-                    if !screenTime.authorized { await screenTime.requestAuthorization() }
-                    guard screenTime.authorized else { authorizationError = true; return }
-                    authorizationError = false
-                    pickerMode = alwaysAllowed ? .always : .earned
+    private var categoriesSection: some View {
+        let selected = ScreenTimeRules.restricted
+        return CardSurface {
+            VStack(alignment: .leading, spacing: 12) {
+                sectionHeader(L.t("dashboard.apps"), icon: "iphone")
+                if isChild {
+                    Text(L.t("dashboard.remote")).font(F.xs).foregroundStyle(theme.p.s600)
+                } else {
+                    Text(L.t("dashboard.selection", [
+                        "apps": L.number(selected.applicationTokens.count),
+                        "categories": L.number(selected.categoryTokens.count),
+                        "websites": L.number(selected.webDomainTokens.count),
+                    ])).font(F.xs).foregroundStyle(theme.p.s600)
+                    SecondaryButton(title: L.t("dashboard.restrict")) {
+                        Task {
+                            screenTime.refreshAuthorization()
+                            if !screenTime.authorized { await screenTime.requestAuthorization() }
+                            guard screenTime.authorized else { authorizationError = true; return }
+                            authorizationError = false
+                            pickerMode = .earned
+                        }
+                    }
+                }
+                if authorizationError {
+                    Text(L.t("dashboard.authorization_error")).font(F.xs).foregroundStyle(theme.p.s600)
                 }
             }
         }
+        .id(selectionRevision)
     }
 
     // MARK: - Children
 
     private var childrenSection: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Label(L.t("dashboard.family"), systemImage: "figure.2.and.child.holdinghands")
-                .font(F.lg).foregroundStyle(theme.foreground)
+            sectionHeader(L.t("dashboard.family"), icon: "figure.2.and.child.holdinghands")
             TaskNotificationsCard()
             if let confirmation {
                 Label(confirmation, systemImage: "checkmark.circle.fill")
@@ -246,7 +250,7 @@ struct ParentView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Image(systemName: "figure.2.and.child.holdinghands")
                         .font(.system(size: 36)).foregroundStyle(theme.primary)
-                    Text(L.t("dashboard.empty_title")).font(F.xl2).foregroundStyle(theme.foreground)
+                    Text(L.t("dashboard.empty_title")).font(F.sans(16, .semibold)).foregroundStyle(theme.foreground)
                     Text(L.t("dashboard.empty_desc")).font(F.sm).foregroundStyle(theme.mutedForeground)
                     PrimaryButton(title: L.t("parent.add_child")) { creatingChild = true }
                 }
