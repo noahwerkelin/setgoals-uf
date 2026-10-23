@@ -19,7 +19,7 @@ struct NativeScreenTimePicker: View {
     var body: some View {
         NavigationStack {
             FamilyActivityPicker(selection: $draft)
-                .navigationTitle(L.t(alwaysAllowed ? "dashboard.always" : "dashboard.earned_only"))
+                .navigationTitle(L.t("dashboard.restrict"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
