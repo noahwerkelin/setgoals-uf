@@ -18,7 +18,7 @@ struct AppShell<Content: View>: View {
                     .padding(.bottom, 112)          // pb-28
             }
             .scrollIndicators(.hidden)
-            if !hideNav { BottomNav(tab: $tab) }
+            if !hideNav { BottomNav(tab: $tab).ignoresSafeArea(edges: .bottom) }
         }
     }
 }
