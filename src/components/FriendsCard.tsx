@@ -90,6 +90,8 @@ export function FriendsCard() {
                 <p className="truncate text-[11px] text-sage-600">@{f.username}</p>
               </div>
               <Button
+                variant="ghost"
+                size="icon"
                 type="button"
                 disabled={busy}
                 title={t("friends.remove")}

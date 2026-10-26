@@ -195,8 +195,8 @@ struct AddFriendSheet: View {
                                         do {
                                             try await SupabaseAPI.addFriend(u.id)
                                             q = ""; results = []; failed = false
-                                            sent = true
                                             await store.refresh()
+                                            sent = true
                                             onAdded()
                                         } catch { failed = true }
                                     }
@@ -242,7 +242,7 @@ struct AddFriendSheet: View {
         .task(id: q) {
             let query = q.trimmingCharacters(in: .whitespaces)
             failed = false
-            sent = false
+            if !query.isEmpty { sent = false }
             guard query.count >= 2 else { results = []; return }
             searching = true
             do {
