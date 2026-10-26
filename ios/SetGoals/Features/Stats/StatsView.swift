@@ -312,7 +312,7 @@ struct StatsView: View {
                 .strokeBorder(theme.ringBorder, lineWidth: 1))
 
             // Personal messages
-            let messages = Insights.messages(ins)
+            let messages = Insights.messages(ins, name: settings.displayName.isEmpty ? settings.username : settings.displayName)
             if !messages.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(L.t("stats.pro.messages")).eyebrow(theme.p.s600)
