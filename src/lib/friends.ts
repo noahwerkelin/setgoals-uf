@@ -1,9 +1,9 @@
 // Friends list backed by the database. Each friendship is a symmetric row
 // normalized so user_id < friend_id; both users can see and delete the row.
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getFriendships, addFriendship, removeFriendship } from "@/lib/friends.functions";
+import { getFriendships, addFriendship, removeFriendship, getFriendRequests, respondToFriendRequest } from "@/lib/friends.functions";
 
 export type Friend = {
   id: string;
@@ -19,10 +19,27 @@ export function useFriends() {
   const addFriendshipFn = useServerFn(addFriendship);
   const removeFriendshipFn = useServerFn(removeFriendship);
   const queryClient = useQueryClient();
+  const requestFn = useServerFn(getFriendRequests);
+  const respondFn = useServerFn(respondToFriendRequest);
+  const { data: requests = [] } = useQuery({
+    queryKey: ["friend-requests"], queryFn: () => requestFn(), refetchInterval: 30000,
+  });
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: FRIENDS_QUERY_KEY }),
+      queryClient.invalidateQueries({ queryKey: ["friend-requests"] }),
+      queryClient.invalidateQueries({ queryKey: ["friends-steps"] }),
+      queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+    ]);
+  };
+  const respondMut = useMutation({
+    mutationFn: (data: { id: string; accept: boolean }) => respondFn({ data }), onSuccess: refresh,
+  });
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: FRIENDS_QUERY_KEY,
     queryFn: () => getFriends({ data: undefined }),
+    refetchInterval: 30000,
   });
 
   const addMut = useMutation({
@@ -31,7 +48,7 @@ export function useFriends() {
       if ("error" in res) throw new Error(res.error);
       return user;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: FRIENDS_QUERY_KEY }),
+    onSuccess: refresh,
   });
 
   const removeMut = useMutation({
@@ -40,7 +57,7 @@ export function useFriends() {
       if ("error" in res) throw new Error(res.error);
       return friendshipId;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: FRIENDS_QUERY_KEY }),
+    onSuccess: refresh,
   });
 
   const addFriend = useCallback(
@@ -56,13 +73,16 @@ export function useFriends() {
 
   const removeFriend = useCallback(
     (friendshipId: string) => {
-      removeMut.mutate(friendshipId);
+      return removeMut.mutateAsync(friendshipId);
     },
     [removeMut],
   );
 
   return {
     friends: rows,
+    requests,
+    respondRequest: (id: string, accept: boolean) => respondMut.mutateAsync({ id, accept }),
+    busy: respondMut.isPending || removeMut.isPending,
     isLoading,
     addFriend,
     removeFriend,
