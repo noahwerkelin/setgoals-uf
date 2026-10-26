@@ -551,30 +551,46 @@ struct Insights {
                         goalStreak: goalStreak)
     }
 
-    /// Port of `buildMessages` — at most three personal notes.
-    static func messages(_ ins: Insights) -> [String] {
+    /// Port of `buildMessages` — personal, coach-style notes from real
+    /// history only. At most four notes.
+    static func messages(_ ins: Insights, name: String) -> [String] {
         var msgs: [String] = []
-        let best = L.weekdayPlural(ins.bestWeekday)
-        let worst = L.weekdayPlural(ins.worstWeekday)
+        let cap: (String) -> String = { $0.prefix(1).uppercased() + $0.dropFirst() }
+        let best = cap(L.weekdayPlural(ins.bestWeekday))
+        let worst = cap(L.weekdayPlural(ins.worstWeekday))
+        let who = name.isEmpty ? L.t("insights.msg.you") : name
+        let walkMin = max(5, ins.goalLeftToday / 100)
+        let fmt: (Int) -> String = { $0.formatted() }
 
-        msgs.append(L.t("insights.msg.best_day", ["d": best]))
-        if ins.weekendScreenBias > 10 {
-            msgs.append(L.t("insights.msg.weekend_more", ["pct": "\(Int(ins.weekendScreenBias.rounded()))"]))
-        } else if ins.weekendScreenBias < -10 {
-            msgs.append(L.t("insights.msg.weekend_less", ["pct": "\(Int(ins.weekendScreenBias.rounded()))"]))
+        if ins.goalLeftToday > 0 {
+            msgs.append(L.t("insights.msg.goal_left", ["name": who, "n": fmt(ins.goalLeftToday), "m": "\(walkMin)"]))
+        } else {
+            msgs.append(L.t("insights.msg.goal_done", ["name": who]))
+        }
+        if ins.goalStreak >= 3 {
+            msgs.append(L.t("insights.msg.streak", ["n": "\(ins.goalStreak)"]))
         }
         if ins.trend30 > 5 {
             msgs.append(L.t("insights.msg.trend_up", ["pct": "\(Int(ins.trend30.rounded()))"]))
         } else if ins.trend30 < -5 {
             msgs.append(L.t("insights.msg.trend_down", ["pct": "\(Int(abs(ins.trend30).rounded()))"]))
         }
-        if ins.activeDays >= 20 {
-            msgs.append(L.t("insights.msg.strong_month", ["n": "\(ins.activeDays)"]))
-        }
+        msgs.append(L.t("insights.msg.best_day", ["d": best]))
         if worst != best {
             msgs.append(L.t("insights.msg.quietest", ["d": worst]))
         }
-        return Array(msgs.prefix(3))
+        if ins.personalBestSteps > 0 {
+            msgs.append(L.t("insights.msg.personal_best", ["n": fmt(ins.personalBestSteps)]))
+        }
+        if ins.activeDays >= 20 {
+            msgs.append(L.t("insights.msg.strong_month", ["name": who, "n": "\(ins.activeDays)"]))
+        }
+        if ins.weekendScreenBias > 10 {
+            msgs.append(L.t("insights.msg.weekend_more", ["pct": "\(Int(ins.weekendScreenBias.rounded()))"]))
+        } else if ins.weekendScreenBias < -10 {
+            msgs.append(L.t("insights.msg.weekend_less", ["pct": "\(Int(ins.weekendScreenBias.rounded()))"]))
+        }
+        return Array(msgs.prefix(4))
     }
 }
 
