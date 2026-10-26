@@ -332,6 +332,42 @@ export type Database = {
         }
         Relationships: []
       }
+      friend_requests: {
+        Row: {
+          created_at: string
+          id: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friend_requests_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friend_requests_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           created_at: string
@@ -862,6 +898,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_friend_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       add_my_friend: { Args: { _friend_id: string }; Returns: undefined }
       admin_overview_daily: {
         Args: { _from: string; _to?: string }
@@ -938,6 +978,10 @@ export type Database = {
         Args: { _day: string; _uid: string }
         Returns: number
       }
+      dismiss_friend_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       family_today: {
         Args: { _uid: string }
         Returns: {
@@ -981,6 +1025,16 @@ export type Database = {
           username: string
         }[]
       }
+      my_friend_requests: {
+        Args: never
+        Returns: {
+          direction: string
+          id: string
+          name: string
+          user_id: string
+          username: string
+        }[]
+      }
       my_friends: {
         Args: never
         Returns: {
@@ -1006,6 +1060,7 @@ export type Database = {
         Args: { _day: string; _uid: string }
         Returns: undefined
       }
+      remove_my_friend: { Args: { _friendship_id: string }; Returns: undefined }
       report_consumed: {
         Args: { _day: string; _minutes: number }
         Returns: undefined

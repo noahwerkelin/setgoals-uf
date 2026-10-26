@@ -57,6 +57,13 @@
       "when": 1792977533477,
       "tag": "0007_repair_friend_operations_and_rollover_rounding",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792979744193,
+      "tag": "0008_mutual_friend_requests",
+      "breakpoints": true
     }
   ]
 }
