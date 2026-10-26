@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
 import { useDayKey } from "./day";
@@ -26,6 +26,7 @@ export type DayTotals = {
 export function useTodaySteps() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const subscriptionID = useId();
   // Re-keys at local midnight so today's totals reset with the new day.
   const dayKey = useDayKey();
 
@@ -33,7 +34,7 @@ export function useTodaySteps() {
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel("activity-today-" + user.id)
+      .channel(`activity-today-${user.id}-${subscriptionID}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "activity_steps", filter: `user_id=eq.${user.id}` },
@@ -46,7 +47,7 @@ export function useTodaySteps() {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [user, qc]);
+  }, [user?.id, qc, subscriptionID]);
 
   return useQuery({
     queryKey: ["today-steps", user?.id, dayKey],

@@ -9,8 +9,13 @@ final class ProSTStore: ObservableObject {
     @Published var rollover: Bool {
         didSet {
             d.set(rollover, forKey: "st.rollover")
+            guard !restoring else { return }
             let on = rollover
-            Task { await SupabaseAPI.saveRolloverPref(on) }
+            Task {
+                do { try await SupabaseAPI.saveRolloverPref(on) }
+                catch { /* Reload the saved choice rather than displaying a false success. */ }
+                await SettingsStore.shared.load()
+            }
         }
     }
     @Published var weekend2x: Bool { didSet { d.set(weekend2x, forKey: "st.weekend2x") } }
@@ -28,6 +33,13 @@ final class ProSTStore: ObservableObject {
     }
 
     private let d = UserDefaults.standard
+    private var restoring = false
+
+    func restoreRollover(_ on: Bool) {
+        restoring = true
+        rollover = on
+        restoring = false
+    }
 
     private init() {
         rollover = d.bool(forKey: "st.rollover")

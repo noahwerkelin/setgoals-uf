@@ -99,6 +99,9 @@ struct AddFriendSheet: View {
 
     @State private var q = ""
     @State private var results: [PublicUser] = []
+    @State private var searching = false
+    @State private var adding = false
+    @State private var failed = false
 
     var body: some View {
         NavigationStack {
@@ -121,15 +124,23 @@ struct AddFriendSheet: View {
                     VStack(spacing: 8) {
                         if q.trimmingCharacters(in: .whitespaces).count < 2 {
                             hint(L.t("friends.search.hint"))
+                        } else if searching {
+                            ProgressView().tint(theme.primary)
+                        } else if failed {
+                            hint(L.t("pro.error"))
                         } else if visible.isEmpty {
                             hint(L.t("friends.search.no_results"))
                         } else {
                             ForEach(visible) { u in
                                 Button {
                                     Task {
-                                        try? await SupabaseAPI.addFriend(u.id)
-                                        q = ""; results = []
-                                        onAdded()
+                                        adding = true
+                                        defer { adding = false }
+                                        do {
+                                            try await SupabaseAPI.addFriend(u.id)
+                                            q = ""; results = []; failed = false
+                                            onAdded()
+                                        } catch { failed = true }
                                     }
                                 } label: {
                                     HStack(spacing: 12) {
@@ -151,6 +162,7 @@ struct AddFriendSheet: View {
                                     .background(theme.p.s50.opacity(0.6),
                                                 in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
                                 }
+                                .disabled(adding)
                             }
                         }
                     }
@@ -171,9 +183,19 @@ struct AddFriendSheet: View {
         .presentationDetents([.medium, .large])
         .task(id: q) {
             let query = q.trimmingCharacters(in: .whitespaces)
+            failed = false
             guard query.count >= 2 else { results = []; return }
-            try? await Task.sleep(nanoseconds: 250_000_000)
-            results = (try? await SupabaseAPI.searchUsers(query)) ?? []
+            searching = true
+            do {
+                try await Task.sleep(nanoseconds: 250_000_000)
+                let found = try await SupabaseAPI.searchUsers(query)
+                try Task.checkCancellation()
+                results = found
+                searching = false
+            } catch {
+                guard !Task.isCancelled else { return }
+                results = []; searching = false; failed = true
+            }
         }
     }
 

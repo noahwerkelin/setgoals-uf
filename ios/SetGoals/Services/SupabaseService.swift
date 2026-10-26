@@ -40,6 +40,7 @@ struct UserSettingsRow: Codable {
     var googlefit_connected: Bool
     var push_on: Bool
     var share_location: String
+    var st_rollover: Bool
 }
 
 struct ActivityStepsRow: Codable {
@@ -167,20 +168,26 @@ enum SupabaseAPI {
 
     /// Sends Screen Time usage measured by Apple (today, plus yesterday's final
     /// value kept at the midnight roll) to the backend.
-    static func reportConsumedUsage() async {
+    @discardableResult
+    static func reportConsumedUsage() async -> Bool {
         let today = ScreenTimeBudget.usedMin
-        _ = try? await supabase.rpc("report_consumed",
-            params: ["_day": AnyJSON.string(todayKey), "_minutes": .integer(today)]).execute()
-        if let prev = ScreenTimeBudget.previousDay {
-            _ = try? await supabase.rpc("report_consumed",
-                params: ["_day": AnyJSON.string(prev.day), "_minutes": .integer(prev.usedMin)]).execute()
+        do {
+            if let prev = ScreenTimeBudget.previousDay {
+                _ = try await supabase.rpc("report_consumed",
+                    params: ["_day": AnyJSON.string(prev.day), "_minutes": .integer(prev.usedMin)]).execute()
+            }
+            _ = try await supabase.rpc("report_consumed",
+                params: ["_day": AnyJSON.string(todayKey), "_minutes": .integer(today)]).execute()
+            return true
+        } catch {
+            return false
         }
     }
 
     /// Saves the PRO rollover on/off choice to the account.
-    static func saveRolloverPref(_ on: Bool) async {
+    static func saveRolloverPref(_ on: Bool) async throws {
         guard let uid = await currentUserID() else { return }
-        _ = try? await supabase.from("user_settings").update(["st_rollover": on])
+        _ = try await supabase.from("user_settings").update(["st_rollover": on])
             .eq("user_id", value: uid).execute()
     }
 
@@ -196,7 +203,7 @@ enum SupabaseAPI {
         var req = URLRequest(url: URL(string: "https://step-wise-life.lovable.app/api/public/family-today?day=\(todayKey)")!)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await URLSession.shared.data(for: req)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else { return [] }
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode([FamilyMember].self, from: data)
     }
 

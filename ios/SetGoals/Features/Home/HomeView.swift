@@ -12,7 +12,7 @@ struct HomeView: View {
 
     @AppStorage("st.rollover") private var rolloverEnabled = false
 
-    @State private var family: [FamilyMember] = []
+    @ObservedObject private var familyStore = FamilyStore.shared
     @ObservedObject private var friendsStore = FriendsStore.shared
     @State private var showAddFriend = false
     @ObservedObject private var badgeStore = BadgeStore.shared
@@ -63,7 +63,6 @@ struct HomeView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 screenTime.refreshFromStore()
-                Task { await friendsStore.refresh() }
             }
         }
         .sheet(isPresented: $showAddFriend) {
@@ -77,7 +76,6 @@ struct HomeView: View {
         await health.requestAuthorization()
         screenTime.refreshAuthorization()
         screenTime.setBaseAllowance(baseAllowanceMin)
-        family = (try? await SupabaseAPI.familyToday()) ?? []
         // Pay out any challenge rewards completed since the last visit.
         let week = await SupabaseAPI.weekTotals()
         screenTime.setBaseAllowance(baseAllowanceMin)
@@ -260,7 +258,7 @@ struct HomeView: View {
     }
 
     @ViewBuilder private var familySection: some View {
-        FamilyCard(rows: family, onAddChild: {
+        FamilyCard(rows: familyStore.members, onAddChild: {
             tab = .screenTime
         }, onView: {
             tab = .screenTime

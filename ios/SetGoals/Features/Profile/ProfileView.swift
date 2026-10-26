@@ -62,7 +62,13 @@ struct ProfileView: View {
             Task { await handlePick(item) }
         }
         .fullScreenCover(isPresented: $showSettings) {
-            SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings)
+            SettingsView(tab: Binding(
+                get: { tab },
+                set: { destination in
+                    showSettings = false
+                    tab = destination
+                }
+            )).environmentObject(theme).environmentObject(settings)
         }
     }
 

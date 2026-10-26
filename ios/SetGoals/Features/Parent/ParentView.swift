@@ -14,19 +14,20 @@ struct ParentView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedChildID: UUID?
-    @State private var family: [FamilyMember] = []
-    @State private var loadingFamily = true
-    @State private var familyError = false
+    @ObservedObject private var familyStore = FamilyStore.shared
+    private var family: [FamilyMember] { familyStore.members }
+    private var loadingFamily: Bool { !familyStore.loaded && !familyStore.failed }
+    private var familyError: Bool { familyStore.failed }
     @State private var confirmation: String?
     @State private var childPanel: ChildPanel = .overview
     private enum ChildPanel: Hashable { case overview, tasks, settings }
     @State private var selectionRevision = 0
     @State private var authorizationError = false
 
-    @State private var children: [ChildRow] = []
-    @State private var today: [UUID: ChildDayStats] = [:]
-    @State private var week: [UUID: [String: (steps: Int, usedMin: Int)]] = [:]
-    @State private var parentID: UUID?
+    private var children: [ChildRow] { familyStore.children }
+    private var today: [UUID: ChildDayStats] { familyStore.today }
+    private var week: [UUID: [String: (steps: Int, usedMin: Int)]] { familyStore.week }
+    private var parentID: UUID? { familyStore.userID }
 
     @State private var editing: ChildRow?
     @State private var creatingChild = false
@@ -61,14 +62,12 @@ struct ParentView: View {
         .task {
             screenTime.refreshAuthorization()
             screenTime.refreshFromStore()
-            if canManageChildren { await reload() }
         }
 
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 screenTime.refreshAuthorization()
                 screenTime.refreshFromStore()
-                if canManageChildren { Task { await reload() } }
             }
         }
         .sheet(item: $pickerMode) { mode in
@@ -447,23 +446,9 @@ struct ParentView: View {
 
     private func reload() async {
         guard canManageChildren else { return }
-        loadingFamily = true
-        defer { loadingFamily = false }
-        parentID = await SupabaseAPI.currentUserID()
-        do {
-            async let childRows = SupabaseAPI.children()
-            async let members = SupabaseAPI.familyToday()
-            children = try await childRows
-            family = try await members
-            familyError = false
-            let activity = await SupabaseAPI.childActivity(children.compactMap(\.auth_user_id))
-            today = activity.today
-            week = activity.week
-            if let selectedChildID, !children.contains(where: { $0.id == selectedChildID }) {
-                self.selectedChildID = nil
-            }
-        } catch {
-            familyError = true
+        await familyStore.refresh()
+        if let selectedChildID, !children.contains(where: { $0.id == selectedChildID }) {
+            self.selectedChildID = nil
         }
     }
 

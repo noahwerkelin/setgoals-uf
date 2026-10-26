@@ -44,11 +44,11 @@ export function useFriends() {
   });
 
   const addFriend = useCallback(
-    (user: { id: string; username: string }) => {
+    async (user: { id: string; username: string }) => {
       if (rows.some((f) => f.id === user.id || f.username.toLowerCase() === user.username.toLowerCase())) {
         return false;
       }
-      addMut.mutate({ id: user.id, username: user.username, name: "" });
+      await addMut.mutateAsync({ id: user.id, username: user.username, name: "" });
       return true;
     },
     [rows, addMut],
