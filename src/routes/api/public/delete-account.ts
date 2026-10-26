@@ -92,7 +92,9 @@ export const Route = createFileRoute("/api/public/delete-account")({
           password: input.password,
         });
         if (pwErr) return json({ error: "wrong_password" }, 403);
-        await anon.auth.signOut();
+        // Local scope only: a global sign-out would revoke every session the
+        // user has (including the iOS app that just deleted a child).
+        await anon.auth.signOut({ scope: "local" });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

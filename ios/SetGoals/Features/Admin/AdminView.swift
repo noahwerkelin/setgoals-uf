@@ -220,9 +220,9 @@ private struct AdminUsersList: View {
                     NavigationLink(value: u) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("@\(u.username) · \(u.display_name)").bold()
-                            Text(u.email ?? "–").font(.caption).foregroundStyle(.secondary)
+                            Text(u.email ?? "–").font(F.xs).foregroundStyle(.secondary)
                             Text("\(u.total_steps.formatted()) steps · avg \(num(u.avg_daily_steps))/day · earned \(mins(u.avg_earned_seconds))/day")
-                                .font(.caption2).foregroundStyle(.secondary)
+                                .font(F.sans(10, .regular)).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -230,7 +230,7 @@ private struct AdminUsersList: View {
             if total > 25 {
                 HStack {
                     Button("Previous") { page -= 1 }.disabled(page == 0)
-                    Spacer(); Text("Page \(page + 1) / \((total + 24) / 25)").font(.caption); Spacer()
+                    Spacer(); Text("Page \(page + 1) / \((total + 24) / 25)").font(F.xs); Spacer()
                     Button("Next") { page += 1 }.disabled((page + 1) * 25 >= total)
                 }.buttonStyle(.borderless)
             }
@@ -260,7 +260,7 @@ private struct AdminUserDetail: View {
             Section("Profile") {
                 kv("Email", user.email ?? "–"); kv("Username", "@\(user.username)")
                 kv("Display name", user.display_name)
-                kv("UID", user.user_id.uuidString).font(.caption)
+                kv("UID", user.user_id.uuidString).font(F.xs)
                 kv("Registered", String(user.created_at.prefix(10)))
                 kv("Last active", user.last_active_at.map { String($0.prefix(10)) } ?? "–")
                 kv("Last activity day", user.last_activity_date ?? "–")
@@ -292,7 +292,7 @@ private struct AdminUserDetail: View {
                             .foregroundStyle(.orange).lineStyle(StrokeStyle(dash: [4, 3]))
                     }
                 }.frame(height: 180)
-                Text("Green = goal reached · dashed = goal").font(.caption2).foregroundStyle(.secondary)
+                Text("Green = goal reached · dashed = goal").font(F.sans(10, .regular)).foregroundStyle(.secondary)
             }
             Section("B · Screen-time balance (min)") {
                 Chart {
@@ -313,11 +313,11 @@ private struct AdminUserDetail: View {
             Section("C · Steps & earned time") {
                 ForEach(rows.reversed()) { r in
                     HStack {
-                        Text(r.stat_date).font(.caption.monospaced())
+                        Text(r.stat_date).font(F.sans(11, .regular)).monospaced()
                         Spacer()
-                        Text("\(r.steps.formatted()) st").font(.caption)
-                        Text("· +\(r.screen_time_earned_seconds / 60)m").font(.caption).foregroundStyle(.secondary)
-                        Text("· used \(r.screen_time_used_seconds.map { "\($0 / 60)m" } ?? "–")").font(.caption).foregroundStyle(.secondary)
+                        Text("\(r.steps.formatted()) st").font(F.xs)
+                        Text("· +\(r.screen_time_earned_seconds / 60)m").font(F.xs).foregroundStyle(.secondary)
+                        Text("· used \(r.screen_time_used_seconds.map { "\($0 / 60)m" } ?? "–")").font(F.xs).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -334,7 +334,7 @@ private struct AdminUserDetail: View {
                     }.frame(height: 140)
                     kv("Change", b > 0 ? String(format: "%+.0f%%", (l - b) / b * 100) : "–")
                 } else {
-                    Text("Not enough recorded days in this range to compare.").font(.caption).foregroundStyle(.secondary)
+                    Text("Not enough recorded days in this range to compare.").font(F.xs).foregroundStyle(.secondary)
                 }
             } header: { Text("D · Progress over time") } footer: {
                 Text("Compares average steps between the first and most recent recorded days. Shows change, not cause. Device screen time isn't available from Apple, so no usage comparison is made.")
