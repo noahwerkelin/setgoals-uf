@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { useFriends, type Friend } from "@/lib/friends";
 import { searchUsersByUsername } from "@/lib/friends.functions";
@@ -83,8 +84,8 @@ export function FriendsCard() {
         open={open}
         onOpenChange={setOpen}
         existing={friends}
-        onAdd={(u) => {
-          const ok = addFriend(u);
+        onAdd={async (u) => {
+          const ok = await addFriend(u);
           if (ok) toast.success(t("friends.added", { name: u.name }));
           else toast(t("friends.already"));
         }}
@@ -102,13 +103,14 @@ function AddFriendDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   existing: Friend[];
-  onAdd: (f: PublicUser) => void;
+  onAdd: (f: PublicUser) => Promise<void>;
 }) {
   const { t } = useT();
   const [q, setQ] = useState("");
+  const [adding, setAdding] = useState(false);
   const search = useServerFn(searchUsersByUsername);
   const query = q.trim();
-  const { data: found = [] } = useQuery({
+  const { data: found = [], isFetching, isError } = useQuery({
     queryKey: ["user-search", query.toLowerCase()],
     enabled: open && query.length >= 2,
     queryFn: () => search({ data: { query } }),
@@ -143,18 +145,28 @@ function AddFriendDialog({
         <div className="mt-2 max-h-72 space-y-2 overflow-y-auto">
           {q.trim().length < 2 ? (
             <p className="px-1 py-4 text-center text-xs text-sage-600">{t("friends.search.hint")}</p>
+          ) : isFetching ? (
+            <div className="flex justify-center py-4"><Search className="size-4 animate-pulse text-muted-foreground" /></div>
+          ) : isError ? (
+            <p className="px-1 py-4 text-center text-xs text-muted-foreground">{t("pro.error")}</p>
           ) : results.length === 0 ? (
             <p className="px-1 py-4 text-center text-xs text-sage-600">{t("friends.search.no_results")}</p>
           ) : (
             results.map((u) => (
-              <button
+              <Button
+                variant="ghost"
                 key={u.id}
                 type="button"
-                onClick={() => {
-                  onAdd(u);
-                  setQ("");
+                disabled={adding}
+                onClick={async () => {
+                  setAdding(true);
+                  try {
+                    await onAdd(u);
+                    setQ("");
+                  } catch { toast.error(t("pro.error")); }
+                  finally { setAdding(false); }
                 }}
-                className="flex w-full items-center gap-3 rounded-2xl bg-sage-50/60 p-2.5 pl-3 text-left hover:bg-sage-100"
+                className="flex h-auto w-full items-center gap-3 rounded-2xl bg-sage-50/60 p-2.5 pl-3 text-left hover:bg-sage-100"
               >
                 <span className="grid size-9 place-items-center rounded-full bg-sage-200 text-xs font-semibold uppercase text-sage-700">
                   {u.name[0]}
@@ -164,7 +176,7 @@ function AddFriendDialog({
                   <p className="truncate text-[11px] text-sage-600">@{u.username}</p>
                 </div>
                 <UserPlus className="size-4 text-sage-600" />
-              </button>
+              </Button>
             ))
           )}
         </div>
