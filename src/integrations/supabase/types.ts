@@ -862,6 +862,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_my_friend: { Args: { _friend_id: string }; Returns: undefined }
       admin_overview_daily: {
         Args: { _from: string; _to?: string }
         Returns: {
@@ -980,6 +981,15 @@ export type Database = {
           username: string
         }[]
       }
+      my_friends: {
+        Args: never
+        Returns: {
+          friendship_id: string
+          id: string
+          name: string
+          username: string
+        }[]
+      }
       parent_family_pro: { Args: never; Returns: boolean }
       parent_family_pro_status: {
         Args: { _uid: string }
@@ -999,6 +1009,14 @@ export type Database = {
       report_consumed: {
         Args: { _day: string; _minutes: number }
         Returns: undefined
+      }
+      search_friend_users: {
+        Args: { _query: string }
+        Returns: {
+          id: string
+          name: string
+          username: string
+        }[]
       }
       username_available: { Args: { _username: string }; Returns: boolean }
     }
