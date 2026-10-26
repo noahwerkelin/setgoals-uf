@@ -181,11 +181,13 @@ struct ChildEditDialog: View {
     private var avatarPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L.t("parent.child.avatar")).font(F.sm).foregroundStyle(theme.foreground)
-            HStack(spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
                 AvatarBubble(avatar: avatar, name: name, size: 56)
+                VStack(alignment: .leading, spacing: 8) {
                 PhotosPicker(selection: $photoItem, matching: .images) {
                     Label(uploading ? L.t("parent.child.uploading") : L.t("parent.child.upload_photo"), systemImage: "photo")
                         .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 16).padding(.vertical, 12)
                         .background(theme.secondary, in: Capsule())
                         .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
@@ -197,6 +199,7 @@ struct ChildEditDialog: View {
                             .foregroundStyle(theme.mutedForeground).frame(width: 44, height: 44)
                     }
                     .buttonStyle(FlatPress()).accessibilityLabel(L.t("parent.child.remove_photo"))
+                }
                 }
                 Spacer(minLength: 0)
             }

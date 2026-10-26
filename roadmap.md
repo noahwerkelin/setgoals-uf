@@ -1,7 +1,7 @@
 # Tasks
-- [ ] Match Swift Screen Time heading, remove its Settings shortcut and family diagram, retain child list.
-- [ ] Simplify child creation and expanded management with shared styling and English/Swedish labels.
-- [ ] Validate Swift source and unchanged action paths; native visual and device testing require Xcode.
+- [x] Match Swift Screen Time heading, remove its Settings shortcut and family diagram, retain child list.
+- [x] Simplify child creation and expanded management with shared styling and English/Swedish labels.
+- [x] Validate Swift syntax, bilingual keys and retained action paths; native visual and device checks remain blocked by unavailable Xcode.
 - [x] Redesign native Profile with inline cached statistics and Settings at top-right.
 - [x] Replace Coach bottom tab with a role-aware Screen Time dashboard and preserve Coach access.
 - [x] Add expandable Family Circle using existing child management, rewards and tasks.
