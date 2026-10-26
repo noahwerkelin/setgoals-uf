@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Map, Trophy, Sparkles, User } from "lucide-react";
+import { Home, Map, Trophy, User } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
 export function BottomNav() {
@@ -10,7 +10,6 @@ export function BottomNav() {
     { to: "/", label: t("nav.home"), icon: Home },
     { to: "/map", label: t("nav.map"), icon: Map },
     { to: "/challenges", label: t("nav.goals"), icon: Trophy },
-    { to: "/coach", label: t("nav.coach"), icon: Sparkles },
     { to: "/profile", label: t("nav.profile"), icon: User },
   ] as const;
   return (

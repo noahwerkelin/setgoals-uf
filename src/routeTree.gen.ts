@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChallengesRouteImport } from './routes/challenges'
-import { Route as CoachRouteImport } from './routes/coach'
 import { Route as LeaderboardsRouteImport } from './routes/leaderboards'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -21,7 +20,6 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
-import { Route as ApiPublicCoachRouteImport } from './routes/api/public/coach'
 import { Route as ApiPublicDeleteAccountRouteImport } from './routes/api/public/delete-account'
 import { Route as ApiPublicFamilyTodayRouteImport } from './routes/api/public/family-today'
 import { Route as ApiPublicIngestStepsRouteImport } from './routes/api/public/ingest-steps'
@@ -43,11 +41,6 @@ const AuthRoute = AuthRouteImport.update({
 const ChallengesRoute = ChallengesRouteImport.update({
   id: '/challenges',
   path: '/challenges',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CoachRoute = CoachRouteImport.update({
-  id: '/coach',
-  path: '/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardsRoute = LeaderboardsRouteImport.update({
@@ -88,11 +81,6 @@ const SettingsRoute = SettingsRouteImport.update({
 const StatsRoute = StatsRouteImport.update({
   id: '/stats',
   path: '/stats',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicCoachRoute = ApiPublicCoachRouteImport.update({
-  id: '/api/public/coach',
-  path: '/api/public/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicDeleteAccountRoute = ApiPublicDeleteAccountRouteImport.update({
@@ -139,7 +127,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/challenges': typeof ChallengesRoute
-  '/coach': typeof CoachRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/map': typeof MapRoute
   '/onboarding': typeof OnboardingRoute
@@ -148,7 +135,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
-  '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
@@ -161,7 +147,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/challenges': typeof ChallengesRoute
-  '/coach': typeof CoachRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/map': typeof MapRoute
   '/onboarding': typeof OnboardingRoute
@@ -170,7 +155,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
-  '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
@@ -184,7 +168,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/challenges': typeof ChallengesRoute
-  '/coach': typeof CoachRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/map': typeof MapRoute
   '/onboarding': typeof OnboardingRoute
@@ -193,7 +176,6 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
-  '/api/public/coach': typeof ApiPublicCoachRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/ingest-steps': typeof ApiPublicIngestStepsRoute
@@ -208,7 +190,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/challenges'
-    | '/coach'
     | '/leaderboards'
     | '/map'
     | '/onboarding'
@@ -217,7 +198,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
-    | '/api/public/coach'
     | '/api/public/delete-account'
     | '/api/public/family-today'
     | '/api/public/ingest-steps'
@@ -230,7 +210,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/challenges'
-    | '/coach'
     | '/leaderboards'
     | '/map'
     | '/onboarding'
@@ -239,7 +218,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
-    | '/api/public/coach'
     | '/api/public/delete-account'
     | '/api/public/family-today'
     | '/api/public/ingest-steps'
@@ -252,7 +230,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/challenges'
-    | '/coach'
     | '/leaderboards'
     | '/map'
     | '/onboarding'
@@ -261,7 +238,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
-    | '/api/public/coach'
     | '/api/public/delete-account'
     | '/api/public/family-today'
     | '/api/public/ingest-steps'
@@ -275,7 +251,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ChallengesRoute: typeof ChallengesRoute
-  CoachRoute: typeof CoachRoute
   LeaderboardsRoute: typeof LeaderboardsRoute
   MapRoute: typeof MapRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -284,7 +259,6 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
-  ApiPublicCoachRoute: typeof ApiPublicCoachRoute
   ApiPublicDeleteAccountRoute: typeof ApiPublicDeleteAccountRoute
   ApiPublicFamilyTodayRoute: typeof ApiPublicFamilyTodayRoute
   ApiPublicIngestStepsRoute: typeof ApiPublicIngestStepsRoute
@@ -315,13 +289,6 @@ declare module '@tanstack/react-router' {
       path: '/challenges'
       fullPath: '/challenges'
       preLoaderRoute: typeof ChallengesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/coach': {
-      id: '/coach'
-      path: '/coach'
-      fullPath: '/coach'
-      preLoaderRoute: typeof CoachRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboards': {
@@ -380,13 +347,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/coach': {
-      id: '/api/public/coach'
-      path: '/api/public/coach'
-      fullPath: '/api/public/coach'
-      preLoaderRoute: typeof ApiPublicCoachRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/delete-account': {
       id: '/api/public/delete-account'
       path: '/api/public/delete-account'
@@ -443,7 +403,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ChallengesRoute: ChallengesRoute,
-  CoachRoute: CoachRoute,
   LeaderboardsRoute: LeaderboardsRoute,
   MapRoute: MapRoute,
   OnboardingRoute: OnboardingRoute,
@@ -452,7 +411,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
-  ApiPublicCoachRoute: ApiPublicCoachRoute,
   ApiPublicDeleteAccountRoute: ApiPublicDeleteAccountRoute,
   ApiPublicFamilyTodayRoute: ApiPublicFamilyTodayRoute,
   ApiPublicIngestStepsRoute: ApiPublicIngestStepsRoute,
