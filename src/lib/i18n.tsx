@@ -73,7 +73,6 @@ const DICTS: Record<Lang, Dict> = {
     "nav.home": "Home",
     "nav.map": "Map",
     "nav.goals": "Goals",
-    "nav.coach": "Coach",
     "nav.profile": "Profile",
 
     "home.greeting.morning": "Good morning",
@@ -223,17 +222,6 @@ const DICTS: Record<Lang, Dict> = {
     "challenges.detail.resets_daily": "End of day",
     "challenges.detail.resets_weekly": "End of week",
     "challenges.detail.done": "Challenge complete!",
-
-    "coach.eyebrow": "Personal wellness",
-    "coach.title": "Coach",
-    "coach.seed": "Hi! I'm your coach. Ask me about your progress, nearby routes, or how to earn more screen time.",
-    "coach.reply": "Great — based on your patterns, I'd aim for 9,500 steps today. Try a 25-min walk after lunch and a short loop before dinner.",
-    "coach.s1": "Suggest a short route nearby",
-    "coach.s2": "Why is my screen time low today?",
-    "coach.s3": "Make a goal for this weekend",
-    "coach.placeholder": "Ask anything…",
-    "coach.send": "Send",
-    "coach.input_label": "Message the coach",
 
     "lb.eyebrow": "{range} rankings",
     "lb.title": "Leaderboards",
@@ -645,7 +633,6 @@ const DICTS: Record<Lang, Dict> = {
     "pro.upgrade_subtitle": "More freedom. Better balance. Your rules.",
     "pro.feature.parental": "Advanced parental controls",
     "pro.feature.stats": "Deeper statistics and insights",
-    "pro.feature.coach": "Personal Coach",
     "pro.feature.theme": "Unlock exclusive color themes",
     "pro.feature.premium_badge": "Get a premium PRO badge on your profile",
     "pro.locked": "PRO feature",
@@ -710,9 +697,6 @@ const DICTS: Record<Lang, Dict> = {
     "theme.lavender": "Lavender",
     "theme.amber": "Amber",
     "theme.slate": "Slate",
-
-    "coach.locked_title": "Coach is a PRO feature",
-    "coach.locked_desc": "Get a personal wellness coach that tailors goals and routes to you.",
 
     "parent.adv_title": "Advanced controls",
     "parent.adv_sub": "Fine-tune limits, schedules and earning multipliers.",
@@ -841,7 +825,6 @@ const DICTS: Record<Lang, Dict> = {
     "nav.home": "Hem",
     "nav.map": "Karta",
     "nav.goals": "Mål",
-    "nav.coach": "Coach",
     "nav.profile": "Profil",
 
     "home.greeting.morning": "God morgon",
@@ -991,17 +974,6 @@ const DICTS: Record<Lang, Dict> = {
     "challenges.detail.resets_daily": "Vid dagens slut",
     "challenges.detail.resets_weekly": "Vid veckans slut",
     "challenges.detail.done": "Utmaning klar!",
-
-    "coach.eyebrow": "Personligt välmående",
-    "coach.title": "Coach",
-    "coach.seed": "Hej! Jag är din coach. Fråga mig om dina framsteg, rutter i närheten eller hur du tjänar mer skärmtid.",
-    "coach.reply": "Toppen — utifrån dina vanor föreslår jag 9 500 steg idag. Prova en 25-min promenad efter lunch och en kort runda före middag.",
-    "coach.s1": "Föreslå en kort runda i närheten",
-    "coach.s2": "Varför är min skärmtid låg idag?",
-    "coach.s3": "Sätt ett mål för helgen",
-    "coach.placeholder": "Fråga vad som helst…",
-    "coach.send": "Skicka",
-    "coach.input_label": "Skriv till coachen",
 
     "lb.eyebrow": "{range} ranking",
     "lb.title": "Topplistor",
@@ -1413,7 +1385,6 @@ const DICTS: Record<Lang, Dict> = {
     "pro.upgrade_subtitle": "Mer frihet. Bättre balans. Dina regler.",
     "pro.feature.parental": "Avancerade föräldrakontroller",
     "pro.feature.stats": "Djupare statistik och insikter",
-    "pro.feature.coach": "Personlig coach",
     "pro.feature.theme": "Lås upp exklusiva färgteman",
     "pro.feature.premium_badge": "Få en premium PRO-badge på din profil",
     "pro.locked": "PRO-funktion",
@@ -1478,9 +1449,6 @@ const DICTS: Record<Lang, Dict> = {
     "theme.lavender": "Lavendel",
     "theme.amber": "Bärnsten",
     "theme.slate": "Skiffer",
-
-    "coach.locked_title": "Coachen är en PRO-funktion",
-    "coach.locked_desc": "Få en personlig coach som anpassar mål och rutter efter dig.",
 
     "parent.adv_title": "Avancerade kontroller",
     "parent.adv_sub": "Finjustera gränser, scheman och intjäningsmultiplikatorer.",
