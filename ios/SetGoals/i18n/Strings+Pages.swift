@@ -46,6 +46,9 @@ extension L {
     ]
 
     private static let en1: [(String, String)] = [
+        ("map.view_map", "Map"),
+        ("map.view_list", "List"),
+        ("map.random_location", "Show another nearby location"),
         ("map.start", "Directions"),
         ("map.locating", "Locating you\u2026"),
         ("map.use_location", "Use my location"),
@@ -452,6 +455,9 @@ extension L {
     ]
 
     private static let sv1: [(String, String)] = [
+        ("map.view_map", "Karta"),
+        ("map.view_list", "Lista"),
+        ("map.random_location", "Visa en annan plats i närheten"),
         ("map.start", "V\u00e4gbeskrivning"),
         ("map.locating", "Hittar din plats\u2026"),
         ("map.use_location", "Anv\u00e4nd min plats"),
