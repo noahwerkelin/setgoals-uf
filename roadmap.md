@@ -1,8 +1,10 @@
 # Tasks
-- [ ] Fix native PRO Bonus and friend search/addition.
-- [ ] Preload account-scoped family data at app entry and refresh after changes.
-- [ ] Make native tab reselection return from Settings to Profile without changing bar styling.
-- [ ] Verify backend flows and run available regression checks; native device verification requires Xcode.
+- [x] Repair native rollover preference/allowance synchronization and backend rounding; repair secure friend search/addition.
+- [x] Preload account-scoped family data at app entry and refresh after changes.
+- [x] Make native tab reselection return from Settings to Profile without changing bar styling.
+- [x] Verify real signed-in friend search, addition, read-back and removal; Swift syntax and web build pass.
+- [ ] Run rollback-only database mutation regressions; blocked by read-only sandbox test connection.
+- [ ] Verify native bonus, family loading and Settings tab reselection on an iPhone; blocked by unavailable Xcode/device runtime.
 - [x] Match Swift Screen Time heading, remove its Settings shortcut and family diagram, retain child list.
 - [x] Simplify child creation and expanded management with shared styling and English/Swedish labels.
 - [x] Validate Swift syntax, bilingual keys and retained action paths; native visual and device checks remain blocked by unavailable Xcode.
