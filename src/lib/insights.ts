@@ -11,6 +11,12 @@ export type Insights = {
   worstWeekday: string;
   weekendScreenBias: number; // % more screen earned on weekends vs weekdays
   activeDays: number;
+  stepsToday: number;
+  goalLeftToday: number;
+  avgSteps30: number;
+  personalBestSteps: number;
+  personalBestDay: string;
+  goalStreak: number;
 };
 
 const WEEKDAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -120,6 +126,29 @@ export function computeInsights(
 
   const activeDays = last30.filter((s) => s >= dailyGoal).length;
 
+  // Today, personal best and current goal streak.
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const todayRow = history[history.length - 1];
+  const stepsToday = todayRow && todayRow.day === todayKey ? todayRow.steps : 0;
+  const goalLeftToday = Math.max(0, dailyGoal - stepsToday);
+  const avgSteps30 = Math.round(avg(last30));
+  let personalBestSteps = 0;
+  let personalBestDay = "";
+  for (const d of history.slice(-30)) {
+    if (d.steps > personalBestSteps) {
+      personalBestSteps = d.steps;
+      personalBestDay = d.day;
+    }
+  }
+  let goalStreak = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const d = history[i];
+    if (d.steps >= dailyGoal) goalStreak++;
+    else if (d.day === todayKey) continue; // today may still be in progress
+    else break;
+  }
+
   return {
     activityScore: Math.max(0, Math.min(100, activityScore)),
     trend7,
@@ -130,6 +159,12 @@ export function computeInsights(
     worstWeekday: WEEKDAYS_EN[minIdx] ?? "—",
     weekendScreenBias,
     activeDays,
+    stepsToday,
+    goalLeftToday,
+    avgSteps30,
+    personalBestSteps,
+    personalBestDay,
+    goalStreak,
   };
   function stdev(xs: number[]): number {
     const m = avg(xs);
