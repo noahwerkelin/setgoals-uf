@@ -9,4 +9,5 @@
 - Signed-out iOS actions (username check, kid-code redeem) call public server routes that reuse the web server logic, because the underlying database functions are service-role only.
 
 - Native Profile embeds StatsView's shared cached content without a second AppShell or view-entry fetch; Screen Time replaces the Coach tab while Profile retains Coach access, preserving five navigation destinations.
+- Native child management separates overview, tasks and settings with shared SegmentedTabs; child creation groups identity and rules in a shared-dialog flow, preserving existing mutation handlers.
 - Native app selection uses draft FamilyActivityPicker sheets for separate Always Allowed/Earned Only policies; consolidate legacy tokens only on explicit Save and retain dormant per-category limit storage so old settings are not destroyed.

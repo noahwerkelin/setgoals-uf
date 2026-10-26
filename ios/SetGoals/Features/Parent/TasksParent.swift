@@ -65,61 +65,44 @@ struct ChildTasksSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "list.clipboard").font(.system(size: 13)).foregroundStyle(theme.p.s700)
-                Text(L.t("tasks.title")).font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900)
-                Spacer(minLength: 0)
-                if awaiting > 0 {
-                    Text(L.t("tasks.awaiting", ["n": "\(awaiting)"]))
-                        .font(F.sans(10, .semibold)).foregroundStyle(.orange)
-                        .padding(.horizontal, 10).padding(.vertical, 4)
-                        .background(Color.orange.opacity(0.15), in: Capsule())
-                }
-            }
-
-            Text(L.t("tasks.week_summary", ["n": "\(weekStats.count)", "m": "\(weekStats.minutes)"]))
-                .font(F.text11).foregroundStyle(theme.p.s600)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(filters, id: \.self) { f in
-                        Button { filter = f } label: {
-                            Text(L.t("tasks.filter.\(f)"))
-                                .font(F.sans(10, .semibold))
-                                .foregroundStyle(filter == f ? theme.primaryForeground : theme.p.s700)
-                                .padding(.horizontal, 10).padding(.vertical, 5)
-                                .background(filter == f ? theme.primary : theme.card, in: Capsule())
-                                .overlay(Capsule().stroke(filter == f ? .clear : theme.p.s200, lineWidth: 1))
-                        }
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(L.t("tasks.title"), systemImage: "list.clipboard")
+                        .font(F.sans(14, .semibold)).foregroundStyle(theme.foreground)
+                    if awaiting > 0 {
+                        Text(L.t("tasks.awaiting", ["n": L.number(awaiting)]))
+                            .font(F.xs).foregroundStyle(theme.primary)
                     }
                 }
-                .padding(.bottom, 2)
+                Spacer(minLength: 0)
+                Menu {
+                    Picker(L.t("dashboard.task_filter"), selection: $filter) {
+                        ForEach(filters, id: \.self) { f in
+                            Text(L.t("tasks.filter.\(f)")).tag(f)
+                        }
+                    }
+                } label: {
+                    Label(L.t("tasks.filter.\(filter)"), systemImage: "line.3.horizontal.decrease")
+                        .font(F.sans(12, .medium)).foregroundStyle(theme.primary)
+                        .padding(.vertical, 12)
+                }
+                .accessibilityLabel(L.t("dashboard.task_filter"))
             }
+            Text(L.t("tasks.week_summary", ["n": L.number(weekStats.count), "m": L.number(weekStats.minutes)]))
+                .font(F.xs).foregroundStyle(theme.mutedForeground)
 
             if visible.isEmpty {
-                Text(L.t("tasks.empty_parent")).font(F.text11).foregroundStyle(theme.p.s600)
+                Text(L.t("tasks.empty_parent")).font(F.sm).foregroundStyle(theme.p.s600)
             }
 
             ForEach(visible) { task in
                 taskRow(task)
             }
 
-            Button { creating = true } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus").font(.system(size: 13, weight: .semibold))
-                    Text(canAssign ? L.t("tasks.new") : L.t("tasks.needs_join")).font(F.sans(12, .semibold))
-                }
-                .foregroundStyle(theme.primaryForeground)
-                .frame(maxWidth: .infinity).padding(.vertical, 10)
-                .background(theme.primary, in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
+            PrimaryButton(title: L.t(canAssign ? "tasks.new" : "tasks.needs_join"), enabled: canAssign) {
+                creating = true
             }
-            .disabled(!canAssign)
-            .opacity(canAssign ? 1 : 0.5)
         }
-        .padding(16)
-        .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-            .stroke(theme.p.s200, lineWidth: 1))
         .task { await reload() }
         .sheet(item: $editing) { t in
             TaskEditDialog(task: t, parentID: parentID, childID: childID) { await reload() }
@@ -136,41 +119,28 @@ struct ChildTasksSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(task.title).font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900).lineLimit(1)
+                    Text(task.title).font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900).fixedSize(horizontal: false, vertical: true)
                     Text(subtitle(task)).font(F.text11).foregroundStyle(theme.p.s600)
                 }
                 Spacer(minLength: 0)
                 StatusPill(status: task.status, overdue: Self.isOverdue(task))
             }
             if task.status == "submitted" {
-                Button { reviewing = task } label: {
-                    Text(L.t("tasks.review")).font(F.sans(11, .semibold))
-                        .foregroundStyle(theme.primaryForeground)
-                        .frame(maxWidth: .infinity).padding(.vertical, 8)
-                        .background(theme.primary, in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
-                }
+                PrimaryButton(title: L.t("tasks.review")) { reviewing = task }
             } else {
                 HStack(spacing: 8) {
-                    Button { editing = task } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "pencil").font(.system(size: 11))
-                            Text(L.t("tasks.edit")).font(F.sans(11, .semibold))
-                        }
-                        .foregroundStyle(theme.p.s700)
-                        .frame(maxWidth: .infinity).padding(.vertical, 8)
-                        .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: R.md, style: .continuous)
-                            .stroke(theme.p.s200, lineWidth: 1))
-                    }
+                    SecondaryButton(title: L.t("tasks.edit")) { editing = task }
                     Button {
                         Task { try? await SupabaseAPI.deleteTask(task.id); await reload() }
                     } label: {
                         Image(systemName: "trash").font(.system(size: 12)).foregroundStyle(theme.p.s700)
-                            .frame(width: 36, height: 34)
+                            .frame(width: 44, height: 44)
                             .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: R.md, style: .continuous)
                                 .stroke(theme.p.s200, lineWidth: 1))
                     }
+                    .buttonStyle(FlatPress())
+                    .accessibilityLabel(L.t("dashboard.delete_task"))
                 }
             }
         }
