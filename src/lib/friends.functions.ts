@@ -25,8 +25,12 @@ export const searchUsersByUsername = createServerFn({ method: "POST" })
 export const getFriendsSteps = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => StepsInput.parse(d))
-  .handler(async ({ data }): Promise<Record<string, number>> => {
+  .handler(async ({ data, context }): Promise<Record<string, number>> => {
     if (data.ids.length === 0) return {};
+    const { data: friends, error: friendsError } = await context.supabase.rpc("my_friends");
+    if (friendsError) throw friendsError;
+    const allowed = new Set((friends ?? []).map((f) => f.id));
+    if (data.ids.some((id) => !allowed.has(id))) throw new Error("Only confirmed friends' steps are available");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("activity_steps")
