@@ -1,4 +1,4 @@
-import { Sparkles, Check, Calendar, RefreshCw, Crown, Apple, SlidersHorizontal, Bot, ChartNoAxesCombined, Palette, ShieldCheck, Users } from "lucide-react";
+import { Sparkles, Check, Calendar, RefreshCw, Crown, Apple, SlidersHorizontal, ChartNoAxesCombined, Palette, ShieldCheck, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -129,7 +129,7 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     "pro.feature.premium_badge",
     ...(isFamilyPlan(plan) ? ["pro.feature.family"] : []),
   ];
-  const featureIcons = [SlidersHorizontal, RefreshCw, Bot, ShieldCheck, ChartNoAxesCombined, Palette, Crown, Users];
+  const featureIcons = [SlidersHorizontal, RefreshCw, ShieldCheck, ChartNoAxesCombined, Palette, Crown, Users];
 
   /** Hand a StoreKit result to the server, which is the only entitlement judge. */
   const grant = async (transactions: string[]) => {
