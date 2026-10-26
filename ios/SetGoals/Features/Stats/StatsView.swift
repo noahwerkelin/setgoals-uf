@@ -429,6 +429,12 @@ struct Insights {
     var worstWeekday: Int
     var weekendScreenBias: Double
     var activeDays: Int
+    var stepsToday: Int
+    var goalLeftToday: Int
+    var avgSteps30: Int
+    var personalBestSteps: Int
+    var personalBestDay: String
+    var goalStreak: Int
 
     private static func avg(_ xs: [Double]) -> Double {
         xs.isEmpty ? 0 : xs.reduce(0, +) / Double(xs.count)
@@ -512,12 +518,37 @@ struct Insights {
         let trendComponent = max(0, min(1, 0.5 + trend30 / 200))
         let score = Int((goalHitRatio * 40 + avgRatio * 30 + consistency * 15 + trendComponent * 15).rounded())
 
+        // Today, personal best and current goal streak.
+        let todayKey = SupabaseAPI.todayKey
+        let todayRow = history.last
+        let stepsToday = (todayRow?.day == todayKey) ? (todayRow?.steps ?? 0) : 0
+        let goalLeftToday = max(0, dailyGoal - stepsToday)
+        let avgSteps30 = Int(avg(last30).rounded())
+        var personalBestSteps = 0
+        var personalBestDay = ""
+        for d in history.suffix(30) where d.steps > personalBestSteps {
+            personalBestSteps = d.steps
+            personalBestDay = d.day
+        }
+        var goalStreak = 0
+        for d in history.reversed() {
+            if Double(d.steps) >= goal { goalStreak += 1 }
+            else if d.day == todayKey { continue } // today may still be in progress
+            else { break }
+        }
+
         return Insights(activityScore: max(0, min(100, score)),
                         trend7: trend7, trend30: trend30, trend90: trend90,
                         forecastSteps: forecast,
                         bestWeekday: maxIdx, worstWeekday: minIdx,
                         weekendScreenBias: bias,
-                        activeDays: last30.filter { $0 >= goal }.count)
+                        activeDays: last30.filter { $0 >= goal }.count,
+                        stepsToday: stepsToday,
+                        goalLeftToday: goalLeftToday,
+                        avgSteps30: avgSteps30,
+                        personalBestSteps: personalBestSteps,
+                        personalBestDay: personalBestDay,
+                        goalStreak: goalStreak)
     }
 
     /// Port of `buildMessages` — at most three personal notes.
