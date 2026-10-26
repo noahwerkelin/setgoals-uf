@@ -138,7 +138,6 @@ struct UpgradeDialog: View {
         switch key {
         case "pro.feature.earning": return "slider.horizontal.3"
         case "pro.feature.bonus": return "arrow.trianglehead.clockwise"
-        case "pro.feature.coach": return "bubble.left.and.bubble.right"
         case "pro.feature.parental": return "checkmark.shield"
         case "pro.feature.stats": return "chart.bar.xaxis"
         case "pro.feature.theme": return "paintpalette"
