@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 final class FriendsStore: ObservableObject {
     static let shared = FriendsStore()
+    @Published private(set) var requests: [FriendRequestRow] = []
     @Published private(set) var friends: [FriendRow] = []
     @Published private(set) var board: [LeaderboardEntry] = []
     @Published private(set) var userID: UUID?
@@ -17,6 +18,7 @@ final class FriendsStore: ObservableObject {
         generation = UUID()
         loading = false
         friends = []
+        requests = []
         board = []
         userID = nil
         loaded = false
@@ -41,10 +43,12 @@ final class FriendsStore: ObservableObject {
         defer { if request == generation { loading = false } }
         do {
             async let list = SupabaseAPI.friends()
+            async let pending = SupabaseAPI.friendRequests()
             async let ranks = SupabaseAPI.leaderboard(scope: "friends")
-            let (newFriends, newBoard) = try await (list, ranks)
+            let (newFriends, newBoard, newRequests) = try await (list, ranks, pending)
             guard request == generation,
                   await SupabaseAPI.currentUserID() == uid else { return }
+            requests = newRequests
             friends = newFriends
             board = newBoard
             loaded = true

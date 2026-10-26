@@ -25,8 +25,12 @@ export const searchUsersByUsername = createServerFn({ method: "POST" })
 export const getFriendsSteps = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => StepsInput.parse(d))
-  .handler(async ({ data }): Promise<Record<string, number>> => {
+  .handler(async ({ data, context }): Promise<Record<string, number>> => {
     if (data.ids.length === 0) return {};
+    const { data: friends, error: friendsError } = await context.supabase.rpc("my_friends");
+    if (friendsError) throw friendsError;
+    const allowed = new Set((friends ?? []).map((f) => f.id));
+    if (data.ids.some((id) => !allowed.has(id))) throw new Error("Only confirmed friends' steps are available");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("activity_steps")
@@ -75,11 +79,24 @@ export const removeFriendship = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ friendship_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
-    const { error } = await context.supabase
-      .from("friendships")
-      .delete()
-      .eq("id", data.friendship_id)
-      .or(`user_id.eq.${context.userId},friend_id.eq.${context.userId}`);
+    const { error } = await context.supabase.rpc("remove_my_friend", { _friendship_id: data.friendship_id });
     if (error) return { error: error.message };
+    return { ok: true };
+  });
+
+export type FriendRequest = { id: string; user_id: string; username: string; name: string; direction: "incoming" | "outgoing" };
+export const getFriendRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<FriendRequest[]> => {
+    const { data, error } = await context.supabase.rpc("my_friend_requests");
+    if (error) throw error;
+    return (data ?? []).map((r) => ({ ...r, direction: r.direction === "incoming" ? "incoming" : "outgoing" }));
+  });
+export const respondToFriendRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), accept: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc(data.accept ? "accept_friend_request" : "dismiss_friend_request", { _request_id: data.id });
+    if (error) throw error;
     return { ok: true };
   });

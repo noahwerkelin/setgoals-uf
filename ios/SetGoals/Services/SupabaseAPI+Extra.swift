@@ -242,7 +242,22 @@ struct FriendRow: Codable, Identifiable, Hashable {
     }
 }
 
+struct FriendRequestRow: Codable, Identifiable {
+    let id: UUID
+    let user_id: UUID
+    let username: String
+    let name: String
+    let direction: String
+}
+
 extension SupabaseAPI {
+    static func friendRequests() async throws -> [FriendRequestRow] {
+        try await supabase.rpc("my_friend_requests").execute().value
+    }
+    static func respondToFriendRequest(_ id: UUID, accept: Bool) async throws {
+        try await supabase.rpc(accept ? "accept_friend_request" : "dismiss_friend_request",
+                               params: ["_request_id": id.uuidString]).execute()
+    }
     private struct ProfileLite: Codable { let id: UUID; let username: String?; let display_name: String? }
     private struct FriendshipRow: Codable { let id: UUID; let user_id: UUID; let friend_id: UUID }
 
@@ -263,7 +278,7 @@ extension SupabaseAPI {
     }
 
     static func removeFriend(friendshipID: UUID) async throws {
-        try await supabase.from("friendships").delete().eq("id", value: friendshipID).execute()
+        try await supabase.rpc("remove_my_friend", params: ["_friendship_id": friendshipID.uuidString]).execute()
     }
 
     /// Today's step totals for a set of friends.

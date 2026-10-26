@@ -15,6 +15,9 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub',high_id::text,true);
   PERFORM public.add_my_friend(low_id);
   PERFORM public.add_my_friend(low_id);
+  PERFORM set_config('request.jwt.claim.sub',low_id::text,true);
+  PERFORM public.accept_friend_request((SELECT id FROM public.friend_requests WHERE sender_id=high_id AND recipient_id=low_id));
+  PERFORM set_config('request.jwt.claim.sub',high_id::text,true);
   SELECT count(*) INTO row_count FROM public.my_friends() WHERE id=low_id;
   IF row_count <> 1 THEN RAISE EXCEPTION 'Add reversed UUID or duplicate failed'; END IF;
   PERFORM set_config('request.jwt.claim.sub',low_id::text,true);

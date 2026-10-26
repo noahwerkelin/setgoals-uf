@@ -1,0 +1,1 @@
+REVOKE INSERT, UPDATE, DELETE ON public.friend_requests FROM authenticated, anon; REVOKE ALL ON public.friend_requests FROM anon;
