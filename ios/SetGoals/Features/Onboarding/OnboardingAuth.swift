@@ -228,7 +228,7 @@ struct ChildCodeScreen: View {
                         }
                     HStack(spacing: 6) {
                         ForEach(0..<length, id: \.self) { i in
-                            if i == 4 { Text("–").font(.title3).foregroundStyle(theme.p.s300) }
+                            if i == 4 { Text("–").font(F.sans(20, .medium)).foregroundStyle(theme.p.s300) }
                             box(i)
                         }
                     }
