@@ -52,6 +52,7 @@ struct ProfileView: View {
             }
             VStack(spacing: 24) {
                 hero
+                FriendsCard()
                 StatsView(tab: $tab, embedded: true)
             }
             .padding(.horizontal, 24)
