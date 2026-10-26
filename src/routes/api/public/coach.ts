@@ -314,12 +314,35 @@ export const Route = createFileRoute("/api/public/coach")({
         if (userErr || !userData.user) return json({ error: "Unauthorized" }, 401);
         const userId = userData.user.id;
 
-        // PRO gate (own subscription or inherited family plan).
-        const [{ data: ownPro }, { data: famPro }] = await Promise.all([
-          sb.rpc("pro_is_active", { _user_id: userId }),
-          sb.rpc("parent_family_pro"),
-        ]);
-        if (!ownPro && !famPro) return json({ error: "PRO required" }, 403);
+        // PRO gate (own subscription or inherited family plan). The
+        // pro_is_active / parent_family_pro RPCs are service-role only, so
+        // replicate their logic here with the admin client — the caller is
+        // already verified above and only their own entitlement is read.
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const active = (s: { is_pro: boolean; pro_expires_at: string | null } | null) =>
+          !!s?.is_pro && (!s.pro_expires_at || new Date(s.pro_expires_at).getTime() > Date.now());
+        const { data: own } = await supabaseAdmin
+          .from("user_settings")
+          .select("is_pro, pro_expires_at")
+          .eq("user_id", userId)
+          .maybeSingle();
+        let pro = active(own);
+        if (!pro) {
+          const { data: child } = await supabaseAdmin
+            .from("children")
+            .select("parent_id")
+            .eq("auth_user_id", userId)
+            .maybeSingle();
+          if (child?.parent_id) {
+            const { data: ps } = await supabaseAdmin
+              .from("user_settings")
+              .select("is_pro, pro_plan, pro_expires_at")
+              .eq("user_id", child.parent_id)
+              .maybeSingle();
+            pro = !!ps && active(ps) && String(ps.pro_plan ?? "").startsWith("family");
+          }
+        }
+        if (!pro) return json({ error: "PRO required" }, 403);
 
         const today = dayKey(new Date(Date.now() + 2 * 3600 * 1000)); // app's primary market (Sweden)
 
