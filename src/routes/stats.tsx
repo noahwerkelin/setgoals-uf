@@ -28,7 +28,7 @@ function Page() {
   const { data: week = [] } = useWeekSteps();
   const { data: history = [] } = useHistorySteps(180);
   const insights = computeInsights(history, settings.dailyGoal, settings.stepsPer30, settings.dailyCapHours);
-  const messages = buildMessages(insights, lang);
+  const messages = buildMessages(insights, lang, settings.displayName || settings.username);
   const locale = lang === "sv" ? "sv-SE" : "en-US";
   const WEEK = week.map((d) => d.steps);
   const MAX = Math.max(1, ...WEEK);
