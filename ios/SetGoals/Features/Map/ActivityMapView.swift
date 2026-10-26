@@ -57,10 +57,14 @@ struct ActivityMapView: View {
     @Binding var tab: AppTab
 
     @ObservedObject private var store = NearbyStore.shared
+    @State private var mode: DisplayMode = .map
+    @State private var selectedID: String?
     @State private var filter: Filter = .all
     @State private var pageSize = 5
     @State private var expandedID: String?
     @State private var camera: MapCameraPosition = .automatic
+
+    private enum DisplayMode: Hashable { case map, list }
 
     enum Filter: Hashable {
         case all
@@ -90,94 +94,168 @@ struct ActivityMapView: View {
         }
     }
 
+    private var selectedActivity: NearbyActivity? {
+        visible.first { $0.id == selectedID }
+    }
+
     var body: some View {
-        AppShell(tab: $tab) {
-            PageHeader(eyebrow: L.t("map.eyebrow"), title: L.t("map.title")) {
-                circleButton("location.fill", spinning: loading, pulsing: locator.locating,
-                             label: L.t("map.use_location")) { store.refresh() }
-            }
-
-            VStack(spacing: 20) {
-                mapCard
-                filterRow
-
-                if loading && locator.center != nil {
-                    hint(L.t("map.loading"))
-                } else if !loading && locator.center != nil && visible.isEmpty {
-                    hint(L.t("map.none"))
+        GeometryReader { geometry in
+            ZStack(alignment: .bottom) {
+                theme.background.ignoresSafeArea()
+                if mode == .map {
+                    mapCanvas.ignoresSafeArea()
+                    VStack(spacing: 12) {
+                        topControls
+                        filterRow
+                        Spacer(minLength: 16)
+                        if let activity = selectedActivity {
+                            ScrollView {
+                                floatingCard(activity)
+                            }
+                            .scrollIndicators(.hidden)
+                            .frame(maxHeight: geometry.size.height * 0.44)
+                            .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
+                                .strokeBorder(theme.ringBorder, lineWidth: 1))
+                        } else if locator.center != nil {
+                            hint(L.t(loading ? "map.loading" : "map.none"))
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: R.xl2))
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 12)
+                    .padding(.bottom, 108)
+                } else {
+                    VStack(spacing: 16) {
+                        topControls
+                            .padding(.horizontal, 24)
+                            .padding(.top, 12)
+                        ScrollView {
+                            VStack(spacing: 20) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(L.t("map.eyebrow")).font(F.sans(14, .medium)).foregroundStyle(theme.p.s600)
+                                    Text(L.t("map.title")).font(F.xl2).foregroundStyle(theme.foreground)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                filterRow
+                                if locator.center == nil {
+                                    hint(L.t(locator.denied ? "map.location_denied" : "map.locating"))
+                                } else if loading {
+                                    hint(L.t("map.loading"))
+                                } else if visible.isEmpty {
+                                    hint(L.t("map.none"))
+                                }
+                                list
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 112)
+                        }
+                        .scrollIndicators(.hidden)
+                    }
                 }
-
-                list
+                BottomNav(tab: $tab).ignoresSafeArea(edges: .bottom)
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 24)
         }
+        .buttonStyle(FlatPress())
         .task {
             store.start()
-            if let c = locator.center {
-                camera = .region(MKCoordinateRegion(center: c, latitudinalMeters: 6000, longitudinalMeters: 6000))
-            }
+            recenter()
+            ensureSelection()
         }
-        .onChange(of: locator.centerKey) { _, _ in
-            if let c = locator.center {
-                camera = .region(MKCoordinateRegion(center: c, latitudinalMeters: 6000, longitudinalMeters: 6000))
-            }
-        }
+        .onChange(of: locator.centerKey) { _, _ in recenter() }
+        .onChange(of: visible.map(\.id)) { _, _ in ensureSelection() }
         .onChange(of: filter) { _, _ in pageSize = 5; expandedID = nil }
     }
 
-    // MARK: Map — `aspect-[4/3] rounded-[28px] ring-1 ring-black/5`
+    private var topControls: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 4) {
+                modeButton(.map, icon: "map", title: L.t("map.view_map"))
+                modeButton(.list, icon: "list.bullet", title: L.t("map.view_list"))
+            }
+            .padding(4)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().strokeBorder(theme.ringBorder, lineWidth: 1))
+            Spacer(minLength: 0)
+            circleButton("location.fill", spinning: loading, pulsing: locator.locating,
+                         label: L.t("map.use_location")) {
+                recenter()
+                store.refresh()
+            }
+        }
+    }
 
-    private var mapCard: some View {
-        ZStack(alignment: .bottomLeading) {
+    private func modeButton(_ value: DisplayMode, icon: String, title: String) -> some View {
+        Button { mode = value } label: {
+            Label(title, systemImage: icon)
+                .font(F.sans(13, mode == value ? .semibold : .medium))
+                .foregroundStyle(mode == value ? theme.primaryForeground : theme.p.s900)
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .background(mode == value ? theme.primary : .clear, in: Capsule())
+        }
+        .accessibilityAddTraits(mode == value ? .isSelected : [])
+    }
+
+    private var mapCanvas: some View {
+        Group {
             if let c = locator.center {
-                // Web parity: plain tiles, no labels under the pins and no
-                // MapKit chrome — only the markers and the position chip.
                 Map(position: $camera, interactionModes: [.pan, .zoom]) {
                     Annotation(L.t("map.you_here"), coordinate: c, anchor: .center) { youDot }
                         .annotationTitles(.hidden)
-                    ForEach(visible) { a in
+                    if let a = selectedActivity {
                         Annotation(a.name, coordinate: a.coord, anchor: .bottom) {
                             SagePin(kind: a.kind, size: 40)
-                                .onTapGesture {
-                                    withAnimation(.easeOut(duration: 0.2)) { expandedID = a.id }
-                                }
                         }
                         .annotationTitles(.hidden)
                     }
                 }
                 .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
                 .mapControlVisibility(.hidden)
-
-                HStack(spacing: 6) {
-                    Image(systemName: "mappin").font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(theme.p.s600)
-                    Text("\(String(format: "%.3f", c.latitude)), \(String(format: "%.3f", c.longitude))")
-                }
-                    .font(F.sans(12, .medium))
-                    .foregroundStyle(theme.p.s900)
-                    .padding(.horizontal, 12).padding(.vertical, 8)
-                    .background(theme.card.opacity(0.9), in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-                        .strokeBorder(theme.ringBorder, lineWidth: 1))
-                    .padding(16)
-                    .allowsHitTesting(false)
             } else {
-                theme.p.s100
-                Text(locator.denied ? L.t("map.location_denied") : L.t("map.locating"))
-                    .font(F.sm).foregroundStyle(theme.p.s700)
-                    .multilineTextAlignment(.center)
-                    .padding(24)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                theme.p.s100.overlay {
+                    Text(L.t(locator.denied ? "map.location_denied" : "map.locating"))
+                        .font(F.sm).foregroundStyle(theme.p.s700)
+                        .multilineTextAlignment(.center).padding(24)
+                }
             }
         }
-        .aspectRatio(4.0 / 3.0, contentMode: .fit)
-        .frame(maxWidth: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous)
-            .strokeBorder(theme.ringBorder, lineWidth: 1))
-        .rise()
+    }
+
+    private func recenter() {
+        guard let c = locator.center else { return }
+        camera = .region(MKCoordinateRegion(center: c, latitudinalMeters: 18000, longitudinalMeters: 18000))
+    }
+
+    private func ensureSelection() {
+        guard selectedActivity == nil else { return }
+        selectedID = visible.randomElement()?.id
+    }
+
+    private func shuffleLocation() {
+        let alternatives = visible.filter { $0.id != selectedID }
+        guard let next = alternatives.randomElement() else { return }
+        selectedID = next.id
+    }
+
+    private func floatingCard(_ a: NearbyActivity) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(a.name).font(F.sans(18, .semibold)).foregroundStyle(theme.foreground)
+                    let d = settings.formatDistance(a.distanceM / 1000)
+                    Text("\(L.t("map.kind.\(a.kind.rawValue)")) · \(d.0) \(d.1)")
+                        .font(F.xs).foregroundStyle(theme.p.s600)
+                    Text(subtitle(a)).eyebrow(theme.p.s500)
+                }
+                Spacer(minLength: 0)
+                circleButton("shuffle", label: L.t("map.random_location")) { shuffleLocation() }
+                    .disabled(visible.count < 2)
+                    .opacity(visible.count < 2 ? 0.5 : 1)
+            }
+            activityDetails(a, photoHeight: 112)
+        }
+        .padding(16)
     }
 
     private var youDot: some View {
@@ -200,7 +278,10 @@ struct ActivityMapView: View {
                             .font(F.sans(12, .medium))
                             .foregroundStyle(on ? theme.primaryForeground : theme.p.s700)
                             .padding(.horizontal, 16).padding(.vertical, 8)
-                            .background(on ? theme.p.s600 : theme.card, in: Capsule())
+                            .background {
+                                Capsule().fill(.ultraThinMaterial)
+                                Capsule().fill(on ? theme.primary : theme.card.opacity(0.65))
+                            }
                             .overlay(Capsule().strokeBorder(theme.ringBorder, lineWidth: 1))
                     }
                 }
@@ -270,38 +351,7 @@ struct ActivityMapView: View {
             .buttonStyle(.plain)
 
             if open {
-                VStack(alignment: .leading, spacing: 12) {
-                    if let photo = a.photoUrl, let url = URL(string: photo) {
-                        AsyncImage(url: url) { img in
-                            img.resizable().scaledToFill()
-                        } placeholder: {
-                            theme.p.s100
-                        }
-                        .frame(height: 160)
-                        .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-                            .strokeBorder(theme.ringBorder, lineWidth: 1))
-                    }
-
-                    VStack(spacing: 8) {
-                        detailRow(L.t("map.distance"), "\(d.0) \(d.1)")
-                        if let r = a.rating {
-                            detailRow(L.t("map.rating"),
-                                      String(format: "%.1f", r) + (a.userRatingsTotal.map { " (\($0))" } ?? ""))
-                        }
-                        if let addr = a.address { detailRow(L.t("map.address"), addr) }
-                    }
-
-                    Button { openDirections(a) } label: {
-                        Text(L.t("map.start"))
-                            .font(F.sans(12, .semibold))
-                            .foregroundStyle(theme.primaryForeground)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(theme.p.s600, in: RoundedRectangle(cornerRadius: R.sm, style: .continuous))
-                    }
-                }
+                activityDetails(a, photoHeight: 160)
                 .padding(.horizontal, 16).padding(.bottom, 16).padding(.top, 12)
                 .overlay(alignment: .top) { Rectangle().fill(theme.p.s100).frame(height: 1) }
             }
@@ -310,6 +360,38 @@ struct ActivityMapView: View {
         .clipShape(RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
             .strokeBorder(theme.ringBorder, lineWidth: 1))
+    }
+
+    private func activityDetails(_ a: NearbyActivity, photoHeight: CGFloat) -> some View {
+        let d = settings.formatDistance(a.distanceM / 1000)
+        return VStack(alignment: .leading, spacing: 12) {
+            if let photo = a.photoUrl, let url = URL(string: photo) {
+                GeometryReader { geometry in
+                    AsyncImage(url: url) { phase in
+                        if let image = phase.image {
+                            image.resizable().scaledToFill()
+                        } else {
+                            theme.p.s100.overlay {
+                                Image(systemName: "photo").foregroundStyle(theme.p.s600)
+                            }
+                        }
+                    }
+                    .frame(width: geometry.size.width, height: photoHeight)
+                    .clipped()
+                }
+                .frame(height: photoHeight)
+                .clipShape(RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+            }
+            VStack(spacing: 8) {
+                detailRow(L.t("map.distance"), "\(d.0) \(d.1)")
+                if let r = a.rating {
+                    detailRow(L.t("map.rating"),
+                              String(format: "%.1f", r) + (a.userRatingsTotal.map { " (\($0))" } ?? ""))
+                }
+                if let addr = a.address { detailRow(L.t("map.address"), addr) }
+            }
+            PrimaryButton(title: L.t("map.start")) { openDirections(a) }
+        }
     }
 
     private func subtitle(_ a: NearbyActivity) -> String {
@@ -335,7 +417,8 @@ struct ActivityMapView: View {
                               label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             ZStack {
-                Circle().fill(theme.card)
+                Circle().fill(.ultraThinMaterial)
+                Circle().fill(theme.card.opacity(0.65))
                 Circle().strokeBorder(theme.ringBorder, lineWidth: 1)
                 Image(systemName: icon).font(.system(size: 15))
                     .foregroundStyle(theme.p.s700)
