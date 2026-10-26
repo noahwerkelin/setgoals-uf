@@ -3,6 +3,14 @@ import Foundation
 extension L {
     static let screenTimeStrings: [String: [String: String]] = [
         "en": [
+            "dashboard.eyebrow": "Your daily balance",
+            "dashboard.overview": "Overview",
+            "dashboard.tasks": "Tasks",
+            "dashboard.child_create_sub": "Create your child's profile, then share their invitation code to connect their account.",
+            "dashboard.child_edit_sub": "Profile details, step goal and screen time rules.",
+            "dashboard.child_profile": "Profile details",
+            "dashboard.child_rules": "Goals & screen time",
+            "dashboard.username_placeholder": "Username",
             "nav.screenTime": "Screen Time",
             "dashboard.subtitle": "Your time. Your family. A healthier balance.",
             "dashboard.personal": "My Screen Time",
@@ -30,10 +38,18 @@ extension L {
             "dashboard.bonus_confirmed": "Bonus screen time sent to {name}.",
             "dashboard.coach": "Coach",
             "dashboard.you": "You",
-            "dashboard.child_settings": "Child Settings",
+            "dashboard.child_settings": "Settings",
             "dashboard.steps": "Steps today",
         ],
         "sv": [
+            "dashboard.eyebrow": "Din dagliga balans",
+            "dashboard.overview": "Översikt",
+            "dashboard.tasks": "Uppgifter",
+            "dashboard.child_create_sub": "Skapa barnets profil och dela sedan inbjudningskoden för att koppla barnets konto.",
+            "dashboard.child_edit_sub": "Profiluppgifter, stegmål och skärmtidsregler.",
+            "dashboard.child_profile": "Profiluppgifter",
+            "dashboard.child_rules": "Mål och skärmtid",
+            "dashboard.username_placeholder": "Användarnamn",
             "nav.screenTime": "Skärmtid",
             "dashboard.subtitle": "Din tid. Din familj. En sundare balans.",
             "dashboard.personal": "Min skärmtid",
@@ -61,7 +77,7 @@ extension L {
             "dashboard.bonus_confirmed": "Bonusskärmtid skickad till {name}.",
             "dashboard.coach": "Coach",
             "dashboard.you": "Du",
-            "dashboard.child_settings": "Barninställningar",
+            "dashboard.child_settings": "Inställningar",
             "dashboard.steps": "Steg idag",
         ],
     ]

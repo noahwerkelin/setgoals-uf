@@ -309,7 +309,7 @@ struct ParentView: View {
         return VStack(alignment: .leading, spacing: 20) {
             SegmentedTabs(selection: $childPanel, items: [
                 (.overview, L.t("dashboard.overview")),
-                (.tasks, L.t("tasks.title")),
+                (.tasks, L.t("dashboard.tasks")),
                 (.settings, L.t("dashboard.child_settings")),
             ])
             switch childPanel {
