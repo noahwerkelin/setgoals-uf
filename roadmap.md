@@ -1,6 +1,7 @@
 # Tasks
-- [ ] Redesign Swift Map with full-screen movable Map mode, one expanded random floating location, blurred controls, and separate expandable List mode in English/Swedish.
-- [ ] Validate new Swift map source and translations; native interaction and appearance require unavailable Xcode/device runtime.
+- [x] Redesign Swift Map with full-screen movable Map mode, one expanded random floating location, blurred controls, and separate expandable List mode in English/Swedish.
+- [x] Parse changed Swift Map view and check bilingual labels; preserve nearby search, directions and shared bottom navigation.
+- [ ] Verify new native Map/List interaction and appearance; blocked by unavailable Xcode/device runtime.
 - [x] Require recipient acceptance for new friendships in web and Swift; retain friend removal.
 - [x] Verify request permissions, acceptance, decline/cancellation, and removal in rollback-only database tests; signed-in web send/read-back/cancel passed.
 - [ ] Verify native friend request controls on iPhone; blocked by unavailable Xcode/device runtime.
