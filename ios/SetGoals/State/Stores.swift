@@ -125,9 +125,12 @@ final class AuthStore: ObservableObject {
             for await change in supabase.auth.authStateChanges {
                 self.signedIn = change.session != nil
                 if self.signedIn {
-                    await FriendsStore.shared.preload()
+                    async let friends: Void = FriendsStore.shared.preload()
+                    async let family: Void = FamilyStore.shared.preload()
+                    _ = await (friends, family)
                 } else {
                     FriendsStore.shared.clear()
+                    FamilyStore.shared.clear()
                 }
             }
         }

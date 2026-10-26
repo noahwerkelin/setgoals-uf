@@ -6,6 +6,7 @@ struct SetGoalsApp: App {
     @StateObject private var settings = SettingsStore.shared
     @StateObject private var auth = AuthStore.shared
     @State private var showSplash = true
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("app.onboarded") private var onboarded = false
 
     var body: some Scene {
@@ -19,6 +20,7 @@ struct SetGoalsApp: App {
                             try? await SupabaseAPI.updateProfile(["onboarding_completed": .bool(true)])
                             await settings.load()
                             await FriendsStore.shared.preload()
+                            await FamilyStore.shared.preload()
                             NearbyStore.shared.start()
                             Task { await StatsCache.shared.load() }
                             Task { await BadgeStore.shared.preload() }
@@ -47,7 +49,11 @@ struct SetGoalsApp: App {
             }
             .task {
                 await auth.bootstrap()
-                if auth.signedIn { await FriendsStore.shared.preload() }
+                if auth.signedIn {
+                    async let friends: Void = FriendsStore.shared.preload()
+                    async let family: Void = FamilyStore.shared.preload()
+                    _ = await (friends, family)
+                }
                 // Keep Apple's Screen Time rules in step with the category
                 // pills the user sees.
                 ScreenTimeRules.policies = ProSTStore.shared.alwaysAllow
@@ -80,6 +86,15 @@ struct SetGoalsApp: App {
                 withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
             }
             .onChange(of: settings.themeColor) { _, new in theme.color = new }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active, auth.signedIn else { return }
+                Task {
+                    async let friends: Void = FriendsStore.shared.refresh()
+                    async let family: Void = FamilyStore.shared.refresh()
+                    async let account: Void = settings.load()
+                    _ = await (friends, family, account)
+                }
+            }
         }
     }
 }
