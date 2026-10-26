@@ -18,7 +18,8 @@ struct ParentView: View {
     @State private var loadingFamily = true
     @State private var familyError = false
     @State private var confirmation: String?
-    @State private var showSettings = false
+    @State private var childPanel: ChildPanel = .overview
+    private enum ChildPanel: Hashable { case overview, tasks, settings }
     @State private var selectionRevision = 0
     @State private var authorizationError = false
 
@@ -46,18 +47,9 @@ struct ParentView: View {
 
     var body: some View {
         AppShell(tab: $tab) {
-            PageHeader(title: L.t("nav.screenTime")) {
-                Button { showSettings = true } label: {
-                    Image(systemName: "gearshape").font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(theme.primary).frame(width: 44, height: 44)
-                        .background(theme.secondary, in: Circle())
-                }
-                .buttonStyle(FlatPress())
-                .accessibilityLabel(L.t("profile.settings"))
-            }
+            PageHeader(eyebrow: L.t("dashboard.eyebrow"), title: L.t("nav.screenTime")) { EmptyView() }
 
             VStack(alignment: .leading, spacing: 28) {
-                Text(L.t("dashboard.subtitle")).font(F.sm).foregroundStyle(theme.mutedForeground)
                 myScreenTimeCard
                 if !isChild { childrenSection }
                 categoriesSection
@@ -78,9 +70,6 @@ struct ParentView: View {
                 screenTime.refreshFromStore()
                 if canManageChildren { Task { await reload() } }
             }
-        }
-        .fullScreenCover(isPresented: $showSettings) {
-            SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings)
         }
         .sheet(item: $pickerMode) { mode in
             NativeScreenTimePicker(alwaysAllowed: false) { selectionRevision += 1 }
@@ -255,11 +244,6 @@ struct ParentView: View {
                     PrimaryButton(title: L.t("parent.add_child")) { creatingChild = true }
                 }
             } else {
-                FamilyCircleView(children: children, selectedID: $selectedChildID) { id in
-                    withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85)) {
-                        selectedChildID = selectedChildID == id ? nil : id
-                    }
-                }
                 ForEach(children) { child in
                     childPreview(child)
                     if selectedChildID == child.id {
@@ -280,6 +264,7 @@ struct ParentView: View {
         let member = family.first { $0.member_id == child.id.uuidString.lowercased() || $0.member_id.lowercased() == child.id.uuidString.lowercased() }
         return Button {
             withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85)) {
+                childPanel = .overview
                 selectedChildID = selectedChildID == child.id ? nil : child.id
             }
         } label: {
@@ -321,72 +306,57 @@ struct ParentView: View {
     private func childCard(_ c: ChildRow) -> some View {
         let stats = c.auth_user_id.flatMap { today[$0] } ?? ChildDayStats()
 
-        return VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 12) {
-                    AvatarBubble(avatar: c.avatar, name: c.name, size: 44)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(c.name).font(F.sans(14, .semibold)).foregroundStyle(theme.p.s950).lineLimit(1)
-                        Text(Self.ageLabel(c.birthday)).font(F.xs).foregroundStyle(theme.p.s600)
-                    }
-                    Spacer(minLength: 0)
-                    circleButton("pencil", label: L.t("dashboard.child_settings")) { editing = c }
-                    circleButton("trash", label: L.t("parent.child.delete")) { deleting = c }
+        return VStack(alignment: .leading, spacing: 20) {
+            SegmentedTabs(selection: $childPanel, items: [
+                (.overview, L.t("dashboard.overview")),
+                (.tasks, L.t("tasks.title")),
+                (.settings, L.t("dashboard.child_settings")),
+            ])
+            switch childPanel {
+            case .overview:
+                HStack(spacing: 16) {
+                    childMetric(L.t("parent.child.daily_goal"), L.number(c.daily_goal))
+                    childMetric(L.t("parent.used_screentime"), L.duration(stats.usedMin))
                 }
-
-                HStack(spacing: 12) {
-                    ParentStat(label: L.t("parent.steps"), value: stats.steps.formatted())
-                    ParentStat(label: L.t("parent.child.daily_goal"), value: c.daily_goal.formatted())
-                    ParentStat(label: L.t("parent.used_screentime"),
-                               value: L.duration(stats.usedMin))
-                }
-
                 WeeklySummary(week: c.auth_user_id.flatMap { week[$0] } ?? [:])
-
-                innerCard(icon: "clock", title: L.t("parent.child_screentime", ["n": c.name.isEmpty ? "—" : c.name])) {
-                    HStack(spacing: 12) {
-                        ParentStat(label: L.t("parent.steps_per_30"), value: c.steps_per_30.formatted(), onCard: true)
-                        ParentStat(label: L.t("parent.daily_cap"),
-                                   value: c.daily_cap_hours >= 24
-                                       ? L.t("parent.no_cap")
-                                       : "\(c.daily_cap_hours)\(L.t("settings.hours"))",
-                                   onCard: true)
-                    }
-                    Button { editingChildST = c } label: {
-                        Text(L.t("parent.edit_screentime"))
-                            .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
-                            .frame(maxWidth: .infinity).padding(.vertical, 10)
-                            .background(theme.card, in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: R.md, style: .continuous)
-                                .stroke(theme.p.s200, lineWidth: 1))
-                    }
-                }
-
-                innerCard(icon: "gift", title: L.t("parent.gift.title")) {
-                    Text(L.t("parent.gift.sub")).font(F.text11).foregroundStyle(theme.p.s600)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeader(L.t("parent.gift.title"), icon: "gift")
+                    Text(L.t("parent.gift.sub")).font(F.xs).foregroundStyle(theme.mutedForeground)
                     if stats.bonusMin > 0 {
-                        Text(L.t("parent.gift.given_today", ["m": "\(stats.bonusMin)"]))
-                            .font(F.sans(10, .semibold)).foregroundStyle(theme.p.s700)
-                            .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(theme.card, in: Capsule())
-                            .overlay(Capsule().stroke(theme.p.s200, lineWidth: 1))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Label(L.t("parent.gift.given_today", ["m": L.number(stats.bonusMin)]), systemImage: "checkmark.circle")
+                            .font(F.xs).foregroundStyle(theme.primary)
                     }
-                    Button { gifting = c } label: {
-                        Text(c.auth_user_id != nil ? L.t("parent.gift.cta") : L.t("parent.gift.needs_join"))
-                            .font(F.sans(12, .semibold)).foregroundStyle(theme.primaryForeground)
-                            .frame(maxWidth: .infinity).padding(.vertical, 10)
-                            .background(theme.primary, in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
-                    }
-                    .disabled(c.auth_user_id == nil)
-                    .opacity(c.auth_user_id == nil ? 0.5 : 1)
+                    PrimaryButton(title: L.t(c.auth_user_id != nil ? "parent.gift.cta" : "parent.gift.needs_join"),
+                                  enabled: c.auth_user_id != nil) { gifting = c }
                 }
-
+                if c.invitation_status != "connected" { invitationBlock(c) }
+            case .tasks:
                 ChildTasksSection(childID: c.id, childName: c.name, parentID: parentID,
                                   canAssign: c.auth_user_id != nil && parentID != nil)
-
-                Text(L.t("dashboard.remote")).font(F.xs).foregroundStyle(theme.mutedForeground)
-                invitationBlock(c)
+            case .settings:
+                VStack(alignment: .leading, spacing: 16) {
+                    sectionHeader(L.t("dashboard.child_settings"), icon: "person.crop.circle")
+                    HStack(spacing: 12) {
+                        AvatarBubble(avatar: c.avatar, name: c.name, size: 44)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(c.name).font(F.sans(16, .semibold)).foregroundStyle(theme.foreground)
+                            Text(Self.ageLabel(c.birthday)).font(F.xs).foregroundStyle(theme.mutedForeground)
+                        }
+                    }
+                    SettingsRow(icon: "pencil", title: L.t("parent.child.edit")) { editing = c }
+                    Divider().overlay(theme.border)
+                    HStack(spacing: 16) {
+                        childMetric(L.t("parent.steps_per_30"), L.number(c.steps_per_30))
+                        childMetric(L.t("parent.daily_cap"), c.daily_cap_hours >= 24
+                                    ? L.t("parent.no_cap") : L.duration(c.daily_cap_hours * 60))
+                    }
+                    SecondaryButton(title: L.t("parent.edit_screentime")) { editingChildST = c }
+                    Text(L.t("dashboard.remote")).font(F.xs).foregroundStyle(theme.mutedForeground)
+                    Divider().overlay(theme.border)
+                    invitationBlock(c)
+                    SettingsRow(icon: "trash", title: L.t("parent.child.delete"), destructive: true) { deleting = c }
+                }
+            }
         }
     }
 
@@ -407,17 +377,17 @@ struct ParentView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(L.t("parent.child.code")).eyebrow(theme.p.s600)
-                        Text(c.code).font(F.sans(16, .semibold)).tracking(3.2)
+                        Text(L.t("parent.child.code")).font(F.xs).foregroundStyle(theme.mutedForeground)
+                        Text(c.code).font(F.sans(20, .semibold)).monospacedDigit()
                             .foregroundStyle(theme.p.s900)
                     }
                     Spacer(minLength: 0)
                     Text(L.t(c.invitation_status == "expired"
                              ? "parent.child.status_expired" : "parent.child.status_pending"))
                         .font(F.sans(10, .semibold))
-                        .foregroundStyle(c.invitation_status == "expired" ? Color.red : Color.orange)
+                        .foregroundStyle(theme.primary)
                         .padding(.horizontal, 10).padding(.vertical, 4)
-                        .background((c.invitation_status == "expired" ? Color.red : Color.orange).opacity(0.12),
+                        .background((theme.primary).opacity(0.12),
                                     in: Capsule())
                 }
                 HStack(spacing: 8) {
@@ -433,56 +403,28 @@ struct ParentView: View {
             .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
                 .stroke(theme.p.s200, lineWidth: 1))
 
-            Text(L.t("parent.child.code_help")).font(F.sans(10)).foregroundStyle(theme.p.s600)
+            Text(L.t("parent.child.code_help")).font(F.xs).foregroundStyle(theme.p.s600)
                 .padding(.horizontal, 4)
         }
     }
 
     // MARK: - Bits
 
-    @ViewBuilder
-    private func innerCard<C: View>(icon: String, title: String, @ViewBuilder content: () -> C) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: icon).font(.system(size: 13)).foregroundStyle(theme.p.s700)
-                Text(title).font(F.sans(12, .semibold)).foregroundStyle(theme.p.s900)
-                Spacer(minLength: 0)
-            }
-            content()
-        }
-        .padding(16)
-        .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
-            .stroke(theme.p.s200, lineWidth: 1))
-    }
-
-    private func circleButton(_ icon: String, label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            ZStack {
-                Circle().fill(theme.p.s100)
-                Image(systemName: icon).font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(theme.p.s700)
-            }
-            .frame(width: 44, height: 44)
-        }
-        .buttonStyle(FlatPress())
-        .accessibilityLabel(label)
-    }
-
     private func smallButton(_ icon: String, _ title: String, primary: Bool = false,
                              action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon).font(.system(size: 11, weight: .semibold))
-                Text(title).font(F.sans(11, .semibold)).lineLimit(1)
+                Text(title).font(F.sans(12, .semibold)).multilineTextAlignment(.center)
             }
             .foregroundStyle(primary ? theme.primaryForeground : theme.p.s700)
-            .frame(maxWidth: .infinity).padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .background(primary ? theme.primary : theme.card,
                         in: RoundedRectangle(cornerRadius: R.md, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: R.md, style: .continuous)
                 .stroke(primary ? .clear : theme.p.s200, lineWidth: 1))
         }
+        .buttonStyle(FlatPress())
     }
 
     private func copy(_ code: String) { UIPasteboard.general.string = code }
@@ -579,7 +521,7 @@ struct CategoryToggle: View {
         Button { withAnimation(.easeOut(duration: 0.3)) { action() } } label: {
             HStack(spacing: 4) {
                 Image(systemName: icon).font(.system(size: 10, weight: .semibold))
-                Text(title).font(F.sans(11, .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(title).font(F.sans(12, .semibold)).multilineTextAlignment(.center).minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
             .foregroundStyle(active ? .white : theme.p.s700)

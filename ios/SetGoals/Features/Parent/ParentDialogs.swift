@@ -91,22 +91,24 @@ struct ChildEditDialog: View {
     @State private var uploading = false
     @State private var saving = false
     @State private var error: String?
+    @State private var showEmojis = false
 
     var body: some View {
         ScrollView {
             AppDialog(title: isNew ? L.t("parent.child.new") : L.t("parent.child.edit"),
-                      description: L.t("parent.child.code_help")) {
-                VStack(alignment: .leading, spacing: 16) {
+                      description: L.t(isNew ? "dashboard.child_create_sub" : "dashboard.child_edit_sub")) {
+                VStack(alignment: .leading, spacing: 24) {
+                    formHeading(L.t("dashboard.child_profile"), icon: "person.crop.circle")
                     avatarPicker
 
                     field(L.t("auth.name")) {
-                        TextField("", text: $name).fieldStyle()
+                        TextField("", text: $name).textContentType(.name).textInputAutocapitalization(.words).fieldStyle()
                     }
 
                     field(L.t("settings.username")) {
                         HStack(spacing: 6) {
                             Text("@").font(F.sm).foregroundStyle(theme.p.s600)
-                            TextField("lukas_08", text: $username)
+                            TextField(L.t("dashboard.username_placeholder"), text: $username)
                                 .autocorrectionDisabled()
                                 .textInputAutocapitalization(.never)
                                 .onChange(of: username) { _, v in
@@ -121,9 +123,12 @@ struct ChildEditDialog: View {
                     field(L.t("auth.birthday")) {
                         DatePicker("", selection: birthdayBinding, displayedComponents: .date)
                             .labelsHidden()
+                            .font(F.sm).tint(theme.primary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
+                    Divider().overlay(theme.border)
+                    formHeading(L.t("dashboard.child_rules"), icon: "slider.horizontal.3")
                     SliderRow(title: L.t("parent.child.daily_goal"),
                               valueLabel: Int(dailyGoal).formatted(),
                               value: $dailyGoal, range: 2000...20000, step: 500)
@@ -134,30 +139,34 @@ struct ChildEditDialog: View {
                               valueLabel: "\(Int(capHours))\(L.t("settings.hours"))",
                               value: $capHours, range: 1...8, step: 1)
 
-                    if !code.isEmpty {
+                    if !isNew && !code.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(L.t("parent.child.code"))
-                                .font(F.sans(10, .semibold)).textCase(.uppercase).tracking(1.4)
-                                .foregroundStyle(theme.primaryForeground.opacity(0.8))
-                            Text(code).font(F.sans(24, .semibold)).tracking(6)
-                                .foregroundStyle(theme.primaryForeground)
+                                .font(F.xs).foregroundStyle(theme.mutedForeground)
+                            Text(code).font(F.sans(24, .semibold)).monospacedDigit()
+                                .foregroundStyle(theme.foreground)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 16).padding(.vertical, 12)
-                        .background(theme.primary, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+                        .background(theme.secondary, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
                     }
 
                     if let error {
                         Text(error).font(F.xs).foregroundStyle(theme.destructive)
                     }
                 }
-            } footer: {
-                DialogFooterButtons(cancelTitle: L.t("settings.cancel"),
-                                    confirmTitle: saving ? L.t("parent.child.saving") : L.t("parent.child.save"),
-                                    disabled: saving,
-                                    onCancel: { dismiss() },
-                                    onConfirm: { Task { await save() } })
+            } footer: { EmptyView() }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 8) {
+                PrimaryButton(title: saving ? L.t("parent.child.saving") : L.t(isNew ? "parent.add_child" : "parent.child.save"),
+                              busy: saving, enabled: !uploading) { Task { await save() } }
+                GhostButton(title: L.t("settings.cancel")) { dismiss() }.buttonStyle(FlatPress())
             }
+            .padding(.horizontal, 24).padding(.vertical, 12)
+            .background(theme.card)
+            .overlay(alignment: .top) { Divider().overlay(theme.border) }
         }
         .background(theme.card)
         .presentationCornerRadius(R.xl3)
@@ -171,26 +180,27 @@ struct ChildEditDialog: View {
 
     private var avatarPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(L.t("parent.child.avatar")).eyebrow(theme.p.s600)
+            Text(L.t("parent.child.avatar")).font(F.sm).foregroundStyle(theme.foreground)
             HStack(spacing: 12) {
                 AvatarBubble(avatar: avatar, name: name, size: 56)
                 PhotosPicker(selection: $photoItem, matching: .images) {
-                    Text(uploading ? L.t("parent.child.uploading") : L.t("parent.child.upload_photo"))
-                        .font(F.sans(11, .semibold)).foregroundStyle(theme.primaryForeground)
-                        .padding(.horizontal, 14).padding(.vertical, 8)
-                        .background(theme.p.s700, in: Capsule())
+                    Label(uploading ? L.t("parent.child.uploading") : L.t("parent.child.upload_photo"), systemImage: "photo")
+                        .font(F.sans(14, .semibold)).foregroundStyle(theme.p.s900)
+                        .padding(.horizontal, 16).padding(.vertical, 12)
+                        .background(theme.secondary, in: Capsule())
+                        .overlay(Capsule().strokeBorder(theme.p.s200, lineWidth: 1))
                 }
+                .buttonStyle(FlatPress()).disabled(uploading)
                 if avatar.hasPrefix("data:") || avatar.hasPrefix("http") {
                     Button { avatar = ChildEmojis.all[0] } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "trash").font(.system(size: 11))
-                            Text(L.t("parent.child.remove_photo")).font(F.sans(11, .medium))
-                        }
-                        .foregroundStyle(theme.destructive)
+                        Image(systemName: "trash").font(.system(size: 14))
+                            .foregroundStyle(theme.mutedForeground).frame(width: 44, height: 44)
                     }
+                    .buttonStyle(FlatPress()).accessibilityLabel(L.t("parent.child.remove_photo"))
                 }
                 Spacer(minLength: 0)
             }
+            DisclosureGroup(isExpanded: $showEmojis) {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5), spacing: 8) {
                 ForEach(ChildEmojis.all, id: \.self) { e in
                     Button { avatar = e } label: {
@@ -201,14 +211,27 @@ struct ChildEditDialog: View {
                             .overlay(RoundedRectangle(cornerRadius: R.md, style: .continuous)
                                 .stroke(avatar == e ? theme.primary : theme.p.s200, lineWidth: 1))
                     }
+                    .buttonStyle(FlatPress())
+                    .accessibilityLabel(e)
+                    .accessibilityAddTraits(avatar == e ? .isSelected : [])
                 }
             }
+            .padding(.top, 8)
+            } label: {
+                Text(L.t("parent.child.or_emoji")).font(F.sm).foregroundStyle(theme.mutedForeground)
+            }
+            .tint(theme.primary)
         }
+    }
+
+    private func formHeading(_ title: String, icon: String) -> some View {
+        Label(title, systemImage: icon).font(F.sans(14, .semibold)).foregroundStyle(theme.foreground)
+            .accessibilityAddTraits(.isHeader)
     }
 
     private func field<C: View>(_ label: String, @ViewBuilder content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(label).eyebrow(theme.p.s600)
+            Text(label).font(F.sm).foregroundStyle(theme.foreground)
             content()
         }
     }
@@ -217,7 +240,7 @@ struct ChildEditDialog: View {
         Binding(
             get: {
                 let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.timeZone = .current
-                return f.date(from: birthday) ?? Calendar.current.date(byAdding: .year, value: -10, to: Date())!
+                return f.date(from: birthday) ?? (Calendar.current.date(byAdding: .year, value: -10, to: Date()) ?? Date())
             },
             set: { birthday = SupabaseAPI.dayKey($0) }
         )
