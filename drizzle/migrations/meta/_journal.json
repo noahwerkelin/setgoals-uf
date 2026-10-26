@@ -64,6 +64,13 @@
       "when": 1792979744193,
       "tag": "0008_mutual_friend_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792979836372,
+      "tag": "0009_restrict_direct_friend_request_writes",
+      "breakpoints": true
     }
   ]
 }
