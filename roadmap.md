@@ -1,4 +1,6 @@
 # Tasks
+- [ ] Require recipient acceptance for new friendships in web and Swift; retain friend removal.
+- [ ] Verify request permissions, acceptance, rejection/cancellation, and removal.
 - [x] Repair native rollover preference/allowance synchronization and backend rounding; repair secure friend search/addition.
 - [x] Preload account-scoped family data at app entry and refresh after changes.
 - [x] Make native tab reselection return from Settings to Profile without changing bar styling.
