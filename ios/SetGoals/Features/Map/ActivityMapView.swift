@@ -113,7 +113,7 @@ struct ActivityMapView: View {
                                 floatingCard(activity)
                             }
                             .scrollIndicators(.hidden)
-                            .frame(maxHeight: geometry.size.height * 0.44)
+                            .frame(maxHeight: geometry.size.height * 0.55)
                             .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
                             .clipShape(RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
@@ -279,8 +279,10 @@ struct ActivityMapView: View {
                             .foregroundStyle(on ? theme.primaryForeground : theme.p.s700)
                             .padding(.horizontal, 16).padding(.vertical, 8)
                             .background {
-                                Capsule().fill(.ultraThinMaterial)
-                                Capsule().fill(on ? theme.primary : theme.card.opacity(0.65))
+                                ZStack {
+                                    Capsule().fill(.ultraThinMaterial)
+                                    Capsule().fill(on ? theme.primary : theme.card.opacity(0.65))
+                                }
                             }
                             .overlay(Capsule().strokeBorder(theme.ringBorder, lineWidth: 1))
                     }
