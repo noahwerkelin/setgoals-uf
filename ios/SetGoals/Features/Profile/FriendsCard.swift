@@ -7,6 +7,8 @@ struct FriendsCard: View {
     @ObservedObject private var store = FriendsStore.shared
     private var friends: [FriendRow] { store.friends }
     @State private var showAdd = false
+    @State private var failed = false
+    @State private var busy = false
 
     var body: some View {
         CardSurface {
@@ -37,6 +39,39 @@ struct FriendsCard: View {
                     }
                 }
 
+                if !store.requests.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L.t("friends.requests")).font(F.xs).foregroundStyle(theme.p.s600)
+                        ForEach(store.requests) { request in
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(request.name).font(F.sans(14, .medium)).foregroundStyle(theme.foreground)
+                                    Text("@\(request.username)").font(F.text11).foregroundStyle(theme.p.s600)
+                                    if request.direction == "outgoing" {
+                                        Text(L.t("friends.pending")).font(F.text11).foregroundStyle(theme.p.s600)
+                                    }
+                                }.lineLimit(1)
+                                Spacer()
+                                if request.direction == "incoming" {
+                                    Button { respond(request, accept: true) } label: {
+                                        Image(systemName: "checkmark").font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(theme.p.s700).frame(width: 36, height: 36)
+                                    }.accessibilityLabel(L.t("friends.accept"))
+                                }
+                                Button { respond(request, accept: false) } label: {
+                                    Image(systemName: "xmark").font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(theme.p.s600).frame(width: 36, height: 36)
+                                }.accessibilityLabel(L.t(request.direction == "incoming" ? "friends.decline" : "friends.cancel"))
+                            }
+                            .padding(10)
+                            .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
+                            .disabled(busy)
+                        }
+                    }.padding(.top, 16)
+                }
+                if failed {
+                    Text(L.t("friends.error")).font(F.xs).foregroundStyle(theme.p.s600).padding(.top, 12)
+                }
                 if friends.isEmpty {
                     Text(L.t("friends.empty"))
                         .font(F.xs).foregroundStyle(theme.p.s600)
@@ -47,7 +82,7 @@ struct FriendsCard: View {
                         .padding(.top, 16)
                 } else {
                     VStack(spacing: 8) {
-                        ForEach(friends.prefix(5)) { f in
+                        ForEach(friends) { f in
                             HStack(spacing: 12) {
                                 Text(String(f.name.prefix(1)).uppercased())
                                     .font(F.sans(12, .semibold)).foregroundStyle(theme.p.s700)
@@ -62,8 +97,12 @@ struct FriendsCard: View {
                                 Spacer()
                                 Button {
                                     Task {
-                                        try? await SupabaseAPI.removeFriend(friendshipID: f.friendshipID)
-                                        await load()
+                                        busy = true; failed = false
+                                        defer { busy = false }
+                                        do {
+                                            try await SupabaseAPI.removeFriend(friendshipID: f.friendshipID)
+                                            await load()
+                                        } catch { failed = true }
                                     }
                                 } label: {
                                     Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
@@ -71,6 +110,7 @@ struct FriendsCard: View {
                                         .frame(width: 32, height: 32)
                                 }
                                 .accessibilityLabel(L.t("friends.remove"))
+                                .disabled(busy)
                             }
                             .padding(10)
                             .padding(.leading, 2)
@@ -83,11 +123,21 @@ struct FriendsCard: View {
             }
         }
         .sheet(isPresented: $showAdd) {
-            AddFriendSheet(existing: friends) { Task { await load() } }
+            AddFriendSheet(existing: friends, pending: store.requests.map(\.username)) { Task { await load() } }
                 .environmentObject(theme)
         }
     }
 
+    private func respond(_ request: FriendRequestRow, accept: Bool) {
+        Task {
+            busy = true; failed = false
+            defer { busy = false }
+            do {
+                try await SupabaseAPI.respondToFriendRequest(request.id, accept: accept)
+                await load()
+            } catch { failed = true }
+        }
+    }
     private func load() async { await store.refresh() }
 }
 
@@ -95,8 +145,11 @@ struct AddFriendSheet: View {
     @EnvironmentObject var theme: Theme
     @Environment(\.dismiss) private var dismiss
     let existing: [FriendRow]
+    let pending: [String]
     var onAdded: () -> Void
 
+    @ObservedObject private var store = FriendsStore.shared
+    @State private var sent = false
     @State private var q = ""
     @State private var results: [PublicUser] = []
     @State private var searching = false
@@ -120,6 +173,9 @@ struct AddFriendSheet: View {
                 .overlay(RoundedRectangle(cornerRadius: R.xl2, style: .continuous)
                     .strokeBorder(theme.ringBorder, lineWidth: 1))
 
+                if sent {
+                    Text(L.t("friends.pending")).font(F.xs).foregroundStyle(theme.p.s700)
+                }
                 ScrollView {
                     VStack(spacing: 8) {
                         if q.trimmingCharacters(in: .whitespaces).count < 2 {
@@ -139,6 +195,8 @@ struct AddFriendSheet: View {
                                         do {
                                             try await SupabaseAPI.addFriend(u.id)
                                             q = ""; results = []; failed = false
+                                            sent = true
+                                            await store.refresh()
                                             onAdded()
                                         } catch { failed = true }
                                     }
@@ -184,6 +242,7 @@ struct AddFriendSheet: View {
         .task(id: q) {
             let query = q.trimmingCharacters(in: .whitespaces)
             failed = false
+            sent = false
             guard query.count >= 2 else { results = []; return }
             searching = true
             do {
@@ -200,7 +259,7 @@ struct AddFriendSheet: View {
     }
 
     private var visible: [PublicUser] {
-        let taken = Set(existing.map { $0.username.lowercased() })
+        let taken = Set(existing.map { $0.username.lowercased() } + pending.map { $0.lowercased() } + store.requests.map { $0.username.lowercased() })
         return results.filter { !taken.contains($0.username.lowercased()) }
     }
 
