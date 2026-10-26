@@ -2,6 +2,8 @@
 - Swift friends views observe one account-scoped FriendsStore preloaded at authenticated app entry; refresh after mutations and foregrounding, never fetch on view appearance, so navigation reuses the same snapshot.
 - Swift Home and Screen Time observe one account-scoped FamilyStore preloaded at account entry and refreshed after mutations/foregrounding; this avoids view-entry loading and clears private snapshots on sign-out.
 - Settings uses a tab binding that dismisses its presentation on every tab selection, including Profile reselection, so the shared bottom bar behaves like a tab bar without visual changes.
+- Friend search, list and insertion use caller-scoped database functions exposing only public identity fields; normalized insertion derives its first endpoint from auth.uid(), preserving restrictive direct-table policies.
+- Native rollover restores the account preference without writing it back, reports measured usage before claiming, and synchronizes the resulting allowance with Apple's shared ledger immediately.
 - Keep personal earning-rule and cap edits PRO-gated in both settings interfaces and in a database validation trigger, so old clients cannot bypass subscription access; do not gate parent-managed child rules or daily step goals.
 - Keep the Swift and web upgrade views aligned using the existing semantic themes and bilingual translation dictionaries; preserve the existing purchase, restore, and child inheritance flows.
 - The iOS AI coach goes through one authenticated server route that reads data via RLS as the caller; the model may only propose actions (goal, challenge, navigation) that the app applies after user confirmation, so AI output can never change settings or grant screen time.

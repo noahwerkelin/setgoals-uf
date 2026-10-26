@@ -16,21 +16,9 @@ export const searchUsersByUsername = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => SearchInput.parse(d))
   .handler(async ({ data, context }): Promise<PublicUser[]> => {
-    const q = data.query.trim().toLowerCase().replace(/[%_]/g, "");
-    if (q.length < 2) return [];
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
-      .from("profiles")
-      .select("id, username, display_name")
-      .ilike("username", `%${q}%`)
-      .neq("id", context.userId)
-      .limit(8);
+    const { data: rows, error } = await context.supabase.rpc("search_friend_users", { _query: data.query });
     if (error) throw error;
-    return (rows ?? []).map((r) => ({
-      id: r.id,
-      username: r.username,
-      name: r.display_name || r.username,
-    }));
+    return rows ?? [];
   });
 
 /** Today's real step totals for a set of friend ids. */
@@ -56,30 +44,9 @@ export const getFriendsSteps = createServerFn({ method: "POST" })
 export const getFriendships = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Friendship[]> => {
-    const { data: rows, error } = await context.supabase
-      .from("friendships")
-      .select("id, user_id, friend_id")
-      .or(`user_id.eq.${context.userId},friend_id.eq.${context.userId}`);
+    const { data: rows, error } = await context.supabase.rpc("my_friends");
     if (error) throw error;
-    if (!rows?.length) return [];
-
-    const friendIds = rows.map((r) => (r.user_id === context.userId ? r.friend_id : r.user_id));
-    const { data: profiles } = await context.supabase
-      .from("profiles")
-      .select("id, username, display_name")
-      .in("id", friendIds);
-    const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-
-    return rows.map((r) => {
-      const fid = r.user_id === context.userId ? r.friend_id : r.user_id;
-      const p = profileMap.get(fid);
-      return {
-        id: fid,
-        friend_id: r.id, // friendship row id, for deletion
-        username: p?.username ?? "",
-        name: p?.display_name || p?.username || "",
-      };
-    });
+    return (rows ?? []).map((r) => ({ id: r.id, friend_id: r.friendship_id, username: r.username, name: r.name }));
   });
 
 /** Add a friend by user id. Returns the new friend id. */
@@ -98,8 +65,7 @@ export const addFriendship = createServerFn({ method: "POST" })
     if (existing) return { error: "Already friends" };
 
     const { error } = await context.supabase
-      .from("friendships")
-      .insert({ user_id: context.userId, friend_id: data.friend_id });
+      .rpc("add_my_friend", { _friend_id: data.friend_id });
     if (error) return { error: error.message };
     return { ok: true };
   });

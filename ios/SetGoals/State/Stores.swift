@@ -89,6 +89,7 @@ final class SettingsStore: ObservableObject {
             shareLocation = s.share_location
             proSince = s.pro_since
             themeColor = ThemeColor(rawValue: s.theme_color) ?? .sage
+            ProSTStore.shared.restoreRollover(s.st_rollover)
         }
         if role == "child", let fam = try? await SupabaseAPI.parentFamilyStatus(), let fam {
             parentFamilyActive = fam.active
@@ -96,12 +97,16 @@ final class SettingsStore: ObservableObject {
             parentFamilyEndsAt = fam.ends_at
             isPro = isPro || fam.active
         }
-        if let b = try? await SupabaseAPI.todayBalance(), let b {
-            bonusMin = b.bonus_min
-        }
+        let balance = try? await SupabaseAPI.todayBalance()
+        bonusMin = balance?.bonus_min ?? 0
+        rolloverMin = isPro && ProSTStore.shared.rollover ? balance?.rollover_min ?? 0 : 0
         // Upload measured Screen Time usage first so yesterday's leftover is exact.
-        await SupabaseAPI.reportConsumedUsage()
-        rolloverMin = isPro ? await SupabaseAPI.claimRollover() : 0
+        let usageReported = await SupabaseAPI.reportConsumedUsage()
+        if usageReported, isPro, ProSTStore.shared.rollover {
+            rolloverMin = await SupabaseAPI.claimRollover()
+        }
+        let base = earnedMin(from: HealthKitService.shared.steps) + rolloverMin + bonusMin
+        ScreenTimeService.shared.setBaseAllowance(base)
         if let st = try? await SupabaseAPI.streak(), let st {
             streakCount = st.count
             streakBest = st.best
