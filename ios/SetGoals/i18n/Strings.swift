@@ -55,7 +55,7 @@ enum L {
     static let dict: [String: [String: String]] = [
         "en": [
             "nav.home": "Home", "nav.map": "Map", "nav.goals": "Goals",
-            "nav.coach": "Coach", "nav.profile": "Profile",
+            "nav.profile": "Profile",
 
             "home.steps_of": "of {goal} steps",
             "home.earned": "Earned", "home.remaining": "Remaining",
@@ -111,7 +111,7 @@ enum L {
         ],
         "sv": [
             "nav.home": "Hem", "nav.map": "Karta", "nav.goals": "Mål",
-            "nav.coach": "Coach", "nav.profile": "Profil",
+            "nav.profile": "Profil",
 
             "home.steps_of": "av {goal} steg",
             "home.earned": "Intjänat", "home.remaining": "Kvar",

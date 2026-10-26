@@ -61,7 +61,7 @@ struct UpgradeDialog: View {
     @State private var note: String?
 
     private var features: [String] {
-        var f = ["pro.feature.earning", "pro.feature.bonus", "pro.feature.coach", "pro.feature.parental",
+        var f = ["pro.feature.earning", "pro.feature.bonus", "pro.feature.parental",
                  "pro.feature.stats", "pro.feature.theme", "pro.feature.premium_badge"]
         if plan.isFamily { f.append("pro.feature.family") }
         return f
@@ -138,7 +138,6 @@ struct UpgradeDialog: View {
         switch key {
         case "pro.feature.earning": return "slider.horizontal.3"
         case "pro.feature.bonus": return "arrow.trianglehead.clockwise"
-        case "pro.feature.coach": return "bubble.left.and.bubble.right"
         case "pro.feature.parental": return "checkmark.shield"
         case "pro.feature.stats": return "chart.bar.xaxis"
         case "pro.feature.theme": return "paintpalette"

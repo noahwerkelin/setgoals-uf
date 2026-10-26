@@ -312,7 +312,7 @@ struct StatsView: View {
                 .strokeBorder(theme.ringBorder, lineWidth: 1))
 
             // Personal messages
-            let messages = Insights.messages(ins)
+            let messages = Insights.messages(ins, name: settings.displayName.isEmpty ? settings.username : settings.displayName)
             if !messages.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(L.t("stats.pro.messages")).eyebrow(theme.p.s600)
@@ -429,6 +429,12 @@ struct Insights {
     var worstWeekday: Int
     var weekendScreenBias: Double
     var activeDays: Int
+    var stepsToday: Int
+    var goalLeftToday: Int
+    var avgSteps30: Int
+    var personalBestSteps: Int
+    var personalBestDay: String
+    var goalStreak: Int
 
     private static func avg(_ xs: [Double]) -> Double {
         xs.isEmpty ? 0 : xs.reduce(0, +) / Double(xs.count)
@@ -512,38 +518,79 @@ struct Insights {
         let trendComponent = max(0, min(1, 0.5 + trend30 / 200))
         let score = Int((goalHitRatio * 40 + avgRatio * 30 + consistency * 15 + trendComponent * 15).rounded())
 
+        // Today, personal best and current goal streak.
+        let todayKey = SupabaseAPI.todayKey
+        let todayRow = history.last
+        let stepsToday = (todayRow?.day == todayKey) ? (todayRow?.steps ?? 0) : 0
+        let goalLeftToday = max(0, dailyGoal - stepsToday)
+        let avgSteps30 = Int(avg(last30).rounded())
+        var personalBestSteps = 0
+        var personalBestDay = ""
+        for d in history.suffix(30) where d.steps > personalBestSteps {
+            personalBestSteps = d.steps
+            personalBestDay = d.day
+        }
+        var goalStreak = 0
+        for d in history.reversed() {
+            if Double(d.steps) >= goal { goalStreak += 1 }
+            else if d.day == todayKey { continue } // today may still be in progress
+            else { break }
+        }
+
         return Insights(activityScore: max(0, min(100, score)),
                         trend7: trend7, trend30: trend30, trend90: trend90,
                         forecastSteps: forecast,
                         bestWeekday: maxIdx, worstWeekday: minIdx,
                         weekendScreenBias: bias,
-                        activeDays: last30.filter { $0 >= goal }.count)
+                        activeDays: last30.filter { $0 >= goal }.count,
+                        stepsToday: stepsToday,
+                        goalLeftToday: goalLeftToday,
+                        avgSteps30: avgSteps30,
+                        personalBestSteps: personalBestSteps,
+                        personalBestDay: personalBestDay,
+                        goalStreak: goalStreak)
     }
 
-    /// Port of `buildMessages` — at most three personal notes.
-    static func messages(_ ins: Insights) -> [String] {
+    /// Port of `buildMessages` — personal, coach-style notes from real
+    /// history only. At most four notes.
+    static func messages(_ ins: Insights, name: String) -> [String] {
         var msgs: [String] = []
-        let best = L.weekdayPlural(ins.bestWeekday)
-        let worst = L.weekdayPlural(ins.worstWeekday)
+        let cap: (String) -> String = { $0.prefix(1).uppercased() + $0.dropFirst() }
+        let best = cap(L.weekdayPlural(ins.bestWeekday))
+        let worst = cap(L.weekdayPlural(ins.worstWeekday))
+        let who = name.isEmpty ? L.t("insights.msg.you") : name
+        let walkMin = max(5, ins.goalLeftToday / 100)
+        let fmt: (Int) -> String = { $0.formatted() }
 
-        msgs.append(L.t("insights.msg.best_day", ["d": best]))
-        if ins.weekendScreenBias > 10 {
-            msgs.append(L.t("insights.msg.weekend_more", ["pct": "\(Int(ins.weekendScreenBias.rounded()))"]))
-        } else if ins.weekendScreenBias < -10 {
-            msgs.append(L.t("insights.msg.weekend_less", ["pct": "\(Int(ins.weekendScreenBias.rounded()))"]))
+        if ins.goalLeftToday > 0 {
+            msgs.append(L.t("insights.msg.goal_left", ["name": who, "n": fmt(ins.goalLeftToday), "m": "\(walkMin)"]))
+        } else {
+            msgs.append(L.t("insights.msg.goal_done", ["name": who]))
+        }
+        if ins.goalStreak >= 3 {
+            msgs.append(L.t("insights.msg.streak", ["n": "\(ins.goalStreak)"]))
         }
         if ins.trend30 > 5 {
             msgs.append(L.t("insights.msg.trend_up", ["pct": "\(Int(ins.trend30.rounded()))"]))
         } else if ins.trend30 < -5 {
             msgs.append(L.t("insights.msg.trend_down", ["pct": "\(Int(abs(ins.trend30).rounded()))"]))
         }
-        if ins.activeDays >= 20 {
-            msgs.append(L.t("insights.msg.strong_month", ["n": "\(ins.activeDays)"]))
-        }
+        msgs.append(L.t("insights.msg.best_day", ["d": best]))
         if worst != best {
             msgs.append(L.t("insights.msg.quietest", ["d": worst]))
         }
-        return Array(msgs.prefix(3))
+        if ins.personalBestSteps > 0 {
+            msgs.append(L.t("insights.msg.personal_best", ["n": fmt(ins.personalBestSteps)]))
+        }
+        if ins.activeDays >= 20 {
+            msgs.append(L.t("insights.msg.strong_month", ["name": who, "n": "\(ins.activeDays)"]))
+        }
+        if ins.weekendScreenBias > 10 {
+            msgs.append(L.t("insights.msg.weekend_more", ["pct": "\(Int(ins.weekendScreenBias.rounded()))"]))
+        } else if ins.weekendScreenBias < -10 {
+            msgs.append(L.t("insights.msg.weekend_less", ["pct": "\(Int(ins.weekendScreenBias.rounded()))"]))
+        }
+        return Array(msgs.prefix(4))
     }
 }
 

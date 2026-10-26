@@ -28,7 +28,6 @@ struct ProfileView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var uploading = false
     @State private var showSettings = false
-    @State private var showCoach = false
 
     private var stepsToday: Int { health.steps }
     private var isChild: Bool { settings.role == "child" }
@@ -54,7 +53,6 @@ struct ProfileView: View {
             VStack(spacing: 24) {
                 hero
                 StatsView(tab: $tab, embedded: true)
-                SecondaryButton(title: L.t("dashboard.coach")) { showCoach = true }
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 32)
@@ -65,19 +63,6 @@ struct ProfileView: View {
         }
         .fullScreenCover(isPresented: $showSettings) {
             SettingsView(tab: $tab).environmentObject(theme).environmentObject(settings)
-        }
-        .fullScreenCover(isPresented: $showCoach) {
-            CoachView(tab: $tab)
-                .environmentObject(theme).environmentObject(settings)
-                .overlay(alignment: .topTrailing) {
-                    Button { showCoach = false } label: {
-                        Image(systemName: "xmark").frame(width: 44, height: 44)
-                            .foregroundStyle(theme.primary).background(theme.card, in: Circle())
-                    }
-                    .accessibilityLabel(L.t("settings.cancel"))
-                    .padding(.trailing, 24)
-                }
-                .onChange(of: tab) { _, _ in showCoach = false }
         }
     }
 
