@@ -1,4 +1,7 @@
 # Tasks
+- [ ] Share existing username validation across Swift regular and child creation/editing; add bilingual, nonblocking availability checks.
+- [ ] Enforce case-insensitive global username uniqueness safely in the existing database, preserving accounts and relationships.
+- [ ] Provide separate SQL and safe application instructions; verify validation, database enforcement, and native source checks.
 - [x] Redesign Swift Map with full-screen movable Map mode, one expanded random floating location, blurred controls, and separate expandable List mode in English/Swedish.
 - [x] Parse changed Swift Map view and check bilingual labels; preserve nearby search, directions and shared bottom navigation.
 - [ ] Verify new native Map/List interaction and appearance; blocked by unavailable Xcode/device runtime.
