@@ -209,7 +209,7 @@ Last updated: 2026-10-27
 """,
 
             "legal.terms.body": """
-Last updated: 2026-09-06
+Last updated: 2026-10-27
 These Terms of Use ("the Terms") apply to the use of the SetGoals mobile application ("SetGoals", "the app", "the service") provided by SetGoals UF ("SetGoals", "we", "us").
 By creating an account or using SetGoals, you accept these Terms. If you do not accept the Terms, you must not use the service.
 ## 1. About SetGoals
@@ -300,8 +300,8 @@ PRO costs:
 * SEK 49 per month, or
 * SEK 490 per year.
 PRO includes:
+* the ability to change your own earning rules and daily screen-time limit,
 * the ability to save the previous day's unused screen time as a bonus,
-* a personal coach,
 * advanced parental controls,
 * deeper statistics and insights,
 * exclusive colour themes,
@@ -333,14 +333,7 @@ The service may be affected by, for example:
 * problems with external services,
 * changes to Apple's operating system or APIs.
 We may temporarily limit or shut down parts of the service when required for maintenance, security or technical measures.
-## 15. Coach
-SetGoals may offer a personal coach as a premium feature.
-The coach is a technical aid and does not replace a doctor, psychologist, dietitian or other qualified professional.
-AI-generated recommendations may be incorrect or inappropriate. The user should therefore not make medical or other important decisions based solely on the coach's responses.
-SetGoals does not use the coach as a replacement for professional medical advice.
-SetGoals may use your screen-time data, location, name and motion data for the coach in order to provide answers depending on your question.
-SetGoals uses Google Gemini via the Lovable AI Gateway as the coach.
-## 16. Suspension and termination of account
+## 15. Suspension and termination of account
 The user can terminate their account using the features SetGoals offers.
 We may temporarily restrict or terminate an account if:
 * the user breaches the Terms,
@@ -349,20 +342,20 @@ We may temporarily restrict or terminate an account if:
 * continued use constitutes a security risk,
 * we are required to do so by law.
 When an account is terminated, associated information may be deleted in accordance with our Privacy Policy and our legal obligations.
-## 17. Changes to the service
+## 16. Changes to the service
 SetGoals may develop, change or remove features in the service.
 If a change constitutes a material deterioration for the user or requires a change to these Terms, we will, where required, inform the user in an appropriate manner.
-## 18. Changes to the Terms
+## 17. Changes to the Terms
 We may update these Terms when necessary, for example due to changes in the service, legislation or technical conditions.
 For significant changes, the user will be informed in an appropriate manner before the change takes effect, where this is required.
-## 19. Applicable law
+## 18. Applicable law
 These Terms are governed by Swedish law.
 If the user is a consumer, this does not affect the rights the user has under mandatory consumer legislation.
-## 20. Contact
+## 19. Contact
 Questions about these Terms can be sent to:
 SetGoals UF Sweden
 Email: kontakt@setgoals.se
-Last updated: 2026-09-06
+Last updated: 2026-10-27
 """,
 
             "legal.subs.body": """
@@ -698,7 +691,7 @@ Senast uppdaterad: 2026-10-27
 """,
 
             "legal.terms.body": """
-Senast uppdaterad: 2026-09-06
+Senast uppdaterad: 2026-10-27
 Dessa användarvillkor ("Villkoren") gäller för användningen av mobilapplikationen SetGoals ("SetGoals", "appen", "tjänsten") som tillhandahålls av SetGoals UF ("SetGoals", "vi", "oss").
 Genom att skapa ett konto eller använda SetGoals godkänner du dessa Villkor. Om du inte godkänner Villkoren ska du inte använda tjänsten.
 ## 1. Om SetGoals
@@ -789,8 +782,8 @@ PRO kostar:
 * 49 SEK per månad, eller
 * 490 SEK per år.
 PRO innehåller:
+* Möjlighet att ändra dina egna intjäningsregler och dagliga skärmtidsgräns,
 * möjlighet att spara föregående dags oanvända skärmtid som bonus,
-* personlig coach,
 * avancerade föräldrakontroller,
 * djupare statistik och insikter,
 * exklusiva färgteman,
@@ -822,14 +815,7 @@ Tjänsten kan påverkas av exempelvis:
 * problem hos externa tjänster,
 * förändringar i Apples operativsystem eller API:er.
 Vi kan tillfälligt begränsa eller stänga av delar av tjänsten när det krävs för underhåll, säkerhet eller tekniska åtgärder.
-## 15. Coach
-SetGoals kan erbjuda en personlig coach som premiumfunktion.
-Coachen är ett tekniskt hjälpmedel och ersätter inte läkare, psykolog, dietist eller annan kvalificerad yrkesperson.
-AI-genererade rekommendationer kan vara felaktiga eller olämpliga. Användaren bör därför inte fatta medicinska eller andra viktiga beslut enbart baserat på coachens svar.
-SetGoals använder inte coachen som ersättning för professionell medicinsk rådgivning.
-SetGoals kan använda din skärmtidsdata, plats, namn och rörelsedata till coachen för att ge svar beroende på din fråga.
-SetGoals använder Google Gemini via Lovable AI Gateway som coach.
-## 16. Avstängning och avslutande av konto
+## 15. Avstängning och avslutande av konto
 Användaren kan avsluta sitt konto enligt de funktioner som SetGoals erbjuder.
 Vi kan tillfälligt begränsa eller avsluta ett konto om:
 * användaren bryter mot Villkoren,
@@ -838,21 +824,21 @@ Vi kan tillfälligt begränsa eller avsluta ett konto om:
 * fortsatt användning innebär en säkerhetsrisk,
 * vi enligt lag måste göra det.
 När ett konto avslutas kan tillhörande information raderas i enlighet med vår Integritetspolicy och våra rättsliga skyldigheter.
-## 17. Ändringar av tjänsten
+## 16. Ändringar av tjänsten
 SetGoals kan utveckla, ändra eller ta bort funktioner i tjänsten.
 Om en förändring innebär en väsentlig försämring för användaren eller kräver ändring av dessa Villkor kommer vi, när det krävs, att informera användaren på lämpligt sätt.
-## 18. Ändringar av Villkoren
+## 17. Ändringar av Villkoren
 Vi kan uppdatera dessa Villkor när det behövs, exempelvis på grund av ändringar i tjänsten, lagstiftningen eller tekniska förutsättningar.
 Vid väsentliga ändringar kommer användaren att informeras på lämpligt sätt innan ändringen träder i kraft, när detta krävs.
-## 19. Tillämplig lag
+## 18. Tillämplig lag
 Dessa Villkor regleras av svensk rätt.
 Om användaren är konsument påverkar detta inte de rättigheter som användaren har enligt tvingande konsumentlagstiftning.
-## 20. Kontakt
+## 19. Kontakt
 Frågor om dessa Villkor kan skickas till:
 SetGoals UF
 Sverige
 E-post: kontakt@setgoals.se
-Senast uppdaterad: 2026-09-06
+Senast uppdaterad: 2026-10-27
 """,
 
             "legal.subs.body": """
