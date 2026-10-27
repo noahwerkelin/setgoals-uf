@@ -109,11 +109,7 @@ struct ActivityMapView: View {
                         filterRow
                         Spacer(minLength: 16)
                         if let activity = selectedActivity {
-                            ScrollView {
-                                floatingCard(activity)
-                            }
-                            .scrollIndicators(.hidden)
-                            .frame(maxHeight: geometry.size.height * 0.55)
+                            floatingCard(activity)
                             .background(theme.card, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
                             .clipShape(RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
@@ -123,9 +119,9 @@ struct ActivityMapView: View {
                                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: R.xl2))
                         }
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 16)
                     .padding(.top, 12)
-                    .padding(.bottom, 108)
+                    .padding(.bottom, 92)
                 } else {
                     VStack(spacing: 16) {
                         topControls
@@ -203,9 +199,13 @@ struct ActivityMapView: View {
                 Map(position: $camera, interactionModes: [.pan, .zoom]) {
                     Annotation(L.t("map.you_here"), coordinate: c, anchor: .center) { youDot }
                         .annotationTitles(.hidden)
-                    if let a = selectedActivity {
+                    ForEach(visible) { a in
+                        let isSelected = a.id == selectedID
                         Annotation(a.name, coordinate: a.coord, anchor: .bottom) {
-                            SagePin(kind: a.kind, size: 40)
+                            SagePin(kind: a.kind, size: isSelected ? 42 : 28)
+                                .opacity(isSelected ? 1 : 0.85)
+                                .onTapGesture { selectedID = a.id }
+                                .animation(.spring(duration: 0.25), value: isSelected)
                         }
                         .annotationTitles(.hidden)
                     }
@@ -239,23 +239,56 @@ struct ActivityMapView: View {
     }
 
     private func floatingCard(_ a: NearbyActivity) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(a.name).font(F.sans(18, .semibold)).foregroundStyle(theme.foreground)
-                    let d = settings.formatDistance(a.distanceM / 1000)
-                    Text("\(L.t("map.kind.\(a.kind.rawValue)")) · \(d.0) \(d.1)")
-                        .font(F.xs).foregroundStyle(theme.p.s600)
-                    Text(subtitle(a)).eyebrow(theme.p.s500)
+        let d = settings.formatDistance(a.distanceM / 1000)
+        return HStack(spacing: 12) {
+            Group {
+                if let photo = a.photoUrl, let url = URL(string: photo) {
+                    AsyncImage(url: url) { phase in
+                        if let image = phase.image {
+                            image.resizable().scaledToFill()
+                        } else {
+                            theme.p.s100.overlay { SagePin(kind: a.kind, size: 28) }
+                        }
+                    }
+                } else {
+                    theme.p.s100.overlay { SagePin(kind: a.kind, size: 28) }
                 }
-                Spacer(minLength: 0)
-                circleButton("shuffle", label: L.t("map.random_location")) { shuffleLocation() }
-                    .disabled(visible.count < 2)
-                    .opacity(visible.count < 2 ? 0.5 : 1)
             }
-            activityDetails(a, photoHeight: 112)
+            .frame(width: 64, height: 64)
+            .clipShape(RoundedRectangle(cornerRadius: R.xl, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(a.name).font(F.sans(15, .semibold)).lineLimit(1)
+                    .foregroundStyle(theme.foreground)
+                Text("\(L.t("map.kind.\(a.kind.rawValue)")) · \(d.0) \(d.1)")
+                    .font(F.xs).foregroundStyle(theme.p.s600).lineLimit(1)
+                if let addr = a.address {
+                    Text(addr).font(F.xs).foregroundStyle(theme.p.s500).lineLimit(1)
+                }
+            }
+            Spacer(minLength: 0)
+            VStack(spacing: 6) {
+                Button { openDirections(a) } label: {
+                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(theme.primaryForeground)
+                        .frame(width: 36, height: 36)
+                        .background(theme.primary, in: Circle())
+                }
+                .accessibilityLabel(L.t("map.start"))
+                Button { shuffleLocation() } label: {
+                    Image(systemName: "shuffle")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(theme.p.s700)
+                        .frame(width: 36, height: 36)
+                        .background(theme.p.s100, in: Circle())
+                }
+                .accessibilityLabel(L.t("map.random_location"))
+                .disabled(visible.count < 2)
+                .opacity(visible.count < 2 ? 0.5 : 1)
+            }
         }
-        .padding(16)
+        .padding(10)
     }
 
     private var youDot: some View {
