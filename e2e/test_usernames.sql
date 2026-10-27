@@ -39,8 +39,8 @@ BEGIN
  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  PERFORM set_config('request.jwt.claims','{"role":"service_role"}',true);
  -- Real auth trigger path, inside the rollback-only transaction.
- INSERT INTO auth.users(id,instance_id,aud,role,email,encrypted_password,raw_user_meta_data,created_at,updated_at)
- VALUES(cuser,'00000000-0000-0000-0000-000000000000','authenticated','authenticated','child.'||child||'@child.setgoals.app','',jsonb_build_object('username',testname),now(),now());
+ INSERT INTO auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,raw_user_meta_data,created_at,updated_at)
+ VALUES(cuser,'00000000-0000-0000-0000-000000000000','authenticated','authenticated','child.'||child||'@child.setgoals.app','',now(),jsonb_build_object('username',testname),now(),now());
  IF NOT EXISTS(SELECT 1 FROM public.profiles WHERE id=cuser AND username=testname) OR NOT EXISTS(SELECT 1 FROM public.children WHERE id=child AND auth_user_id=cuser AND username=testname) THEN RAISE EXCEPTION 'Child redemption did not preserve username and link'; END IF;
  UPDATE public.children SET username=testname||'x' WHERE id=child;
  IF NOT EXISTS(SELECT 1 FROM public.profiles WHERE id=cuser AND username=testname||'x') THEN RAISE EXCEPTION 'Parent rename not synced'; END IF;
