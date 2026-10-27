@@ -78,6 +78,13 @@
       "when": 1793113549825,
       "tag": "0010_global_username_reservations",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793113630840,
+      "tag": "0011_lock_private_username_reservations",
+      "breakpoints": true
     }
   ]
 }
