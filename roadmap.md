@@ -1,4 +1,6 @@
 # Tasks
+- [x] Replace the Subscription & Payment Terms body in Swedish and English with the supplied 2026-10-27 text; other documents unchanged.
+- [ ] Verify the updated legal documents render correctly in the iPhone app; blocked by unavailable Xcode/device runtime.
 - [x] Share existing username validation across Swift regular and child creation/editing; add bilingual, nonblocking availability checks.
 - [x] Enforce case-insensitive global username uniqueness safely in the existing database, preserving accounts and relationships.
 - [x] Provide separate SQL and safe application instructions; shared rule tests, rollback database tests and native syntax checks passed.
