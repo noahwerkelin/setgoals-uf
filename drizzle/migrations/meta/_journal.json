@@ -85,6 +85,13 @@
       "when": 1793113630840,
       "tag": "0011_lock_private_username_reservations",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793113725299,
+      "tag": "0012_verify_child_signup_link",
+      "breakpoints": true
     }
   ]
 }
