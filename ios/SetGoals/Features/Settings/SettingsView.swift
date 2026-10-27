@@ -107,7 +107,6 @@ struct SettingsView: View {
         .sheet(isPresented: $usernameOpen) {
             UsernameDialog(current: settings.username) { v in
                 settings.username = v
-                Task { try? await SupabaseAPI.updateProfile(["username": .string(v)]) }
             }
         }
         .sheet(isPresented: $emailOpen) {
