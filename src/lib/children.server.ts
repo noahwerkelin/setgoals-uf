@@ -28,12 +28,17 @@ export async function redeemChildCodeServer(code: string): Promise<{ email: stri
 
     const email = `child.${child.id}@child.setgoals.app`;
     const password = randomPassword();
+    const signupToken = randomPassword();
+    const { error: tokenError } = await supabaseAdmin.from("children")
+      .update({ signup_token: signupToken }).eq("id", child.id).is("auth_user_id", null);
+    if (tokenError) throw tokenError;
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       user_metadata: {
         child_profile_id: child.id,
+        child_signup_token: signupToken,
         display_name: child.name,
         avatar_url: child.avatar,
         ...(child.username ? { username: child.username } : {}),
