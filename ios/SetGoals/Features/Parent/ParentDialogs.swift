@@ -92,6 +92,21 @@ struct ChildEditDialog: View {
     @State private var saving = false
     @State private var error: String?
     @State private var showEmojis = false
+    @State private var usernameAvailable = false
+    @State private var checkedUsername = ""
+    @State private var checkingUsername = false
+    @State private var usernameError: String?
+
+    private var unchangedUsername: Bool {
+        guard let child else { return false }
+        return UsernameRules.normalize(username) == UsernameRules.normalize(child.username ?? "")
+    }
+
+    private var canSave: Bool {
+        !uploading && !saving && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && (unchangedUsername || (UsernameRules.isValid(username) && usernameAvailable
+                && checkedUsername == UsernameRules.normalize(username)))
+    }
 
     var body: some View {
         ScrollView {
@@ -111,13 +126,14 @@ struct ChildEditDialog: View {
                             TextField(L.t("dashboard.username_placeholder"), text: $username)
                                 .autocorrectionDisabled()
                                 .textInputAutocapitalization(.never)
-                                .onChange(of: username) { _, v in
-                                    username = String(v.lowercased()
-                                        .filter { $0.isLetter && $0.isASCII || $0.isNumber || $0 == "_" }
-                                        .prefix(20))
-                                }
+                                .font(F.sm)
                         }
                         .fieldStyle()
+                        if checkingUsername {
+                            Text(L.t("ob.signup.checking")).font(F.xs).foregroundStyle(theme.mutedForeground)
+                        } else if let usernameError {
+                            Text(usernameError).font(F.xs).foregroundStyle(theme.destructive)
+                        }
                     }
 
                     field(L.t("auth.birthday")) {
@@ -161,7 +177,7 @@ struct ChildEditDialog: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 8) {
                 PrimaryButton(title: saving ? L.t("parent.child.saving") : L.t(isNew ? "parent.add_child" : "parent.child.save"),
-                              busy: saving, enabled: !uploading) { Task { await save() } }
+                              busy: saving, enabled: canSave) { Task { await save() } }
                 GhostButton(title: L.t("settings.cancel")) { dismiss() }.buttonStyle(FlatPress())
             }
             .padding(.horizontal, 24).padding(.vertical, 12)
@@ -172,6 +188,7 @@ struct ChildEditDialog: View {
         .presentationCornerRadius(R.xl3)
         .presentationDetents([.large])
         .onAppear(perform: seed)
+        .task(id: username) { await checkUsername() }
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
             Task { await pick(item) }
@@ -273,36 +290,70 @@ struct ChildEditDialog: View {
         avatar = url
     }
 
+    @MainActor
+    private func checkUsername() async {
+        let candidate = UsernameRules.normalize(username)
+        usernameAvailable = false
+        checkingUsername = false
+        usernameError = nil
+        if unchangedUsername { checkedUsername = candidate; usernameAvailable = true; return }
+        if let key = UsernameRules.validationKey(candidate) {
+            if !candidate.isEmpty { usernameError = L.t(key) }
+            return
+        }
+        checkingUsername = true
+        do {
+            try await Task.sleep(for: .milliseconds(400))
+            let available = try await SupabaseAPI.usernameAvailable(candidate, excludingChildID: child?.id)
+            guard !Task.isCancelled, candidate == UsernameRules.normalize(username) else { return }
+            checkedUsername = candidate
+            usernameAvailable = available
+            checkingUsername = false
+            usernameError = available ? nil : L.t("account.username.taken")
+        } catch {
+            guard !Task.isCancelled, candidate == UsernameRules.normalize(username) else { return }
+            checkingUsername = false
+            usernameError = L.t("auth.username_check_failed")
+        }
+    }
+
+    @MainActor
     private func save() async {
+        guard !saving else { return }
         error = nil
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         guard !trimmedName.isEmpty else { error = L.t("parent.child.name_required"); return }
-        guard username.count >= 3 else { error = L.t("parent.child.username_required"); return }
-        if existing.contains(where: { $0.id != child?.id && ($0.username ?? "").lowercased() == username.lowercased() }) {
-            error = L.t("parent.child.username_taken"); return
-        }
+        let candidate = UsernameRules.normalize(username)
+        if !unchangedUsername, let key = UsernameRules.validationKey(candidate) { error = L.t(key); return }
         saving = true
         defer { saving = false }
         do {
+            if !unchangedUsername {
+                guard try await SupabaseAPI.usernameAvailable(candidate, excludingChildID: child?.id) else {
+                    usernameAvailable = false
+                    error = L.t("account.username.taken"); return
+                }
+            }
             if let c = child {
-                try await SupabaseAPI.updateChild(c.id, [
+                var patch: [String: AnyJSON] = [
                     "name": .string(trimmedName),
-                    "username": .string(username),
                     "avatar": .string(avatar),
                     "birthday": birthday.isEmpty ? .null : .string(birthday),
                     "daily_goal": .integer(Int(dailyGoal)),
                     "steps_per_30": .integer(Int(stepsPer30)),
                     "daily_cap_hours": .integer(Int(capHours)),
-                ])
+                ]
+                if !unchangedUsername { patch["username"] = .string(candidate) }
+                try await SupabaseAPI.updateChild(c.id, patch)
             } else {
-                try await SupabaseAPI.createChild(name: trimmedName, username: username, avatar: avatar,
+                try await SupabaseAPI.createChild(name: trimmedName, username: candidate, avatar: avatar,
                                                   birthday: birthday, dailyGoal: Int(dailyGoal),
                                                   stepsPer30: Int(stepsPer30), dailyCapHours: Int(capHours))
             }
             await onDone()
             dismiss()
         } catch {
-            self.error = error.localizedDescription
+            self.error = UsernameRules.errorMessage(error)
         }
     }
 }

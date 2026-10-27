@@ -893,6 +893,21 @@ export type Database = {
         }
         Relationships: []
       }
+      username_reservations: {
+        Row: {
+          owner_id: string
+          username: string
+        }
+        Insert: {
+          owner_id: string
+          username: string
+        }
+        Update: {
+          owner_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1073,7 +1088,12 @@ export type Database = {
           username: string
         }[]
       }
+      setgoals_parent_gift: {
+        Args: { p_child_id: string; p_minutes: number; p_note?: string }
+        Returns: undefined
+      }
       username_available: { Args: { _username: string }; Returns: boolean }
+      username_is_valid: { Args: { _username: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
