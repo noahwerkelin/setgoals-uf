@@ -5,6 +5,9 @@ import Foundation
 extension L {
     static let parentStrings: [String: [String: String]] = [
         "en": [
+            "username.too_short": "Username must have at least 3 characters.",
+            "username.too_long": "Username must have no more than 20 characters.",
+            "username.characters": "Use only letters A–Z, numbers 0–9, or underscores.",
             "parent.child.delete_desc": "This permanently deletes {n}'s profile and account, including all activity data. They will be signed out immediately. This cannot be undone.",
             "parent.child_locked": "Your parent sets these rules.",
             "auth.copied": "Copied",
@@ -61,7 +64,7 @@ extension L {
             "parent.child.upload_photo": "Upload photo",
             "parent.child.uploading": "Uploading\u2026",
             "parent.child.username_required": "Add a name and a username (min 3 characters) for your child.",
-            "parent.child.username_taken": "That username is already used by another child.",
+            "parent.child.username_taken": "That username is already taken.",
             "parent.child_screentime": "{n}'s screen time",
             "parent.child_screentime_sub": "Earning ratio and daily cap for {n}.",
             "parent.children": "Children",
@@ -100,6 +103,9 @@ extension L {
             "stmode.hint": "Choose whether this category is always available, or only when the user has screen time to spend.",
         ],
         "sv": [
+            "username.too_short": "Användarnamnet måste ha minst 3 tecken.",
+            "username.too_long": "Användarnamnet får ha högst 20 tecken.",
+            "username.characters": "Använd endast bokstäver A–Z, siffror 0–9 eller understreck.",
             "parent.child.delete_desc": "Detta raderar {n}:s profil och konto permanent, inklusive all aktivitetsdata. Barnet loggas ut direkt. Detta g\u00e5r inte att \u00e5ngra.",
             "parent.child_locked": "Din f\u00f6r\u00e4lder best\u00e4mmer dessa regler.",
             "auth.copied": "Kopierat",
@@ -156,7 +162,7 @@ extension L {
             "parent.child.upload_photo": "Ladda upp bild",
             "parent.child.uploading": "Laddar upp\u2026",
             "parent.child.username_required": "L\u00e4gg till ett namn och ett anv\u00e4ndarnamn (minst 3 tecken) f\u00f6r ditt barn.",
-            "parent.child.username_taken": "Det anv\u00e4ndarnamnet anv\u00e4nds redan av ett annat barn.",
+            "parent.child.username_taken": "Det användarnamnet är upptaget.",
             "parent.child_screentime": "{n}s sk\u00e4rmtid",
             "parent.child_screentime_sub": "Intj\u00e4ning och dagligt tak f\u00f6r {n}.",
             "parent.children": "Barn",

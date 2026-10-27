@@ -232,11 +232,21 @@ enum SupabaseAPI {
         return (e, p)
     }
 
-    static func usernameAvailable(_ username: String) async throws -> Bool {
-        var req = URLRequest(url: URL(string: "https://step-wise-life.lovable.app/api/public/username-available")!)
+    static func usernameAvailable(_ username: String, excludingChildID: UUID? = nil) async throws -> Bool {
+        guard UsernameRules.isValid(username) else { return false }
+        guard let url = URL(string: "https://step-wise-life.lovable.app/api/public/username-available") else {
+            throw URLError(.badURL)
+        }
+        var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.httpBody = try JSONSerialization.data(withJSONObject: ["username": username])
+        var body = ["username": UsernameRules.normalize(username)]
+        if let excludingChildID {
+            body["childId"] = excludingChildID.uuidString
+            let session = try await supabase.auth.session
+            req.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        }
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await URLSession.shared.data(for: req)
         guard (response as? HTTPURLResponse)?.statusCode == 200,
               let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any],

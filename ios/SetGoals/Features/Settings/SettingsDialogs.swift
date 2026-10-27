@@ -399,7 +399,6 @@ struct UsernameDialog: View {
                 TextField(L.t("account.username.placeholder"), text: $val)
                     .autocorrectionDisabled().textInputAutocapitalization(.never)
                     .onChange(of: val) { _, new in
-                        val = String(new.filter { $0.isLetter || $0.isNumber || $0 == "_" }.prefix(20))
                         error = nil
                     }
                     .fieldStyle()
@@ -408,7 +407,7 @@ struct UsernameDialog: View {
         } footer: {
             DialogFooterButtons(cancelTitle: L.t("settings.cancel"),
                                 confirmTitle: L.t("settings.save"),
-                                disabled: val.isEmpty, busy: busy) {
+                                disabled: !UsernameRules.isValid(val), busy: busy) {
                 dismiss()
             } onConfirm: {
                 Task { await submit() }
@@ -419,17 +418,19 @@ struct UsernameDialog: View {
     }
 
     private func submit() async {
-        let v = val.trimmingCharacters(in: .whitespaces).lowercased()
-        guard v.range(of: "^[a-z0-9_]{3,20}$", options: .regularExpression) != nil else {
+        let v = UsernameRules.normalize(val)
+        guard UsernameRules.isValid(v) else {
             error = L.t("account.username.invalid"); return
         }
         if v == current.lowercased() { dismiss(); return }
         busy = true
-        let free = (try? await SupabaseAPI.usernameAvailable(v)) ?? false
-        busy = false
-        guard free else { error = L.t("account.username.taken"); return }
-        onSave(v)
-        dismiss()
+        defer { busy = false }
+        do {
+            guard try await SupabaseAPI.usernameAvailable(v) else { error = L.t("account.username.taken"); return }
+            try await SupabaseAPI.updateProfile(["username": .string(v)])
+            onSave(v)
+            dismiss()
+        } catch { self.error = UsernameRules.errorMessage(error) }
     }
 }
 

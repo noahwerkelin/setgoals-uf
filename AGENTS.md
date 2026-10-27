@@ -1,4 +1,5 @@
 # Architecture rules
+- Native signup and username edits reuse UsernameRules; global username reservations in the database serialize claims across profiles and children, with linked child/profile rows treated as one identity, so concurrent clients cannot bypass uniqueness.
 - Native Map owns its full-screen Map/List layout while reusing unchanged BottomNav, NearbyStore, theme and shared location details; random discovery uses cached nearby results without new network calls.
 - Swift friends views observe one account-scoped FriendsStore preloaded at authenticated app entry; refresh after mutations and foregrounding, never fetch on view appearance, so navigation reuses the same snapshot.
 - Swift Home and Screen Time observe one account-scoped FamilyStore preloaded at account entry and refreshed after mutations/foregrounding; this avoids view-entry loading and clears private snapshots on sign-out.

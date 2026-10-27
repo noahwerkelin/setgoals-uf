@@ -33,6 +33,7 @@ export async function redeemChildCodeServer(code: string): Promise<{ email: stri
       password,
       email_confirm: true,
       user_metadata: {
+        child_profile_id: child.id,
         display_name: child.name,
         avatar_url: child.avatar,
         ...(child.username ? { username: child.username } : {}),
@@ -50,7 +51,7 @@ export async function redeemChildCodeServer(code: string): Promise<{ email: stri
         invitation_status: "connected",
       })
       .eq("id", child.id)
-      .is("auth_user_id", null)
+      .or(`auth_user_id.is.null,auth_user_id.eq.${childUserId}`)
       .select("id")
       .maybeSingle();
     if (claimErr || !claimed) {

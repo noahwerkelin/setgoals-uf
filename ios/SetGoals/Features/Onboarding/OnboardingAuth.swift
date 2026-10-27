@@ -325,7 +325,7 @@ struct SignUpScreen: View {
     @State private var legalDoc: LegalDoc?
     @State private var verifyEmail: String?
 
-    private var usernameValid: Bool { username.range(of: "^[a-z0-9_]{3,20}$", options: .regularExpression) != nil }
+    private var usernameValid: Bool { UsernameRules.isValid(username) }
     private var pwLong: Bool { password.count >= 8 }
     private var pwMatch: Bool { !confirm.isEmpty && confirm == password }
 
@@ -355,7 +355,7 @@ struct SignUpScreen: View {
                     OBField(label: L.t("ob.signup.username"), text: $username, content: .username,
                             error: avail == .taken)
                         .onChange(of: username) { _, v in
-                            let clean = v.lowercased().filter { $0.isLetter || $0.isNumber || $0 == "_" }
+                            let clean = v.lowercased()
                             if clean != v { username = clean }
                         }
                         .task(id: username) { await checkUsername() }
@@ -462,11 +462,11 @@ struct SignUpScreen: View {
             let signedIn = try await AuthStore.shared.signUp(
                 email: e, password: password,
                 displayName: displayName.trimmingCharacters(in: .whitespaces),
-                username: username, birthday: nil, termsAcceptedAt: Date())
+                username: UsernameRules.normalize(username), birthday: nil, termsAcceptedAt: Date())
             if signedIn { flow.didAuthenticate(newAccount: true) }
             else { withAnimation { verifyEmail = e } }
         } catch {
-            withAnimation { self.error = error.localizedDescription }
+            withAnimation { self.error = UsernameRules.errorMessage(error) }
         }
         busy = false
     }
