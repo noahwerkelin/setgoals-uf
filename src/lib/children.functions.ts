@@ -32,7 +32,20 @@ export const issueChildCode = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw error;
     if (!child || child.parent_id !== userId) throw new Error("Not found");
-    if (child.auth_user_id) throw new Error("This child has already joined — the code cannot be changed.");
+    if (child.auth_user_id) {
+      // The linked auth account may have been deleted without clearing this
+      // reference (a failed signup rollback). Only block re-issuing when the
+      // account genuinely still exists; otherwise clear the ghost link.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: authCheck } = await supabaseAdmin.auth.admin.getUserById(child.auth_user_id);
+      if (authCheck?.user) throw new Error("This child has already joined — the code cannot be changed.");
+      await supabaseAdmin.from("username_reservations").delete().eq("owner_id", child.auth_user_id);
+      const { error: clearErr } = await supabaseAdmin
+        .from("children")
+        .update({ auth_user_id: null, invitation_status: "pending" })
+        .eq("id", child.id);
+      if (clearErr) throw clearErr;
+    }
 
     const expiresAt = new Date(Date.now() + DEFAULT_TTL_DAYS * 86400_000).toISOString();
     for (let attempt = 0; attempt < 6; attempt++) {
@@ -129,7 +142,12 @@ export const deleteChild = createServerFn({ method: "POST" })
     await supabaseAdmin.from("children").delete().eq("id", child.id);
     if (childUserId) {
       const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(childUserId);
-      if (delErr) throw new Error(delErr.message);
+      // Tolerate a missing auth user: the account may already be gone (ghost
+      // reference), and the child profile must still be deletable.
+      const code = (delErr as { code?: string } | null)?.code;
+      if (delErr && code !== "user_not_found" && !/user not found/i.test(delErr.message)) {
+        throw new Error(delErr.message);
+      }
     }
     return { ok: true };
   });

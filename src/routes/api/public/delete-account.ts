@@ -44,7 +44,12 @@ async function purgeUser(admin: any, userId: string) {
   await admin.from("user_roles").delete().eq("user_id", userId);
   await admin.from("profiles").delete().eq("id", userId);
   const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) throw new Error(error.message);
+  // Tolerate a missing auth user (ghost reference): the rows are already gone,
+  // so deletion of the profile must still succeed.
+  const code = (error as { code?: string } | null)?.code;
+  if (error && code !== "user_not_found" && !/user not found/i.test(error.message)) {
+    throw new Error(error.message);
+  }
 }
 
 /** Deletes one child profile plus, when they joined, their auth account. */
