@@ -43,20 +43,36 @@ export async function redeemChildCodeServer(code: string): Promise<{ email: stri
     if (createErr || !created.user) throw new Error(createErr?.message ?? "Could not create the account.");
     const childUserId = created.user.id;
 
-    // Claim the profile atomically: only succeeds while still unclaimed.
-    const { data: claimed, error: claimErr } = await supabaseAdmin
+    // The signup trigger already links auth_user_id while the account is
+    // created. Confirm that link (or claim it if still empty) and mark connected.
+    const { data: linked, error: linkReadErr } = await supabaseAdmin
       .from("children")
-      .update({
-        auth_user_id: childUserId,
-        invitation_status: "connected",
-      })
+      .select("auth_user_id")
       .eq("id", child.id)
-      .or(`auth_user_id.is.null,auth_user_id.eq.${childUserId}`)
-      .select("id")
       .maybeSingle();
-    if (claimErr || !claimed) {
+    let ok = !linkReadErr && !!linked && (linked.auth_user_id === childUserId || linked.auth_user_id === null);
+    if (ok) {
+      const { error: claimErr } = await supabaseAdmin
+        .from("children")
+        .update({ auth_user_id: childUserId, invitation_status: "connected" })
+        .eq("id", child.id);
+      if (claimErr) {
+        console.error("redeemChildCode: claim failed", claimErr);
+        ok = false;
+      }
+    }
+    if (!ok) {
+      console.error("redeemChildCode: link mismatch", { linkReadErr, linked, childUserId });
+      // Undo cleanly so the code stays usable: drop the reservation move, the
+      // ghost link, and the half-created account.
+      await supabaseAdmin.from("username_reservations").update({ owner_id: child.id }).eq("owner_id", childUserId);
+      await supabaseAdmin
+        .from("children")
+        .update({ auth_user_id: null, invitation_status: "pending" })
+        .eq("id", child.id)
+        .eq("auth_user_id", childUserId);
       await supabaseAdmin.auth.admin.deleteUser(childUserId);
-      throw new Error("This invitation code has already been used.");
+      throw new Error("Could not join with this code. Please try again.");
     }
 
     await supabaseAdmin.from("profiles").update({ role: "child" }).eq("id", childUserId);
