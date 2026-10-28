@@ -18,7 +18,18 @@ export async function redeemChildCodeServer(code: string): Promise<{ email: stri
       .maybeSingle();
     if (error) throw error;
     if (!child) throw new Error("Invalid invitation code.");
-    if (child.auth_user_id || child.invitation_status === "connected") {
+    if (child.auth_user_id) {
+      // Self-heal a ghost link (auth account no longer exists) so the code stays usable.
+      const { data: existing } = await supabaseAdmin.auth.admin.getUserById(child.auth_user_id as string);
+      if (existing?.user) throw new Error("This invitation code has already been used.");
+      const { error: healErr } = await supabaseAdmin
+        .from("children")
+        .update({ auth_user_id: null, invitation_status: "pending" })
+        .eq("id", child.id);
+      if (healErr) throw new Error(healErr.message);
+      await supabaseAdmin.from("parent_child_relationships").delete().eq("child_profile_id", child.id);
+      child.auth_user_id = null;
+    } else if (child.invitation_status === "connected") {
       throw new Error("This invitation code has already been used.");
     }
     if (new Date(child.invitation_expires_at as string).getTime() < Date.now()) {
