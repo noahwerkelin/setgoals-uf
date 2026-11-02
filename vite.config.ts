@@ -23,14 +23,33 @@ export default defineConfig({
   },
   vite: {
     resolve: {
-      alias: {
+      alias: [
         // htmlparser2 pulls in a nested entities v7 copy that breaks SSR
         // (v7 removed ./lib/decode.js). Force every import to the hoisted
-        // v4.5.0 copy pinned via package.json overrides.
-        "entities/lib/decode.js": path.resolve(__dirname, "node_modules/entities/lib/decode.js"),
-        "entities/lib/encode.js": path.resolve(__dirname, "node_modules/entities/lib/encode.js"),
-        entities: path.resolve(__dirname, "node_modules/entities"),
-      },
+        // v4.5.0 copy pinned via package.json overrides. Subpath aliases must
+        // come before the root alias, and the root alias is exact-match only
+        // so it doesn't rewrite "entities/decode" to a missing file.
+        {
+          find: "entities/lib/decode.js",
+          replacement: path.resolve(__dirname, "node_modules/entities/lib/decode.js"),
+        },
+        {
+          find: "entities/lib/encode.js",
+          replacement: path.resolve(__dirname, "node_modules/entities/lib/encode.js"),
+        },
+        {
+          find: "entities/decode",
+          replacement: path.resolve(__dirname, "node_modules/entities/lib/decode.js"),
+        },
+        {
+          find: "entities/encode",
+          replacement: path.resolve(__dirname, "node_modules/entities/lib/encode.js"),
+        },
+        {
+          find: /^entities$/,
+          replacement: path.resolve(__dirname, "node_modules/entities"),
+        },
+      ],
     },
   },
 });
