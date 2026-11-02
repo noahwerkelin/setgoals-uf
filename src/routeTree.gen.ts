@@ -27,6 +27,8 @@ import { Route as ApiPublicNearbyActivitiesRouteImport } from './routes/api/publ
 import { Route as ApiPublicRedeemChildCodeRouteImport } from './routes/api/public/redeem-child-code'
 import { Route as ApiPublicUsernameAvailableRouteImport } from './routes/api/public/username-available'
 import { Route as ApiPublicPaymentsAppleNotificationsRouteImport } from './routes/api/public/payments/apple-notifications'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -122,6 +124,16 @@ const ApiPublicPaymentsAppleNotificationsRoute =
     path: '/api/public/payments/apple-notifications',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -142,6 +154,8 @@ export interface FileRoutesByFullPath {
   '/api/public/redeem-child-code': typeof ApiPublicRedeemChildCodeRoute
   '/api/public/username-available': typeof ApiPublicUsernameAvailableRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -162,6 +176,8 @@ export interface FileRoutesByTo {
   '/api/public/redeem-child-code': typeof ApiPublicRedeemChildCodeRoute
   '/api/public/username-available': typeof ApiPublicUsernameAvailableRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -183,6 +199,8 @@ export interface FileRoutesById {
   '/api/public/redeem-child-code': typeof ApiPublicRedeemChildCodeRoute
   '/api/public/username-available': typeof ApiPublicUsernameAvailableRoute
   '/api/public/payments/apple-notifications': typeof ApiPublicPaymentsAppleNotificationsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -205,6 +223,8 @@ export interface FileRouteTypes {
     | '/api/public/redeem-child-code'
     | '/api/public/username-available'
     | '/api/public/payments/apple-notifications'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -225,6 +245,8 @@ export interface FileRouteTypes {
     | '/api/public/redeem-child-code'
     | '/api/public/username-available'
     | '/api/public/payments/apple-notifications'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   id:
     | '__root__'
     | '/'
@@ -245,6 +267,8 @@ export interface FileRouteTypes {
     | '/api/public/redeem-child-code'
     | '/api/public/username-available'
     | '/api/public/payments/apple-notifications'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -266,6 +290,8 @@ export interface RootRouteChildren {
   ApiPublicRedeemChildCodeRoute: typeof ApiPublicRedeemChildCodeRoute
   ApiPublicUsernameAvailableRoute: typeof ApiPublicUsernameAvailableRoute
   ApiPublicPaymentsAppleNotificationsRoute: typeof ApiPublicPaymentsAppleNotificationsRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -396,6 +422,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsAppleNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -419,6 +459,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicUsernameAvailableRoute: ApiPublicUsernameAvailableRoute,
   ApiPublicPaymentsAppleNotificationsRoute:
     ApiPublicPaymentsAppleNotificationsRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
