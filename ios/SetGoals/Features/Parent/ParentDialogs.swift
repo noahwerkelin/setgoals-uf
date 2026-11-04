@@ -92,6 +92,8 @@ struct ChildEditDialog: View {
     @State private var saving = false
     @State private var error: String?
     @State private var showEmojis = false
+    @ObservedObject private var settingsStore = SettingsStore.shared
+    @State private var showPro = false
     @State private var usernameAvailable = false
     @State private var checkedUsername = ""
     @State private var checkingUsername = false
@@ -148,12 +150,16 @@ struct ChildEditDialog: View {
                     SliderRow(title: L.t("parent.child.daily_goal"),
                               valueLabel: Int(dailyGoal).formatted(),
                               value: $dailyGoal, range: 2000...20000, step: 500)
-                    SliderRow(title: L.t("parent.steps_per_30"),
-                              valueLabel: Int(stepsPer30).formatted(),
-                              value: $stepsPer30, range: 200...3000, step: 100)
-                    SliderRow(title: L.t("parent.daily_cap"),
-                              valueLabel: "\(Int(capHours))\(L.t("settings.hours"))",
-                              value: $capHours, range: 1...8, step: 1)
+                    if settingsStore.hasFamilyPro {
+                        SliderRow(title: L.t("parent.steps_per_30"),
+                                  valueLabel: Int(stepsPer30).formatted(),
+                                  value: $stepsPer30, range: 200...3000, step: 100)
+                        SliderRow(title: L.t("parent.daily_cap"),
+                                  valueLabel: "\(Int(capHours))\(L.t("settings.hours"))",
+                                  value: $capHours, range: 1...8, step: 1)
+                    } else {
+                        FamilyRulesLock(stepsPer30: Int(stepsPer30), capHours: Int(capHours)) { showPro = true }
+                    }
 
                     if !isNew && !code.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
@@ -188,6 +194,7 @@ struct ChildEditDialog: View {
         .presentationCornerRadius(R.xl3)
         .presentationDetents([.large])
         .onAppear(perform: seed)
+        .sheet(isPresented: $showPro) { ProUpgradeDialog() }
         .task(id: username) { await checkUsername() }
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
@@ -340,15 +347,18 @@ struct ChildEditDialog: View {
                     "avatar": .string(avatar),
                     "birthday": birthday.isEmpty ? .null : .string(birthday),
                     "daily_goal": .integer(Int(dailyGoal)),
-                    "steps_per_30": .integer(Int(stepsPer30)),
-                    "daily_cap_hours": .integer(Int(capHours)),
                 ]
+                if settingsStore.hasFamilyPro {
+                    patch["steps_per_30"] = .integer(Int(stepsPer30))
+                    patch["daily_cap_hours"] = .integer(Int(capHours))
+                }
                 if !unchangedUsername { patch["username"] = .string(candidate) }
                 try await SupabaseAPI.updateChild(c.id, patch)
             } else {
                 try await SupabaseAPI.createChild(name: trimmedName, username: candidate, avatar: avatar,
                                                   birthday: birthday, dailyGoal: Int(dailyGoal),
-                                                  stepsPer30: Int(stepsPer30), dailyCapHours: Int(capHours))
+                                                  stepsPer30: settingsStore.hasFamilyPro ? Int(stepsPer30) : 1000,
+                                                  dailyCapHours: settingsStore.hasFamilyPro ? Int(capHours) : 5)
             }
             await onDone()
             dismiss()
@@ -467,5 +477,37 @@ struct GiftScreenTimeDialog: View {
                                 })
         }
         .presentationDetents([.height(420)])
+    }
+}
+
+
+/// Shown instead of the child earning-rule sliders when the parent lacks PRO Family.
+struct FamilyRulesLock: View {
+    @EnvironmentObject var theme: Theme
+    let stepsPer30: Int
+    let capHours: Int
+    let onUpgrade: () -> Void
+
+    var body: some View {
+        Button(action: onUpgrade) {
+            HStack(spacing: 12) {
+                Image(systemName: "lock.fill").font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(theme.p.s700)
+                    .frame(width: 36, height: 36)
+                    .background(theme.p.s100, in: RoundedRectangle(cornerRadius: R.lg, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L.t("parent.rules_locked", ["steps": L.number(stepsPer30), "h": "\(capHours)"]))
+                        .font(F.sans(13, .semibold)).foregroundStyle(theme.foreground)
+                    Text(L.t("parent.rules_family_only")).font(F.xs).foregroundStyle(theme.mutedForeground)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(theme.p.s600)
+            }
+            .padding(12)
+            .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 }

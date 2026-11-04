@@ -36,6 +36,7 @@ struct SettingsView: View {
             VStack(spacing: 24) {
                 proCard
                 themeGroup
+                appearanceGroup
                 if !isChild { earningGroup }
                 integrationsGroup
                 privacyGroup
@@ -219,6 +220,16 @@ struct SettingsView: View {
                 }
                 .padding(16)
             }
+        }
+    }
+
+    // MARK: - Appearance (free for everyone)
+
+    private var appearanceGroup: some View {
+        group(L.t("appearance.title")) {
+            SegmentedTabs(selection: Binding(get: { theme.appearance }, set: { theme.appearance = $0 }),
+                          items: Appearance.allCases.map { ($0, L.t("appearance.\($0.rawValue)")) })
+                .padding(12)
         }
     }
 

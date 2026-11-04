@@ -72,6 +72,15 @@ struct ChallengesView: View {
                 .font(F.xl3).tabularNums().foregroundStyle(theme.primaryForeground)
             Text(L.t("challenges.streak_sub")).font(F.sm)
                 .foregroundStyle(theme.p.s100.opacity(0.85))
+            HStack(spacing: 6) {
+                Image(systemName: "crown.fill").font(.system(size: 11))
+                Text(L.t("challenges.streak_best", ["n": "\(max(streak?.best ?? 0, streak?.count ?? 0))"]))
+                    .font(F.sans(13, .semibold)).tabularNums()
+            }
+            .foregroundStyle(theme.primaryForeground)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(Color.white.opacity(0.15), in: Capsule())
+            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(24)

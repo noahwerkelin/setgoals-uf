@@ -22,9 +22,24 @@ struct SagePalette {
     ]
 
     init(hex: [String]) {
-        s50 = Color(hex: hex[0]); s100 = Color(hex: hex[1]); s200 = Color(hex: hex[2])
-        s300 = Color(hex: hex[3]); s500 = Color(hex: hex[4]); s600 = Color(hex: hex[5])
-        s700 = Color(hex: hex[6]); s900 = Color(hex: hex[7]); s950 = Color(hex: hex[8])
+        func u(_ i: Int) -> UIColor { UIColor(Color(hex: hex[i])) }
+        func mix(_ a: UIColor, _ b: UIColor, _ t: CGFloat) -> UIColor {
+            var r1: CGFloat = 0, g1: CGFloat = 0, b1: CGFloat = 0, a1: CGFloat = 0
+            var r2: CGFloat = 0, g2: CGFloat = 0, b2: CGFloat = 0, a2: CGFloat = 0
+            a.getRed(&r1, green: &g1, blue: &b1, alpha: &a1); b.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+            return UIColor(red: r1 + (r2 - r1) * t, green: g1 + (g2 - g1) * t, blue: b1 + (b2 - b1) * t, alpha: 1)
+        }
+        let black = UIColor(white: 0.04, alpha: 1)
+        // Dark mode mapping: surfaces (50–300) darken, text tones (700–950) lighten,
+        // mid tones (500/600) stay so primary buttons keep the brand color.
+        s50 = .adaptive(light: u(0), dark: mix(black, u(8), 0.6))
+        s100 = .adaptive(light: u(1), dark: mix(u(8), u(7), 0.6))
+        s200 = .adaptive(light: u(2), dark: u(7))
+        s300 = .adaptive(light: u(3), dark: mix(u(7), u(6), 0.5))
+        s500 = Color(hex: hex[4]); s600 = Color(hex: hex[5])
+        s700 = .adaptive(light: u(6), dark: u(3))
+        s900 = .adaptive(light: u(7), dark: u(1))
+        s950 = .adaptive(light: u(8), dark: u(0))
     }
 }
 
@@ -37,12 +52,28 @@ final class Theme: ObservableObject {
         get { ThemeColor(rawValue: stored) ?? .sage }
         set { stored = newValue.rawValue; objectWillChange.send() }
     }
+    @AppStorage("appearance") private var storedAppearance: String = Appearance.system.rawValue
+    var appearance: Appearance {
+        get { Appearance(rawValue: storedAppearance) ?? .system }
+        set { storedAppearance = newValue.rawValue; objectWillChange.send(); applyAppearance() }
+    }
+    /// Applies the choice to every window so sheets and dialogs follow too.
+    func applyAppearance() {
+        let style: UIUserInterfaceStyle = appearance == .light ? .light : appearance == .dark ? .dark : .unspecified
+        for scene in UIApplication.shared.connectedScenes {
+            (scene as? UIWindowScene)?.windows.forEach { $0.overrideUserInterfaceStyle = style }
+        }
+    }
+    var colorScheme: ColorScheme? {
+        switch appearance { case .system: return nil; case .light: return .light; case .dark: return .dark }
+    }
+
     var p: SagePalette { SagePalette.table[color] ?? SagePalette.table[.sage]! }
 
     // Semantic tokens
     var background: Color { p.s50 }
     var foreground: Color { p.s950 }
-    var card: Color { .white }
+    var card: Color { Color.adaptive(light: UIColor.white, dark: UIColor(white: 0.11, alpha: 1)) }
     var cardForeground: Color { p.s950 }
     var primary: Color { p.s600 }
     var primaryForeground: Color { Color(hex: "#FCFCFC") }
@@ -53,7 +84,18 @@ final class Theme: ObservableObject {
     var destructive: Color { Color(hex: "#DC2626") }
     /// `--border: oklch(0.18 0.018 145 / 0.06)` == sage-950 @ 6%
     var border: Color { p.s950.opacity(0.06) }
-    var ringBorder: Color { Color.black.opacity(0.05) } // ring-1 ring-black/5
+    var ringBorder: Color { Color.adaptive(light: UIColor(white: 0, alpha: 0.05), dark: UIColor(white: 1, alpha: 0.08)) }
+}
+
+enum Appearance: String, CaseIterable, Identifiable {
+    case system, light, dark
+    var id: String { rawValue }
+}
+
+extension Color {
+    static func adaptive(light: UIColor, dark: UIColor) -> Color {
+        Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
+    }
 }
 
 extension Color {

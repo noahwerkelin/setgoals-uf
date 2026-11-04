@@ -34,6 +34,8 @@ final class SettingsStore: ObservableObject {
     @Published var proSince: String? = nil
     /// Mirrors `parent_family_pro_status()` for child accounts.
     @Published var parentFamilyActive: Bool = false
+    /// Only PRO Family subscribers may customize child earning rules and caps.
+    var hasFamilyPro: Bool { isPro && role != "child" && proPlan.hasPrefix("family") }
     @Published var parentFamilyCancelling: Bool = false
     @Published var parentFamilyEndsAt: String? = nil
 

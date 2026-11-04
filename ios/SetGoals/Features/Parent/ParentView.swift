@@ -349,7 +349,12 @@ struct ParentView: View {
                         childMetric(L.t("parent.daily_cap"), c.daily_cap_hours >= 24
                                     ? L.t("parent.no_cap") : L.duration(c.daily_cap_hours * 60))
                     }
-                    SecondaryButton(title: L.t("parent.edit_screentime")) { editingChildST = c }
+                    if settings.hasFamilyPro {
+                        SecondaryButton(title: L.t("parent.edit_screentime")) { editingChildST = c }
+                    } else {
+                        FamilyRulesLock(stepsPer30: c.steps_per_30,
+                                        capHours: min(c.daily_cap_hours, 24)) { showPro = true }
+                    }
                     Text(L.t("dashboard.remote")).font(F.xs).foregroundStyle(theme.mutedForeground)
                     Divider().overlay(theme.border)
                     invitationBlock(c)

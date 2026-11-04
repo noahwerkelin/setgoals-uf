@@ -40,11 +40,17 @@ enum AppTab: String, CaseIterable {
 
 struct BottomNav: View {
     @EnvironmentObject var theme: Theme
+    @ObservedObject private var settings = SettingsStore.shared
     @Binding var tab: AppTab
+
+    /// Child accounts get four tabs; Screen Time is managed by the parent.
+    private var items: [AppTab] {
+        settings.role == "child" ? AppTab.allCases.filter { $0 != .screenTime } : AppTab.allCases
+    }
 
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(AppTab.allCases, id: \.self) { item in
+            ForEach(items, id: \.self) { item in
                 Button { tab = item } label: {
                     Image(systemName: item.icon)
                         .font(.system(size: 20, weight: tab == item ? .semibold : .regular))

@@ -47,6 +47,8 @@ struct SetGoalsApp: App {
                         .transition(.opacity)
                 }
             }
+            .preferredColorScheme(theme.colorScheme)
+            .onAppear { theme.applyAppearance() }
             .task {
                 await auth.bootstrap()
                 if auth.signedIn {
@@ -109,7 +111,7 @@ struct RootView: View {
         } else if !auth.signedIn {
             AuthView()
         } else {
-            switch tab {
+            switch (tab == .screenTime && SettingsStore.shared.role == "child") ? .home : tab {
             case .home: HomeView(tab: $tab)
             case .profile: ProfileView(tab: $tab)
             case .map: ActivityMapView(tab: $tab)
