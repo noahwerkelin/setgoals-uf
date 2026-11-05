@@ -1,81 +1,93 @@
 import SwiftUI
 
-/// Port of `src/components/Splash.tsx` — radial sage gradient, two pulsing
-/// rings, gradient logo tile, title, tagline and the 1.1s progress bar.
+/// A lightweight brand animation; account loading and dismissal remain owned
+/// by SetGoalsApp. All surfaces follow the user's theme and appearance.
 struct SplashView: View {
     @EnvironmentObject var theme: Theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var appeared = false
-    @State private var pulse = false
-    @State private var bar: CGFloat = 0
+    @State private var revolving = false
+    @State private var stepping = false
 
     var body: some View {
         ZStack {
-            RadialGradient(colors: [theme.p.s100, theme.p.s50, theme.p.s200],
-                           center: UnitPoint(x: 0.5, y: 0.3), startRadius: 0, endRadius: 520)
-                .ignoresSafeArea()
-
-            ZStack {
-                ring(460, delay: 0)
-                ring(320, delay: 0.12)
-            }
+            theme.background.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .fill(LinearGradient(colors: [theme.p.s500, theme.p.s700],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing))
-                    Image(systemName: "shoeprints.fill")
-                        .font(.system(size: 40, weight: .regular))
-                        .foregroundStyle(theme.primaryForeground)
+                    Circle()
+                        .strokeBorder(theme.accent.opacity(0.6), lineWidth: 3)
+
+                    Circle()
+                        .trim(from: 0, to: appeared ? 0.78 : 0)
+                        .stroke(theme.primary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .rotationEffect(.degrees(-90 + (revolving ? 360 : 0)))
+                        .animation(reduceMotion ? nil : .easeOut(duration: 1.0), value: appeared)
+
+                    ZStack {
+                        RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
+                            .fill(theme.secondary)
+                        RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
+                            .strokeBorder(theme.border, lineWidth: 1)
+                        Image(systemName: "shoeprints.fill")
+                            .font(.system(size: 42, weight: .regular))
+                            .foregroundStyle(theme.primary)
+                            .rotationEffect(.degrees(stepping ? 4 : -4))
+                            .offset(y: stepping ? -2 : 2)
+                    }
+                    .frame(width: 96, height: 96)
                 }
-                .frame(width: 96, height: 96)
-                .shadow(color: theme.p.s700.opacity(0.55), radius: 30, y: 20)
-                .modifier(SplashRise(appeared: appeared, delay: 0))
+                .frame(width: 140, height: 140)
+                .scaleEffect(appeared || reduceMotion ? 1 : 0.88)
+                .modifier(SplashRise(appeared: appeared, reduceMotion: reduceMotion, delay: 0))
 
                 Text("SetGoals")
-                    .font(F.sans(30, .semibold)).tracking(-0.5)
-                    .foregroundStyle(theme.p.s950)
+                    .font(F.xl4)
+                    .foregroundStyle(theme.foreground)
                     .padding(.top, 28)
-                    .modifier(SplashRise(appeared: appeared, delay: 0.12))
+                    .modifier(SplashRise(appeared: appeared, reduceMotion: reduceMotion, delay: 0.12))
 
                 Text(L.t("splash.tagline"))
-                    .font(F.sm).foregroundStyle(theme.p.s700)
+                    .font(F.sm).foregroundStyle(theme.mutedForeground)
+                    .multilineTextAlignment(.center)
                     .padding(.top, 8)
-                    .modifier(SplashRise(appeared: appeared, delay: 0.24))
-
-                ZStack(alignment: .leading) {
-                    Capsule().fill(theme.p.s200)
-                    Capsule().fill(theme.p.s600).frame(width: 96 * bar)
-                }
-                .frame(width: 96, height: 3)
-                .padding(.top, 40)
-                .modifier(SplashRise(appeared: appeared, delay: 0.36))
+                    .modifier(SplashRise(appeared: appeared, reduceMotion: reduceMotion, delay: 0.24))
             }
+            .padding(.horizontal, 24)
         }
+        .accessibilityElement(children: .combine)
         .onAppear {
             appeared = true
-            pulse = true
-            withAnimation(.timingCurve(0.65, 0, 0.35, 1, duration: 1.1).delay(0.36)) { bar = 1 }
+            updateMotion()
         }
+        .onChange(of: reduceMotion) { _, _ in updateMotion() }
     }
 
-    private func ring(_ size: CGFloat, delay: Double) -> some View {
-        Circle()
-            .strokeBorder(theme.p.s600.opacity(size > 400 ? 0.18 : 0.28), lineWidth: 1)
-            .frame(width: size, height: size)
-            .scaleEffect(pulse ? 1.15 : 0.7)
-            .opacity(pulse ? 0 : 1)
-            .animation(.easeOut(duration: 2.4).delay(delay), value: pulse)
+    private func updateMotion() {
+        var reset = Transaction()
+        reset.disablesAnimations = true
+        withTransaction(reset) {
+            revolving = false
+            stepping = false
+        }
+        guard !reduceMotion else { return }
+        withAnimation(.linear(duration: 3.2).repeatForever(autoreverses: false)) {
+            revolving = true
+        }
+        withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
+            stepping = true
+        }
     }
 }
 
 private struct SplashRise: ViewModifier {
     let appeared: Bool
+    let reduceMotion: Bool
     let delay: Double
     func body(content: Content) -> some View {
         content
             .opacity(appeared ? 1 : 0)
-            .offset(y: appeared ? 0 : 10)
-            .animation(.timingCurve(0.16, 1, 0.3, 1, duration: 0.7).delay(delay), value: appeared)
+            .offset(y: appeared || reduceMotion ? 0 : 10)
+            .animation(reduceMotion ? nil : .timingCurve(0.16, 1, 0.3, 1, duration: 0.7).delay(delay), value: appeared)
     }
 }
