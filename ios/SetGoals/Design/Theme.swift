@@ -10,6 +10,7 @@ enum ThemeColor: String, CaseIterable, Identifiable {
 
 struct SagePalette {
     let s50, s100, s200, s300, s500, s600, s700, s900, s950: Color
+    let card, mutedFg, primary: Color
 
     static let table: [ThemeColor: SagePalette] = [
         .sage: SagePalette(hex: ["#F9FBF7", "#F2F5EF", "#E1E7DD", "#C8D1C2", "#879884", "#6E806C", "#566955", "#263126", "#0D140D"]),
@@ -29,13 +30,15 @@ struct SagePalette {
             a.getRed(&r1, green: &g1, blue: &b1, alpha: &a1); b.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
             return UIColor(red: r1 + (r2 - r1) * t, green: g1 + (g2 - g1) * t, blue: b1 + (b2 - b1) * t, alpha: 1)
         }
-        let black = UIColor(white: 0.04, alpha: 1)
-        // Dark mode mapping: surfaces (50–300) darken, text tones (700–950) lighten,
-        // mid tones (500/600) stay so primary buttons keep the brand color.
-        s50 = .adaptive(light: u(0), dark: mix(black, u(8), 0.6))
-        s100 = .adaptive(light: u(1), dark: mix(u(8), u(7), 0.6))
-        s200 = .adaptive(light: u(2), dark: u(7))
-        s300 = .adaptive(light: u(3), dark: mix(u(7), u(6), 0.5))
+        // Dark mode mirrors the web `.dark` tokens: tinted near-black background,
+        // slightly lifted tinted cards, light text, brighter brand primary.
+        s50 = .adaptive(light: u(0), dark: u(8))
+        s100 = .adaptive(light: u(1), dark: mix(u(8), u(7), 0.75))
+        s200 = .adaptive(light: u(2), dark: mix(u(7), u(6), 0.3))
+        s300 = .adaptive(light: u(3), dark: mix(u(7), u(6), 0.6))
+        card = .adaptive(light: .white, dark: mix(u(8), u(7), 0.55))
+        mutedFg = .adaptive(light: u(5), dark: mix(u(4), u(3), 0.5))
+        primary = .adaptive(light: u(5), dark: u(4))
         s500 = Color(hex: hex[4]); s600 = Color(hex: hex[5])
         s700 = .adaptive(light: u(6), dark: u(3))
         s900 = .adaptive(light: u(7), dark: u(1))
@@ -73,17 +76,17 @@ final class Theme: ObservableObject {
     // Semantic tokens
     var background: Color { p.s50 }
     var foreground: Color { p.s950 }
-    var card: Color { Color.adaptive(light: UIColor.white, dark: UIColor(white: 0.11, alpha: 1)) }
+    var card: Color { p.card }
     var cardForeground: Color { p.s950 }
-    var primary: Color { p.s600 }
+    var primary: Color { p.primary }
     var primaryForeground: Color { Color(hex: "#FCFCFC") }
     var secondary: Color { p.s100 }
     var muted: Color { p.s100 }
-    var mutedForeground: Color { p.s600 }
+    var mutedForeground: Color { p.mutedFg }
     var accent: Color { p.s200 }
     var destructive: Color { Color(hex: "#DC2626") }
     /// `--border: oklch(0.18 0.018 145 / 0.06)` == sage-950 @ 6%
-    var border: Color { p.s950.opacity(0.06) }
+    var border: Color { Color.adaptive(light: UIColor(red: 0.05, green: 0.08, blue: 0.05, alpha: 0.06), dark: UIColor(white: 1, alpha: 0.08)) }
     var ringBorder: Color { Color.adaptive(light: UIColor(white: 0, alpha: 0.05), dark: UIColor(white: 1, alpha: 0.08)) }
 }
 
