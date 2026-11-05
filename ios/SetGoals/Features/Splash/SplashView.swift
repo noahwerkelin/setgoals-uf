@@ -26,8 +26,9 @@ struct SplashView: View {
                     theme.splashFill
                     Image(uiImage: SplashView.grain)
                         .resizable(resizingMode: .tile)
+                        .interpolation(.none)
                         .blendMode(.softLight)
-                        .opacity(0.16)
+                        .opacity(0.08)
                 }
                 .ignoresSafeArea()
                 .opacity(fill)
@@ -70,8 +71,8 @@ struct SplashView: View {
 
     private static let logo = UIImage(named: "SplashLogo") ?? UIImage()
 
-    /// A small, stable monochrome tile, generated once rather than every frame.
-    /// Soft-light blending adds paper-like grain without changing the sage hue.
+    /// A cached 3x monochrome tile: each grain is a physical pixel on a 3x
+    /// display, not a point-sized blurred patch. Never interpolate the texture.
     private static let grain: UIImage = {
         let size = 192
         var seed: UInt32 = 42
@@ -89,7 +90,7 @@ struct SplashView: View {
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent
               ) else { return UIImage() }
-        return UIImage(cgImage: image)
+        return UIImage(cgImage: image, scale: 3, orientation: .up)
     }()
 
     private func progress(_ elapsed: Double, from start: Double, duration: Double) -> Double {
