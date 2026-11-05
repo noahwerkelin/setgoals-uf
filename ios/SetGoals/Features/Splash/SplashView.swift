@@ -9,7 +9,7 @@ struct SplashView: View {
     @State private var settled = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion || settled)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: reduceMotion || settled)) { timeline in
             let elapsed = reduceMotion || settled ? 3.0 : max(0, timeline.date.timeIntervalSince(startedAt))
             ZStack {
                 theme.background.ignoresSafeArea()
@@ -18,20 +18,18 @@ struct SplashView: View {
                         .frame(width: 260, height: 190)
                         .accessibilityHidden(true)
 
-                    HStack(spacing: 0) {
-                        ForEach(Array("SetGoals".enumerated()), id: \.offset) { index, letter in
-                            let reveal = progress(elapsed, from: 1.25 + Double(index) * 0.065, duration: 0.42)
-                            Text(String(letter))
-                                .font(F.xl4)
-                                .foregroundStyle(theme.foreground)
-                                .opacity(reveal)
-                                .offset(y: 16 * (1 - reveal))
-                                .blur(radius: 3 * (1 - reveal))
+                    let title = progress(elapsed, from: 1.5, duration: 0.6)
+                    Text("SetGoals")
+                        .font(F.xl4)
+                        .foregroundStyle(theme.foreground)
+                        .mask(alignment: .leading) {
+                            GeometryReader { geometry in
+                                Rectangle().frame(width: geometry.size.width * title)
+                            }
                         }
-                    }
-                    .accessibilityLabel("SetGoals")
+                        .offset(y: 8 * (1 - title))
 
-                    let caption = progress(elapsed, from: 1.9, duration: 0.4)
+                    let caption = progress(elapsed, from: 2.0, duration: 0.4)
                     Text(L.t("splash.tagline"))
                         .font(F.sm)
                         .foregroundStyle(theme.mutedForeground)
@@ -58,27 +56,15 @@ struct SplashView: View {
     }
 
     private func journey(_ elapsed: Double) -> some View {
-        let gather = progress(elapsed, from: 1.02, duration: 0.55)
-        let logo = progress(elapsed, from: 1.22, duration: 0.48)
+        let gather = progress(elapsed, from: 1.05, duration: 0.65)
+        let logo = progress(elapsed, from: 1.24, duration: 0.58)
+        let sweep = progress(elapsed, from: 1.72, duration: 0.55)
         return ZStack {
             SplashTrail()
-                .trim(from: 0, to: progress(elapsed, from: 0.05, duration: 0.95))
-                .stroke(theme.accent, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [2, 7]))
-                .opacity(0.65 * (1 - gather))
-
-            ForEach(0..<6, id: \.self) { index in
-                let landing = progress(elapsed, from: Double(index) * 0.14, duration: 0.24)
-                let x = -100.0 + Double(index) * 36.0
-                let y = 46.0 - Double(index) * 17.0 + (index.isMultiple(of: 2) ? -9.0 : 9.0)
-                SplashFootprint()
-                    .fill(theme.primary)
-                    .frame(width: 12, height: 27)
-                    .scaleEffect(x: index.isMultiple(of: 2) ? -1 : 1, y: 1)
-                    .rotationEffect(.degrees(28 * (1 - gather)))
-                    .scaleEffect(0.55 + 0.45 * landing)
-                    .offset(x: x * (1 - gather), y: y * (1 - gather) - 12 * (1 - landing))
-                    .opacity(landing * (1 - gather))
-            }
+                .trim(from: progress(elapsed, from: 0.95, duration: 0.5),
+                      to: progress(elapsed, from: 0.02, duration: 1.0))
+                .stroke(theme.accent, style: StrokeStyle(lineWidth: 1.25, lineCap: .round))
+                .opacity(0.7 * (1 - gather))
 
             RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
                 .fill(theme.secondary)
@@ -87,16 +73,47 @@ struct SplashView: View {
                         .strokeBorder(theme.border, lineWidth: 1)
                 }
                 .frame(width: 96, height: 96)
-                .scaleEffect(0.76 + 0.24 * logo + 0.04 * sin(logo * .pi))
+                .overlay {
+                    // One subtle light pass, clipped to the tile — no glow or heavy shadow.
+                    Rectangle()
+                        .fill(theme.primary.opacity(0.08))
+                        .frame(width: 24, height: 160)
+                        .rotationEffect(.degrees(24))
+                        .offset(x: -90 + 180 * sweep)
+                        .opacity(sin(sweep * .pi))
+                        .mask(RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
+                }
+                .scaleEffect(0.8 + 0.2 * logo + 0.05 * sin(logo * .pi))
                 .opacity(logo)
 
-            Image(systemName: "shoeprints.fill")
-                .font(.system(size: 42, weight: .regular))
-                .foregroundStyle(theme.primary)
-                .scaleEffect(0.65 + 0.35 * logo)
-                .rotationEffect(.degrees(-12 * (1 - logo)))
-                .opacity(logo)
+            ForEach(0..<8, id: \.self) { index in
+                footfall(index, elapsed: elapsed)
+            }
         }
+    }
+
+    private func footfall(_ index: Int, elapsed: Double) -> some View {
+        let left = index.isMultiple(of: 2)
+        let landing = progress(elapsed, from: Double(index) * 0.115, duration: 0.22)
+        let gather = progress(elapsed, from: 1.04 + Double(index) * 0.035, duration: 0.54)
+        let point = SplashTrail.point(Double(index) / 7)
+        let side = left ? -1.0 : 1.0
+        let originX = point.x + side * 8
+        let originY = point.y
+        let targetX = side * 13
+        let targetY = left ? -5.0 : 5.0
+        let lift = sin(gather * .pi)
+        let fade = index < 6 ? 1 - progress(elapsed, from: 1.35 + Double(index) * 0.035, duration: 0.28) : 1
+
+        return SplashFootprint()
+            .fill(theme.primary)
+            .frame(width: 13 + 4 * gather, height: 29 + 9 * gather)
+            .scaleEffect(x: left ? -1 : 1, y: 1)
+            .rotationEffect(.degrees(32 * (1 - gather) + side * 10 * gather))
+            .scaleEffect(0.72 + 0.28 * landing + 0.08 * sin(landing * .pi))
+            .offset(x: originX * (1 - gather) + targetX * gather + side * 14 * lift,
+                    y: originY * (1 - gather) + targetY * gather - 18 * lift - 10 * (1 - landing))
+            .opacity(landing * fade)
     }
 
     private func progress(_ elapsed: Double, from start: Double, duration: Double) -> Double {
@@ -109,9 +126,16 @@ struct SplashView: View {
 private struct SplashFootprint: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        path.addRoundedRect(in: CGRect(x: rect.width * 0.08, y: 0,
-                                      width: rect.width * 0.84, height: rect.height * 0.66),
-                            cornerSize: CGSize(width: rect.width * 0.42, height: rect.width * 0.42))
+        path.move(to: CGPoint(x: rect.width * 0.16, y: rect.height * 0.6))
+        path.addCurve(to: CGPoint(x: rect.width * 0.5, y: 0),
+                      control1: CGPoint(x: -rect.width * 0.12, y: rect.height * 0.28),
+                      control2: CGPoint(x: rect.width * 0.06, y: 0))
+        path.addCurve(to: CGPoint(x: rect.width * 0.83, y: rect.height * 0.6),
+                      control1: CGPoint(x: rect.width * 1.06, y: 0),
+                      control2: CGPoint(x: rect.width * 1.05, y: rect.height * 0.4))
+        path.addQuadCurve(to: CGPoint(x: rect.width * 0.16, y: rect.height * 0.6),
+                          control: CGPoint(x: rect.width * 0.5, y: rect.height * 0.76))
+        path.closeSubpath()
         path.addEllipse(in: CGRect(x: rect.width * 0.16, y: rect.height * 0.75,
                                   width: rect.width * 0.68, height: rect.height * 0.25))
         return path
@@ -119,12 +143,19 @@ private struct SplashFootprint: Shape {
 }
 
 private struct SplashTrail: Shape {
+    /// Shared curve positions keep every footfall aligned with the drawn route.
+    static func point(_ t: Double) -> CGPoint {
+        let u = 1 - t
+        return CGPoint(x: u * u * u * -108 + 3 * u * u * t * -58 + 3 * u * t * t * 44 + t * t * t * 100,
+                       y: u * u * u * 58 + 3 * u * u * t * 50 + 3 * u * t * t * -62 + t * t * t * -52)
+    }
+
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        path.move(to: CGPoint(x: rect.midX - 106, y: rect.midY + 48))
-        path.addCurve(to: CGPoint(x: rect.midX + 84, y: rect.midY - 45),
-                      control1: CGPoint(x: rect.midX - 40, y: rect.midY + 28),
-                      control2: CGPoint(x: rect.midX + 18, y: rect.midY - 44))
+        path.move(to: CGPoint(x: rect.midX - 108, y: rect.midY + 58))
+        path.addCurve(to: CGPoint(x: rect.midX + 100, y: rect.midY - 52),
+                      control1: CGPoint(x: rect.midX - 58, y: rect.midY + 50),
+                      control2: CGPoint(x: rect.midX + 44, y: rect.midY - 62))
         return path
     }
 }
