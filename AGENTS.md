@@ -20,4 +20,4 @@
 
 - Child accounts hide the Screen Time tab (BottomNav filters it and RootView redirects), because parents manage child limits.
 - Light/Dark/System appearance lives in Theme: palette tokens are dynamic UIColors and the choice overrides window style so sheets follow.
-- Native splash animations stay presentation-only in SplashView, use Theme/F tokens and respect Reduce Motion; launch loading and dismissal remain owned by SetGoalsApp to avoid coupling animation to account state.
+- Native splash stays opaque from its first frame, uses Theme tokens and a cached static grain tile, and respects Reduce Motion; launch loading and dismissal remain owned by SetGoalsApp to avoid coupling animation to account state and per-frame texture work.

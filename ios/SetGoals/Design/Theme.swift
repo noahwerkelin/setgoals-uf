@@ -80,6 +80,10 @@ final class Theme: ObservableObject {
     var cardForeground: Color { p.s950 }
     var primary: Color { p.primary }
     var primaryForeground: Color { Color(hex: "#FCFCFC") }
+    // Launch branding is fixed in light/dark mode and independent of account theme.
+    var splashOpeningBackground: Color { .white }
+    var splashFill: Color { SagePalette.table[.sage]?.s600 ?? p.s600 }
+    var splashForeground: Color { .white }
     var secondary: Color { p.s100 }
     var muted: Color { p.s100 }
     var mutedForeground: Color { p.mutedFg }
