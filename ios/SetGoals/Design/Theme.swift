@@ -30,17 +30,17 @@ struct SagePalette {
             a.getRed(&r1, green: &g1, blue: &b1, alpha: &a1); b.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
             return UIColor(red: r1 + (r2 - r1) * t, green: g1 + (g2 - g1) * t, blue: b1 + (b2 - b1) * t, alpha: 1)
         }
-        // Dark mode mirrors the web `.dark` tokens: tinted near-black background,
-        // slightly lifted tinted cards, light text, brighter brand primary.
-        s50 = .adaptive(light: u(0), dark: u(8))
-        s100 = .adaptive(light: u(1), dark: mix(u(8), u(7), 0.75))
+        // Dark mode: true black background, subtly lifted tinted cards, light
+        // text, muted sage accents (never pale-bright).
+        s50 = .adaptive(light: u(0), dark: UIColor(red: 0, green: 0, blue: 0, alpha: 1))
+        s100 = .adaptive(light: u(1), dark: mix(u(8), u(7), 0.55))
         s200 = .adaptive(light: u(2), dark: mix(u(7), u(6), 0.3))
         s300 = .adaptive(light: u(3), dark: mix(u(7), u(6), 0.6))
-        card = .adaptive(light: .white, dark: mix(u(8), u(7), 0.55))
+        card = .adaptive(light: .white, dark: mix(u(8), u(7), 0.4))
         mutedFg = .adaptive(light: u(5), dark: mix(u(4), u(3), 0.5))
         primary = .adaptive(light: u(5), dark: u(4))
         s500 = Color(hex: hex[4]); s600 = Color(hex: hex[5])
-        s700 = .adaptive(light: u(6), dark: u(3))
+        s700 = .adaptive(light: u(6), dark: mix(u(4), u(3), 0.25))
         s900 = .adaptive(light: u(7), dark: u(1))
         s950 = .adaptive(light: u(8), dark: u(0))
     }

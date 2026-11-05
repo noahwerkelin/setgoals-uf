@@ -65,7 +65,13 @@ struct BottomNav: View {
         }
         .padding(6)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
-        .background(theme.card.opacity(0.85), in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous))
+        .background(
+            Color.adaptive(
+                light: UIColor(white: 1, alpha: 0.85),
+                dark: UIColor(red: 0.04, green: 0.06, blue: 0.045, alpha: 0.94)
+            ),
+            in: RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
+        )
         .overlay(
             RoundedRectangle(cornerRadius: R.xl3, style: .continuous)
                 .strokeBorder(theme.ringBorder, lineWidth: 1)
