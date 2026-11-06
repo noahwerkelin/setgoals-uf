@@ -51,3 +51,11 @@ Official documentation was queried specifically about a standalone website using
 References: https://docs.lovable.dev/tips-tricks/external-deployment-hosting and https://docs.lovable.dev/features/authentication. These are evidence of general external frontend configuration, not proof that this dashboard arrangement has passed an end-to-end check. No new live-database inspection or authentication test was performed in this follow-up; earlier live findings remain dated audit evidence.
 
 The previous promise to immediately implement four roles and MFA after switching to Build mode was premature. No migrations, role grants, RLS changes, Auth changes, credentials, Swift changes or publishing were made. Do not use an MCP OAuth recipe as proof of support for an ordinary browser dashboard. Platform feedback was submitted requesting an authoritative remote-auth integration contract and hosted MFA/rate-limit verification.
+## Etapp 1 – genomförd (2026-11-06)
+
+- Ny tabell `admin_roles` med rollerna `super_admin`, `admin`, `support_admin`, `marketing_admin`. Befintliga admins blev `super_admin`.
+- Behörigheter: super_admin = allt; admin = overview, users, history, audit; support_admin = users, history; marketing_admin = overview.
+- Ny tabell `admin_audit_log`: varje anrop till admin-funktionerna loggas med användare, åtgärd, mål och MFA-nivå (`aal`). Läsbar för super_admin/admin.
+- `admin_me()` returnerar inloggad användares roller och `aal`. Dashboarden ska kräva `aal = 'aal2'` (MFA) innan den visar data.
+- `admin_overview_totals`, `admin_overview_daily`, `admin_users`, `admin_user_history` kontrollerar nu rollbehörighet, loggar och är stängda för anonyma anrop. Sökningen escapar jokertecken.
+- Hemsidan ansluter med appens publika URL + publishable key (finns i appens `.env`) och loggar in med vanlig e-post/lösenord.

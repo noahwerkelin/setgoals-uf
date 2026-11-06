@@ -77,6 +77,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_audit_log: {
+        Row: {
+          aal: string | null
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json
+          id: string
+          target_user_id: string | null
+        }
+        Insert: {
+          aal?: string | null
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          aal?: string | null
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_pro_grants: {
         Row: {
           created_at: string
@@ -97,6 +127,32 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      admin_roles: {
+        Row: {
+          created_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       children: {
         Row: {
@@ -918,6 +974,15 @@ export type Database = {
         Returns: undefined
       }
       add_my_friend: { Args: { _friend_id: string }; Returns: undefined }
+      admin_can: { Args: { _perm: string }; Returns: boolean }
+      admin_me: {
+        Args: never
+        Returns: {
+          aal: string
+          roles: string[]
+          user_id: string
+        }[]
+      }
       admin_overview_daily: {
         Args: { _from: string; _to?: string }
         Returns: {
@@ -938,6 +1003,15 @@ export type Database = {
           active_7d: number
           total_users: number
         }[]
+      }
+      admin_require: {
+        Args: {
+          _action: string
+          _details?: Json
+          _perm: string
+          _target?: string
+        }
+        Returns: undefined
       }
       admin_user_history: {
         Args: { _from?: string; _uid: string }
