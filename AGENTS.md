@@ -1,4 +1,6 @@
 # Architecture rules
+- Native campaigns use one account-scoped CampaignStore loaded asynchronously at entry/foreground; caller-scoped RPCs enforce eligibility and server rewards reconcile into the native base allowance without double granting.
+- Admin deletion is an audited MFA-authorized request completed by an authenticated server route using the supported Auth admin API; never delete managed Auth rows directly from SQL.
 - Native signup and username edits reuse UsernameRules; global username reservations in the database serialize claims across profiles and children, with linked child/profile rows treated as one identity, so concurrent clients cannot bypass uniqueness.
 - Native Map owns its full-screen Map/List layout while reusing unchanged BottomNav, NearbyStore, theme and shared location details; random discovery uses cached nearby results without new network calls.
 - Swift friends views observe one account-scoped FriendsStore preloaded at authenticated app entry; refresh after mutations and foregrounding, never fetch on view appearance, so navigation reuses the same snapshot.

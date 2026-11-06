@@ -131,6 +131,16 @@ final class ScreenTimeService: ObservableObject {
 
     // MARK: enforcement
 
+    /// Server rewards are part of baseMin, not local rewardMin. Verify native
+    /// monitoring before displaying a successful sponsored reward confirmation.
+    func synchronizeServerAllowance() throws {
+        refreshAuthorization()
+        guard authorized else { throw ScreenTimeError.notAuthorized }
+        refreshFromStore()
+        do { try startMonitoring() }
+        catch { throw ScreenTimeError.monitoringFailed(error.localizedDescription) }
+    }
+
     /// Shields only the categories the user marked "Only with earned time"
     /// when nothing is left, and lifts the shield as soon as there are minutes
     /// to spend. Always-allowed apps (and SetGoals itself) are never shielded.

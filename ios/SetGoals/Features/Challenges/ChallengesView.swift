@@ -15,6 +15,7 @@ struct ChallengesView: View {
     @ObservedObject private var badgeStore = BadgeStore.shared
     private var earnedBadges: Set<String> { badgeStore.earned }
     @State private var detail: Challenge?
+    @ObservedObject private var campaigns = CampaignStore.shared
 
     var body: some View {
         AppShell(tab: $tab) {
@@ -48,6 +49,7 @@ struct ChallengesView: View {
                 // Completed challenges pay out their screen-time reward once
                 // per day (daily) or per week (weekly).
                 await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
+                await campaigns.refresh()
             }
         }
         .sheet(item: $detail) { c in
@@ -59,6 +61,7 @@ struct ChallengesView: View {
     private var goals: some View {
         VStack(spacing: 24) {
             streakCard
+            SponsoredChallengesSection()
             section(L.t("challenges.today"), ChallengeCatalog.todaysDaily, delay: 0)
             section(L.t("challenges.week"), ChallengeCatalog.thisWeeksWeekly, delay: 0.15)
         }

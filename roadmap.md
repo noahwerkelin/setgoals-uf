@@ -1,4 +1,9 @@
 # Tasks
+- [x] iOS telemetry, announcement/ad presentation and sponsored challenges with native allowance synchronization.
+- [x] Inspect daily analytics triggers and wire native earned-time uploads; implement audited MFA-protected admin deletion through supported Auth admin API.
+- [x] Test 14 native campaign rules, verify backend schema/ACLs and local deletion denial paths; document website integration.
+- [ ] Verify native campaign UI and Apple rewards on iPhone; blocked by unavailable Xcode/device runtime.
+- [ ] Run rollback-only backend reward/stats tests; test connection lacks profiles privileges. Verify real admin deletion with an approved disposable account/AAL2 session and published website CORS.
 - [x] Admin integration: inspect live backend identity, tables, ACLs/RLS, functions, migration registry, Auth redirects and existing RPC access; document read-only findings.
 - [x] Admin integration: recover the 03:16 instruction and inspect the separate website snapshot; correct the earlier unsupported connection claim and document the implementation gate.
 - [x] Admin integration: recheck the standalone remote Auth/RPC client path with official documentation after approval; exact website sign-in/MFA arrangement remains unconfirmed, so no backend changes applied.

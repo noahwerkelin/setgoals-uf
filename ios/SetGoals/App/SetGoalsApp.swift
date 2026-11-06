@@ -48,11 +48,18 @@ struct SetGoalsApp: App {
                 }
             }
             .preferredColorScheme(theme.colorScheme)
+            .modifier(CampaignPresenter(enabled: auth.signedIn && onboarded && !showSplash))
+            .environmentObject(theme)
+            .onChange(of: auth.signedIn) { _, signedIn in
+                if signedIn { Task { await CampaignStore.shared.foreground() } }
+                else { CampaignStore.shared.clear() }
+            }
             .onAppear { theme.applyAppearance() }
             .task {
                 let splashStart = Date()
                 await auth.bootstrap()
                 if auth.signedIn {
+                    Task { await CampaignStore.shared.foreground() }
                     async let friends: Void = FriendsStore.shared.preload()
                     async let family: Void = FamilyStore.shared.preload()
                     _ = await (friends, family)
@@ -95,6 +102,7 @@ struct SetGoalsApp: App {
             .onChange(of: settings.themeColor) { _, new in theme.color = new }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active, auth.signedIn else { return }
+                Task { await CampaignStore.shared.foreground() }
                 Task {
                     async let friends: Void = FriendsStore.shared.refresh()
                     async let family: Void = FamilyStore.shared.refresh()

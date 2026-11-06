@@ -251,6 +251,36 @@ export type Database = {
           },
         ]
       }
+      admin_user_deletions: {
+        Row: {
+          actor_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          reason: string
+          status: string
+          target_user_id: string
+        }
+        Insert: {
+          actor_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          reason: string
+          status?: string
+          target_user_id: string
+        }
+        Update: {
+          actor_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          status?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       app_activity_days: {
         Row: {
           app_version: string | null
@@ -1324,6 +1354,8 @@ export type Database = {
         Row: {
           actual_device_screen_time_seconds: number | null
           created_at: string
+          distance_km: number
+          exercise_minutes: number
           id: string
           screen_time_bonus_seconds: number
           screen_time_carried_over_seconds: number | null
@@ -1339,6 +1371,8 @@ export type Database = {
         Insert: {
           actual_device_screen_time_seconds?: number | null
           created_at?: string
+          distance_km?: number
+          exercise_minutes?: number
           id?: string
           screen_time_bonus_seconds?: number
           screen_time_carried_over_seconds?: number | null
@@ -1354,6 +1388,8 @@ export type Database = {
         Update: {
           actual_device_screen_time_seconds?: number | null
           created_at?: string
+          distance_km?: number
+          exercise_minutes?: number
           id?: string
           screen_time_bonus_seconds?: number
           screen_time_carried_over_seconds?: number | null
@@ -1526,6 +1562,10 @@ export type Database = {
       admin_can: { Args: { _perm: string }; Returns: boolean }
       admin_can_write: { Args: { _perm: string }; Returns: boolean }
       admin_dashboard_stats: { Args: never; Returns: Json }
+      admin_delete_user: {
+        Args: { _reason: string; _uid: string }
+        Returns: string
+      }
       admin_get_audit_logs: {
         Args: {
           _action?: string
@@ -1673,6 +1713,8 @@ export type Database = {
         Returns: {
           actual_device_screen_time_seconds: number | null
           created_at: string
+          distance_km: number
+          exercise_minutes: number
           id: string
           screen_time_bonus_seconds: number
           screen_time_carried_over_seconds: number | null
@@ -1757,10 +1799,9 @@ export type Database = {
         Returns: boolean
       }
       claim_rollover: { Args: { _day: string }; Returns: number }
-      claim_sponsored_challenge_reward: {
-        Args: { _challenge_id: string }
-        Returns: Json
-      }
+      claim_sponsored_challenge_reward:
+        | { Args: { _challenge_id: string }; Returns: Json }
+        | { Args: { _challenge_id: string; _day: string }; Returns: Json }
       compute_rollover: {
         Args: { _day: string; _uid: string }
         Returns: number
@@ -1805,6 +1846,22 @@ export type Database = {
           priority: number
           requires_ack: boolean
           style: Json
+        }[]
+      }
+      get_native_advertisements: {
+        Args: { _app_version?: string; _lang?: string }
+        Returns: {
+          content: Json
+          cta_url: string
+          id: string
+          max_per_day: number
+          max_total_per_user: number
+          min_minutes_between: number
+          once_per_campaign: boolean
+          secondary_url: string
+          sponsor_name: string
+          style: Json
+          template: string
         }[]
       }
       get_sponsored_challenge_progress: {

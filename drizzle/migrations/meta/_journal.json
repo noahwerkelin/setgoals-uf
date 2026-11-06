@@ -141,6 +141,20 @@
       "when": 1793933689640,
       "tag": "0019_campaign_delivery_api",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793938498585,
+      "tag": "0020_native_campaign_safety_and_admin_deletion",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793938559168,
+      "tag": "0021_native_campaign_delivery",
+      "breakpoints": true
     }
   ]
 }

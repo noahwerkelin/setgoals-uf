@@ -116,3 +116,36 @@ Only template data is returned – never executable code.
 
 ### Not verified
 No end-to-end test with a real admin session from the website (MFA enrolment, writes) has been performed yet.
+
+## Native app integration — 2026-11-06
+
+The uploaded app-integration brief explicitly authorizes native UI integration, superseding the earlier no-SwiftUI scope for this task only. No backend connection or credentials changed.
+
+### Telemetry and daily history
+- `CampaignStore` calls existing `record_app_open({_app_version,_platform:'ios'})` after sign-in and on foreground, without awaiting it in the launch loading sequence. There is **no `p_user_id` argument**: identity comes from the authenticated session.
+- Existing activity/balance triggers maintain daily step and earned/consumed screen-time history. `distance_km` and `exercise_minutes` were added to `user_daily_stats` and backfilled from existing activity. Usage is measured SetGoals-managed app allowance usage, **not all device screen time**.
+- `admin_analytics_series` keeps its existing return shape; distance and earned/used time remain available from daily history, not new fields silently added to that RPC. Historic days never synced by a device cannot be reconstructed.
+
+### Announcements, ads and challenges
+- Native models support editor `description/subtitle/button_text` and brief `message/cta_label/action_url` aliases. Styling uses app Theme/F/CardSurface/buttons/sheets. HTTPS images/links only; arbitrary editor colors never override theme accessibility.
+- `get_active_announcements` now returns the eligible priority-ordered queue, so a locally seen session announcement cannot starve other messages or ads. Existing clients taking the first row remain compatible. Required acknowledgements remain eligible after display until acknowledged. Native interactive dismissal is disabled; the explicit close button respects `dismissible` and `requires_ack`.
+- `get_native_advertisements({_lang,_app_version})` includes frequency fields; native local history and backend event history both enforce caps, interval and once-per-campaign. Native ads do not recheck the announcement queue; the client always selects an eligible announcement first. Backend day boundaries use each ad's configured timezone, local history additionally uses the device's day. Unknown birthdays are ineligible, as are children and under-18s.
+- Five ad templates supported: full-height image sheet, centered logo, image above text, themed gradient illustration, minimal text. Missing images fail without blocking entry. Sponsor label, close and both links are supported.
+- One account-scoped in-memory challenge cache is refreshed at entry/foreground and after HealthKit uploads. Server progress/join/claim APIs are authoritative. Expired rows are hidden natively. Claim uses `claim_sponsored_challenge_reward({_challenge_id,_day:'YYYY-MM-DD'})`, with device-local day validated within ±1 UTC day. The legacy single-argument RPC still works with UTC day.
+- Server credits `bonus_min` once; native Settings refresh reconciles that credit into Apple's base allowance and reschedules monitoring, **without adding another local reward**. If authorization/monitoring fails, credit stays saved and the app does not announce native success. No new local HealthKit samples are manufactured.
+- Announcement and ad events are queued per account in UserDefaults when offline. Analytics remain client-reported impressions/clicks, not fraud-proof events. Cached challenges are not actionable offline; mutation errors are displayed.
+
+### Admin deletion: required two-step contract
+Only current **super_admin** has `users_delete`; support, marketing and ordinary admin do not. Every request and completion requires a current AAL2 session. The database cannot safely delete managed Auth accounts directly.
+
+1. `const {data: requestId, error} = await client.rpc('admin_delete_user', {_uid: userId, _reason: reason})`.
+2. With the same current access token, POST `https://step-wise-life.lovable.app/api/public/admin-delete-user`:
+   `Authorization: Bearer <current session access token>` and JSON `{ "request_id": requestId }`.
+3. Only HTTP 200 `{ok:true}` means deletion completed. The RPC alone **queues** deletion; never show success immediately after it. Retry the same request on an incomplete deletion. CORS permits `https://setgoals.se`; CORS is not authorization.
+
+Self-deletion and deletion of accounts with admin roles are blocked. Parents' owned child accounts are also removed. The server explicitly removes account-owned daily analytics, campaign events/rewards/participation, support notes, grants, friend requests, family/tasks, settings and profiles, then calls the supported Auth admin API. Pseudonymous audit records and deletion requests remain for accountability, with reason/actor/target and status. Table cleanup is checked but cannot be atomic with Auth deletion; incomplete operations are retryable. Stored data-URL photos disappear with rows; separately retained external media or backups follow their provider's retention and are not claimed purged here.
+
+### Verification limits
+No Xcode/iPhone runtime exists in this environment. Native UI, sheet interaction and Apple monitoring must be validated on a signed-in device after rebuilding. Real admin deletion must be tested with an explicitly approved disposable account and MFA session; no existing customer account was deleted for testing. Website completion endpoint requires publishing the app's server changes. This task does not publish or edit the separate website dashboard.
+
+Executed checks: all 14 assertions in the actual Swift CampaignRules passed using a temporary Linux Swift compiler; changed Swift files passed syntax parsing (not iOS typechecking). Live backend confirms new RPCs/columns and denies anonymous execution. Local endpoint returned 401 for missing/invalid tokens and 403 for the requesting user's real AAL1 session. Vite intercepts OPTIONS in preview, so the published preflight remains unverified. The retained rollback-only integration test could not run because its database connection lacks profiles access; no test changes were persisted. Native HealthKit now ensures the balance row then updates earned_min only, preserving bonus/rollover/usage; existing triggers refresh daily history.

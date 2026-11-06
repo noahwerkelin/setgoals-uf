@@ -20,6 +20,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatsRouteImport } from './routes/stats'
+import { Route as ApiPublicAdminDeleteUserRouteImport } from './routes/api/public/admin-delete-user'
 import { Route as ApiPublicDeleteAccountRouteImport } from './routes/api/public/delete-account'
 import { Route as ApiPublicFamilyTodayRouteImport } from './routes/api/public/family-today'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
@@ -86,6 +87,12 @@ const StatsRoute = StatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAdminDeleteUserRoute =
+  ApiPublicAdminDeleteUserRouteImport.update({
+    id: '/api/public/admin-delete-user',
+    path: '/api/public/admin-delete-user',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicDeleteAccountRoute = ApiPublicDeleteAccountRouteImport.update({
   id: '/api/public/delete-account',
   path: '/api/public/delete-account',
@@ -153,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/admin-delete-user': typeof ApiPublicAdminDeleteUserRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -176,6 +184,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/admin-delete-user': typeof ApiPublicAdminDeleteUserRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -200,6 +209,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/api/public/admin-delete-user': typeof ApiPublicAdminDeleteUserRoute
   '/api/public/delete-account': typeof ApiPublicDeleteAccountRoute
   '/api/public/family-today': typeof ApiPublicFamilyTodayRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/admin-delete-user'
     | '/api/public/delete-account'
     | '/api/public/family-today'
     | '/api/public/health'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/admin-delete-user'
     | '/api/public/delete-account'
     | '/api/public/family-today'
     | '/api/public/health'
@@ -271,6 +283,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/stats'
+    | '/api/public/admin-delete-user'
     | '/api/public/delete-account'
     | '/api/public/family-today'
     | '/api/public/health'
@@ -295,6 +308,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
+  ApiPublicAdminDeleteUserRoute: typeof ApiPublicAdminDeleteUserRoute
   ApiPublicDeleteAccountRoute: typeof ApiPublicDeleteAccountRoute
   ApiPublicFamilyTodayRoute: typeof ApiPublicFamilyTodayRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -386,6 +400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/admin-delete-user': {
+      id: '/api/public/admin-delete-user'
+      path: '/api/public/admin-delete-user'
+      fullPath: '/api/public/admin-delete-user'
+      preLoaderRoute: typeof ApiPublicAdminDeleteUserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/delete-account': {
       id: '/api/public/delete-account'
       path: '/api/public/delete-account'
@@ -471,6 +492,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
+  ApiPublicAdminDeleteUserRoute: ApiPublicAdminDeleteUserRoute,
   ApiPublicDeleteAccountRoute: ApiPublicDeleteAccountRoute,
   ApiPublicFamilyTodayRoute: ApiPublicFamilyTodayRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,

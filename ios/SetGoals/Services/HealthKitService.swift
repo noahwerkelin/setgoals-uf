@@ -1,5 +1,6 @@
 import Foundation
 import HealthKit
+import Supabase
 
 /// Replaces the web `src/lib/health-bridge.ts` shim with the real thing.
 /// Reads steps / distance / active energy / exercise minutes and pushes
@@ -65,6 +66,19 @@ final class HealthKitService: ObservableObject {
             try await SupabaseAPI.upsertToday(
                 steps: steps, distanceKm: distanceKm, calories: calories, exerciseMinutes: exerciseMinutes
             )
+            if let uid = await SupabaseAPI.currentUserID() {
+                let earned = SettingsStore.shared.earnedMin(from: steps)
+                // Ensure a row exists without overwriting any server-granted fields.
+                try await supabase.from("earned_balances").upsert([
+                    "user_id": AnyJSON.string(uid.uuidString),
+                    "day": .string(SupabaseAPI.todayKey),
+                    "earned_min": .integer(earned)
+                ], onConflict: "user_id,day", ignoreDuplicates: true).execute()
+                try await supabase.from("earned_balances").update(["earned_min": earned])
+                    .eq("user_id", value: uid).eq("day", value: SupabaseAPI.todayKey).execute()
+                let settings = SettingsStore.shared
+                ScreenTimeService.shared.setBaseAllowance(earned + settings.rolloverMin + settings.bonusMin)
+            }
             syncError = nil
         } catch {
             syncError = error.localizedDescription
@@ -73,6 +87,7 @@ final class HealthKitService: ObservableObject {
         // Keep the streak and badges in step with the movement just recorded.
         await StreakSync.record(steps: steps, goal: SettingsStore.shared.dailyGoal)
         await BadgeSync.run()
+        Task { await CampaignStore.shared.refresh() }
     }
 
     private func sum(_ id: HKQuantityTypeIdentifier, unit: HKUnit, from: Date, to: Date) async -> Double {
