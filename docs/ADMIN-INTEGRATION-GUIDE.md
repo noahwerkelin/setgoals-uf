@@ -20,7 +20,7 @@ External domains can be added to the Auth return-address allow-list. This is not
 
 Before changing anything:
 
-1. Obtain the complete admin specification from the website project.
+1. Use the uploaded instruction as the bounded first-stage scope; do not request another upload to repeat those requirements. Additional capabilities and unspecified role boundaries remain deferred.
 2. Confirm a supported method for the website to authenticate against the existing Auth owner, without enabling Cloud in the website project or transferring private credentials.
 3. Establish exact public website callback and recovery pages; have the owner add their addresses in **More → Users → Auth settings → Advanced → Redirect URLs**. Agent tools cannot edit this allow-list. Do not change the existing Site URL or app redirects as a workaround.
 4. Verify actual hosted MFA enrollment/challenge support and rate-limit settings. Never infer these from local code or a session lacking an assurance claim.
@@ -41,3 +41,13 @@ Enforce MFA assurance in each privileged backend operation, not only the dashboa
 Assign the first Super Admin only after the owner explicitly identifies an existing verified account and its MFA status is checked; use a narrowly scoped privileged assignment with audit actor, target and reason. Never provide a public bootstrap function.
 
 No role, RLS, table, Auth setting, subscription or SwiftUI change was made during this follow-up. No new endpoint was created and nothing needs publishing for this documentation. The public health endpoint remains unchanged and proves no privileged access.
+
+## Approval follow-up — 2026-11-06 02:32 UTC
+
+The owner approved proceeding with the first stage. This does not waive the uploaded instruction's requirement to verify the connection before backend changes.
+
+Official documentation was queried specifically about a standalone website using the existing Cloud Auth URL/publishable key and its own caller session, **without** attaching a second Cloud backend. The answer distinguishes this from managed project attachment: external frontend hosting with the existing backend is documented, but the exact unrelated-website sign-in/MFA/recovery arrangement is not explicitly confirmed. A separate website's password sign-in and AAL2-protected call have therefore not been verified; the gate remains unresolved. This is a platform-verification blocker, not a request for another admin specification.
+
+References: https://docs.lovable.dev/tips-tricks/external-deployment-hosting and https://docs.lovable.dev/features/authentication. These are evidence of general external frontend configuration, not proof that this dashboard arrangement has passed an end-to-end check. No new live-database inspection or authentication test was performed in this follow-up; earlier live findings remain dated audit evidence.
+
+The previous promise to immediately implement four roles and MFA after switching to Build mode was premature. No migrations, role grants, RLS changes, Auth changes, credentials, Swift changes or publishing were made. Do not use an MCP OAuth recipe as proof of support for an ordinary browser dashboard. Platform feedback was submitted requesting an authoritative remote-auth integration contract and hosted MFA/rate-limit verification.
