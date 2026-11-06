@@ -1030,7 +1030,7 @@ export type Database = {
         }[]
       }
       leaderboard_ranked: {
-        Args: { _scope: string; _uid?: string }
+        Args: { _day?: string; _scope: string; _uid?: string }
         Returns: {
           avatar_url: string
           display_name: string
