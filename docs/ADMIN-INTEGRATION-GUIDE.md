@@ -59,3 +59,60 @@ The previous promise to immediately implement four roles and MFA after switching
 - `admin_me()` returnerar inloggad användares roller och `aal`. Dashboarden ska kräva `aal = 'aal2'` (MFA) innan den visar data.
 - `admin_overview_totals`, `admin_overview_daily`, `admin_users`, `admin_user_history` kontrollerar nu rollbehörighet, loggar och är stängda för anonyma anrop. Sökningen escapar jokertecken.
 - Hemsidan ansluter med appens publika URL + publishable key (finns i appens `.env`) och loggar in med vanlig e-post/lösenord.
+
+## Etapp 2 – Full dashboard backend (2026-11-06)
+
+Migrations: `0017_admin_dashboard_tables`, `0018_admin_dashboard_functions`, `0019_campaign_delivery_api`.
+
+### Connection (website)
+`createClient(VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY)` from this app's `.env`. Admins sign in with email/password, then enroll/verify TOTP (`supabase.auth.mfa.enroll/challenge/verify`). **Every write requires an `aal2` session** (enforced in the database); reads only require the role. Never put a service-role key in the website.
+
+Redirect URLs for `https://setgoals.se/admin/login` and the password-reset page must be added by the owner in Auth settings → Redirect URLs.
+
+### Permission matrix (`admin_can(perm)`)
+| perm | super | admin | support | marketing |
+|---|---|---|---|---|
+| overview, analytics | ✓ | ✓ | | ✓ (aggregates only) |
+| users, history | ✓ | ✓ | ✓ | |
+| user_edit | ✓ | ✓ | | |
+| support (notes) | ✓ | ✓ | ✓ | |
+| subs_view | ✓ | ✓ | ✓ | |
+| subs_edit (promos) | ✓ | ✓ | | |
+| announcements, challenges, calendar | ✓ | ✓ | | ✓ |
+| ads | ✓ | | | ✓ |
+| audit | ✓ | ✓ | | |
+| admin_manage | ✓ | | | |
+
+Use `rpc('admin_me')` to get `{roles, aal}` and hide nav items; the backend enforces regardless.
+
+### Admin RPCs (`supabase.rpc(name, args)`)
+- `admin_dashboard_stats()` → jsonb with all overview cards. DAU/WAU/MAU come from `app_activity_days` (app opened); `step_sync_active_*` is reported separately.
+- `admin_analytics_series({_from,_to})` → daily rows: new_users, total_users, dau, wau, mau, step_active_users, total_steps, pro_new, pro_active_paid_or_promo, sponsored_joins, sponsored_completions (max 400 days). Weekly/monthly = aggregate client-side.
+- `admin_users_v2({_search,_plan:'free|pro|pro_family',_account_type:'individual|parent|child',_activity:'active|inactive',_registered_from,_registered_to,_sort:'created_at|last_active|username|display_name|email',_desc,_limit,_offset})` → rows incl. `total_count`.
+- `admin_user_detail({_uid})` → jsonb: profile, settings, activity (today/totals/last_30_days), streak, friends, friend_requests, family, challenges (coach/sponsored/badges), subscription (current/effective_plan/history/promotions). `language` is null (not stored).
+- `admin_update_user({_uid,_daily_goal,_steps_per_30,_daily_cap_hours,_account_status:'active|flagged|suspended',_status_note,_reason})` — validated, audited with before/after. Activity history cannot be edited.
+- `admin_subscription_overview()`, `admin_subscriptions_list({_search,_status,_limit,_offset})`.
+- `admin_grant_promo({_uid,_plan:'pro|pro_family',_expires_at,_reason,_starts_at?})` → id. Max 1 year. Stored in `promotional_entitlements`; only switches the app's PRO flag on when the user has no paid/permanent PRO. `admin_revoke_promo({_promo_id,_reason})` never removes paid access.
+- `admin_list_admins()`, `admin_set_role({_email,_role,_grant,_reason})` (super only; the last Super Admin cannot be removed).
+- `admin_get_audit_logs({_action,_actor,_target,_from,_to,_limit,_offset})`.
+- `admin_campaign_calendar({_from,_to})` → unified rows (type, id, name, status, starts/ends, priority, targeting, fullscreen). Overlap warning = two `fullscreen` rows with intersecting time and audiences.
+- `admin_campaign_stats({_type,_id})` → eligible, displayed, unique_viewers, dismissed, cta_clicks, ctr, participants, completions, rewards_granted, daily.
+
+### Direct table access (RLS-protected, audited by trigger)
+- `admin_support_notes` (select/insert/update; delete = super only). Fields: user_id, author_id, category (`general|technical|subscription|family|screen_time|account_access|other`), content, priority (`low|normal|high|urgent`), status (`open|resolved|archived`), important. Edit history is in the audit log (`details.previous`).
+- `app_announcements`: internal_name, kind (`important|maintenance|service_interruption|new_feature|app_update|general|custom`), `content` = `{"sv":{title,subtitle,description,button_text},"en":{...}}`, `style` = `{background_color,gradient,background_image_url,text_color,icon,logo_url,button_color,button_destination,corner_radius,content_alignment,text_alignment,illustration_url}`, display_mode (`once_per_user|once_per_session|until_dismissed|every_launch`), requires_ack, dismissible (only service kinds may be non-dismissible), priority 1–4 (1 = critical), targeting `{"audiences":["all"|"adults"|"parents"|"children"|"free"|"pro"|"pro_family"],"languages":["sv","en"]}`, min_app_version, status (`draft|scheduled|published|paused|archived`), starts_at, ends_at, timezone.
+- `app_advertisements`: sponsor_name, template (`fullscreen_image|centered_logo|image_bottom_text|gradient_illustration|minimal`), content/style as above, cta_url / secondary_url (https only), priority, targeting, max_per_day (1–5), min_minutes_between (≥30), max_total_per_user, once_per_campaign, status (`draft|scheduled|active|paused|expired|archived`), dates. Children and under-18s never receive ads (server-side).
+- `sponsored_challenges`: content (sv/en title+description), sponsor_name/logo/url, style (cover_image_url, background_color, accent_color, icon), sponsored_label, metric (`steps|distance_km|active_days|exercise_minutes`), target, reward_minutes (0–240), reward_badge_id, max_claims, join_mode (`manual|automatic`), eligibility (same shape as targeting), status (`draft|scheduled|visible|active|completed|paused|archived`), visible_at, join_opens_at, join_closes_at, starts_at, ends_at, removed_at.
+- `admin_preferences` (own row: `prefs` jsonb for language, theme, default timezone, default frequency, notifications).
+- Duplicate = select + insert copy with `status='draft'`. Archive = update `status='archived'`. Delete = super only.
+
+### App delivery API (for future SwiftUI; authenticated users)
+- `record_app_open({_app_version,_platform})` – call on each foreground; feeds DAU/WAU/MAU.
+- `get_active_announcements({_lang,_app_version})` → at most one, highest priority.
+- `get_active_advertisements({_lang,_app_version})` → at most one; empty if an announcement is active; frequency caps + global 4-hour cap.
+- `record_campaign_event({_type:'announcement|advertisement|sponsored_challenge',_campaign_id,_event:'eligible|displayed|dismissed|acknowledged|cta_click|secondary_click'})`.
+- `get_sponsored_challenges({_lang})`, `join_sponsored_challenge({_challenge_id})`, `get_sponsored_challenge_progress({_challenge_id})`, `claim_sponsored_challenge_reward({_challenge_id})` – progress counted only from activity inside the challenge period; one claim per user enforced by primary key + row lock; minutes added as today's bonus.
+Only template data is returned – never executable code.
+
+### Not verified
+No end-to-end test with a real admin session from the website (MFA enrolment, writes) has been performed yet.

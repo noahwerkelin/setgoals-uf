@@ -120,6 +120,27 @@
       "when": 1793932629539,
       "tag": "0016_admin_roles_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793933528171,
+      "tag": "0017_admin_dashboard_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793933635801,
+      "tag": "0018_admin_dashboard_functions",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793933689640,
+      "tag": "0019_campaign_delivery_api",
+      "breakpoints": true
     }
   ]
 }

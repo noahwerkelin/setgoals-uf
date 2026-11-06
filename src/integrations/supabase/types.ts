@@ -77,6 +77,38 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_account_flags: {
+        Row: {
+          note: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          note?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          note?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_account_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_audit_log: {
         Row: {
           aal: string | null
@@ -104,6 +136,24 @@ export type Database = {
           details?: Json
           id?: string
           target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      admin_preferences: {
+        Row: {
+          prefs: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          prefs?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          prefs?: Json
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -153,6 +203,253 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      admin_support_notes: {
+        Row: {
+          author_id: string
+          category: string
+          content: string
+          created_at: string
+          id: string
+          important: boolean
+          priority: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_id?: string
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          important?: boolean
+          priority?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          important?: boolean
+          priority?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_support_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_activity_days: {
+        Row: {
+          app_version: string | null
+          day: string
+          last_seen_at: string
+          opens: number
+          platform: string | null
+          user_id: string
+        }
+        Insert: {
+          app_version?: string | null
+          day: string
+          last_seen_at?: string
+          opens?: number
+          platform?: string | null
+          user_id: string
+        }
+        Update: {
+          app_version?: string | null
+          day?: string
+          last_seen_at?: string
+          opens?: number
+          platform?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_activity_days_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_advertisements: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          cta_url: string | null
+          ends_at: string | null
+          id: string
+          internal_name: string
+          max_per_day: number
+          max_total_per_user: number | null
+          min_app_version: string | null
+          min_minutes_between: number
+          once_per_campaign: boolean
+          priority: number
+          secondary_url: string | null
+          sponsor_name: string
+          starts_at: string | null
+          status: string
+          style: Json
+          targeting: Json
+          template: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          cta_url?: string | null
+          ends_at?: string | null
+          id?: string
+          internal_name: string
+          max_per_day?: number
+          max_total_per_user?: number | null
+          min_app_version?: string | null
+          min_minutes_between?: number
+          once_per_campaign?: boolean
+          priority?: number
+          secondary_url?: string | null
+          sponsor_name: string
+          starts_at?: string | null
+          status?: string
+          style?: Json
+          targeting?: Json
+          template?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          cta_url?: string | null
+          ends_at?: string | null
+          id?: string
+          internal_name?: string
+          max_per_day?: number
+          max_total_per_user?: number | null
+          min_app_version?: string | null
+          min_minutes_between?: number
+          once_per_campaign?: boolean
+          priority?: number
+          secondary_url?: string | null
+          sponsor_name?: string
+          starts_at?: string | null
+          status?: string
+          style?: Json
+          targeting?: Json
+          template?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_announcements: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          dismissible: boolean
+          display_mode: string
+          ends_at: string | null
+          id: string
+          internal_name: string
+          kind: string
+          min_app_version: string | null
+          priority: number
+          requires_ack: boolean
+          starts_at: string | null
+          status: string
+          style: Json
+          targeting: Json
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          dismissible?: boolean
+          display_mode?: string
+          ends_at?: string | null
+          id?: string
+          internal_name: string
+          kind?: string
+          min_app_version?: string | null
+          priority?: number
+          requires_ack?: boolean
+          starts_at?: string | null
+          status?: string
+          style?: Json
+          targeting?: Json
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          dismissible?: boolean
+          display_mode?: string
+          ends_at?: string | null
+          id?: string
+          internal_name?: string
+          kind?: string
+          min_app_version?: string | null
+          priority?: number
+          requires_ack?: boolean
+          starts_at?: string | null
+          status?: string
+          style?: Json
+          targeting?: Json
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      campaign_events: {
+        Row: {
+          campaign_id: string
+          campaign_type: string
+          created_at: string
+          event: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          campaign_type: string
+          created_at?: string
+          event: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          campaign_type?: string
+          created_at?: string
+          event?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       children: {
         Row: {
@@ -528,6 +825,59 @@ export type Database = {
         }
         Relationships: []
       }
+      promotional_entitlements: {
+        Row: {
+          applied_to_settings: boolean
+          created_at: string
+          expires_at: string
+          granted_by: string
+          id: string
+          plan: string
+          reason: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_to_settings?: boolean
+          created_at?: string
+          expires_at: string
+          granted_by: string
+          id?: string
+          plan: string
+          reason: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_to_settings?: boolean
+          created_at?: string
+          expires_at?: string
+          granted_by?: string
+          id?: string
+          plan?: string
+          reason?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotional_entitlements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restriction_settings: {
         Row: {
           active: boolean
@@ -585,6 +935,168 @@ export type Database = {
           minutes?: number
           note?: string | null
           parent_id?: string
+        }
+        Relationships: []
+      }
+      sponsored_challenge_participants: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "sponsored_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_challenge_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsored_challenge_rewards: {
+        Row: {
+          badge_id: string | null
+          challenge_id: string
+          granted_at: string
+          minutes: number
+          user_id: string
+        }
+        Insert: {
+          badge_id?: string | null
+          challenge_id: string
+          granted_at?: string
+          minutes?: number
+          user_id: string
+        }
+        Update: {
+          badge_id?: string | null
+          challenge_id?: string
+          granted_at?: string
+          minutes?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_challenge_rewards_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "sponsored_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_challenge_rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsored_challenges: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          eligibility: Json
+          ends_at: string | null
+          id: string
+          internal_name: string
+          join_closes_at: string | null
+          join_mode: string
+          join_opens_at: string | null
+          max_claims: number | null
+          metric: string
+          removed_at: string | null
+          reward_badge_id: string | null
+          reward_minutes: number
+          sponsor_logo_url: string | null
+          sponsor_name: string | null
+          sponsor_url: string | null
+          sponsored_label: boolean
+          starts_at: string | null
+          status: string
+          style: Json
+          target: number
+          timezone: string
+          updated_at: string
+          visible_at: string | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          eligibility?: Json
+          ends_at?: string | null
+          id?: string
+          internal_name: string
+          join_closes_at?: string | null
+          join_mode?: string
+          join_opens_at?: string | null
+          max_claims?: number | null
+          metric: string
+          removed_at?: string | null
+          reward_badge_id?: string | null
+          reward_minutes?: number
+          sponsor_logo_url?: string | null
+          sponsor_name?: string | null
+          sponsor_url?: string | null
+          sponsored_label?: boolean
+          starts_at?: string | null
+          status?: string
+          style?: Json
+          target: number
+          timezone?: string
+          updated_at?: string
+          visible_at?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          eligibility?: Json
+          ends_at?: string | null
+          id?: string
+          internal_name?: string
+          join_closes_at?: string | null
+          join_mode?: string
+          join_opens_at?: string | null
+          max_claims?: number | null
+          metric?: string
+          removed_at?: string | null
+          reward_badge_id?: string | null
+          reward_minutes?: number
+          sponsor_logo_url?: string | null
+          sponsor_name?: string | null
+          sponsor_url?: string | null
+          sponsored_label?: boolean
+          starts_at?: string | null
+          status?: string
+          style?: Json
+          target?: number
+          timezone?: string
+          updated_at?: string
+          visible_at?: string | null
         }
         Relationships: []
       }
@@ -973,8 +1485,92 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      account_plan: { Args: { _uid: string }; Returns: string }
+      account_type: { Args: { _uid: string }; Returns: string }
       add_my_friend: { Args: { _friend_id: string }; Returns: undefined }
+      admin_analytics_series: {
+        Args: { _from: string; _to?: string }
+        Returns: {
+          dau: number
+          day: string
+          mau: number
+          new_users: number
+          pro_active_paid_or_promo: number
+          pro_new: number
+          sponsored_completions: number
+          sponsored_joins: number
+          step_active_users: number
+          total_steps: number
+          total_users: number
+          wau: number
+        }[]
+      }
+      admin_campaign_calendar: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          campaign_type: string
+          ends_at: string
+          fullscreen: boolean
+          id: string
+          internal_name: string
+          priority: number
+          starts_at: string
+          status: string
+          targeting: Json
+        }[]
+      }
+      admin_campaign_stats: {
+        Args: { _id: string; _type: string }
+        Returns: Json
+      }
       admin_can: { Args: { _perm: string }; Returns: boolean }
+      admin_can_write: { Args: { _perm: string }; Returns: boolean }
+      admin_dashboard_stats: { Args: never; Returns: Json }
+      admin_get_audit_logs: {
+        Args: {
+          _action?: string
+          _actor?: string
+          _from?: string
+          _limit?: number
+          _offset?: number
+          _target?: string
+          _to?: string
+        }
+        Returns: {
+          aal: string
+          action: string
+          actor_id: string
+          actor_username: string
+          created_at: string
+          details: Json
+          id: string
+          target_user_id: string
+          target_username: string
+          total_count: number
+        }[]
+      }
+      admin_grant_promo: {
+        Args: {
+          _expires_at: string
+          _plan: string
+          _reason: string
+          _starts_at?: string
+          _uid: string
+        }
+        Returns: string
+      }
+      admin_list_admins: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          email: string
+          mfa_factors: number
+          roles: string[]
+          user_id: string
+          username: string
+        }[]
+      }
       admin_me: {
         Args: never
         Returns: {
@@ -1013,6 +1609,65 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_require_write: {
+        Args: {
+          _action: string
+          _details?: Json
+          _perm: string
+          _target?: string
+        }
+        Returns: undefined
+      }
+      admin_revoke_promo: {
+        Args: { _promo_id: string; _reason: string }
+        Returns: undefined
+      }
+      admin_set_role: {
+        Args: {
+          _email: string
+          _grant: boolean
+          _reason: string
+          _role: string
+        }
+        Returns: undefined
+      }
+      admin_subscription_overview: { Args: never; Returns: Json }
+      admin_subscriptions_list: {
+        Args: {
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _status?: string
+        }
+        Returns: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string
+          email: string
+          environment: string
+          id: string
+          price_id: string
+          product_id: string
+          provider: string
+          status: string
+          total_count: number
+          user_id: string
+          username: string
+        }[]
+      }
+      admin_update_user: {
+        Args: {
+          _account_status?: string
+          _daily_cap_hours?: number
+          _daily_goal?: number
+          _reason?: string
+          _status_note?: string
+          _steps_per_30?: number
+          _uid: string
+        }
+        Returns: undefined
+      }
+      admin_user_detail: { Args: { _uid: string }; Returns: Json }
       admin_user_history: {
         Args: { _from?: string; _uid: string }
         Returns: {
@@ -1062,7 +1717,50 @@ export type Database = {
           username: string
         }[]
       }
+      admin_users_v2: {
+        Args: {
+          _account_type?: string
+          _activity?: string
+          _desc?: boolean
+          _limit?: number
+          _offset?: number
+          _plan?: string
+          _registered_from?: string
+          _registered_to?: string
+          _search?: string
+          _sort?: string
+        }
+        Returns: {
+          account_status: string
+          account_type: string
+          avatar_url: string
+          created_at: string
+          display_name: string
+          email: string
+          last_app_activity: string
+          last_step_sync: string
+          plan: string
+          total_count: number
+          user_id: string
+          username: string
+        }[]
+      }
+      app_version_gte: { Args: { _min: string; _v: string }; Returns: boolean }
+      campaign_audience_match: {
+        Args: {
+          _is_ad: boolean
+          _lang: string
+          _service: boolean
+          _targeting: Json
+          _uid: string
+        }
+        Returns: boolean
+      }
       claim_rollover: { Args: { _day: string }; Returns: number }
+      claim_sponsored_challenge_reward: {
+        Args: { _challenge_id: string }
+        Returns: Json
+      }
       compute_rollover: {
         Args: { _day: string; _uid: string }
         Returns: number
@@ -1082,6 +1780,64 @@ export type Database = {
           steps: number
         }[]
       }
+      get_active_advertisements: {
+        Args: { _app_version?: string; _lang?: string }
+        Returns: {
+          content: Json
+          cta_url: string
+          id: string
+          secondary_url: string
+          sponsor_name: string
+          sponsored_label: string
+          style: Json
+          template: string
+        }[]
+      }
+      get_active_announcements: {
+        Args: { _app_version?: string; _lang?: string }
+        Returns: {
+          content: Json
+          dismissible: boolean
+          display_mode: string
+          ends_at: string
+          id: string
+          kind: string
+          priority: number
+          requires_ack: boolean
+          style: Json
+        }[]
+      }
+      get_sponsored_challenge_progress: {
+        Args: { _challenge_id: string }
+        Returns: Json
+      }
+      get_sponsored_challenges: {
+        Args: { _lang?: string }
+        Returns: {
+          claims_remaining: number
+          completed: boolean
+          content: Json
+          ends_at: string
+          id: string
+          join_closes_at: string
+          join_mode: string
+          join_opens_at: string
+          joined: boolean
+          metric: string
+          phase: string
+          progress: number
+          reward_badge_id: string
+          reward_claimed: boolean
+          reward_minutes: number
+          sponsor_logo_url: string
+          sponsor_name: string
+          sponsor_url: string
+          sponsored_label: boolean
+          starts_at: string
+          style: Json
+          target: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1092,6 +1848,10 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_parent_of: { Args: { _child_user_id: string }; Returns: boolean }
       is_privileged_caller: { Args: never; Returns: boolean }
+      join_sponsored_challenge: {
+        Args: { _challenge_id: string }
+        Returns: undefined
+      }
       leaderboard: {
         Args: { _scope: string }
         Returns: {
@@ -1145,6 +1905,14 @@ export type Database = {
         }[]
       }
       pro_is_active: { Args: { _user_id: string }; Returns: boolean }
+      record_app_open: {
+        Args: { _app_version?: string; _platform?: string }
+        Returns: undefined
+      }
+      record_campaign_event: {
+        Args: { _campaign_id: string; _event: string; _type: string }
+        Returns: undefined
+      }
       refresh_daily_stats: {
         Args: { _day: string; _uid: string }
         Returns: undefined
@@ -1165,6 +1933,13 @@ export type Database = {
       setgoals_parent_gift: {
         Args: { p_child_id: string; p_minutes: number; p_note?: string }
         Returns: undefined
+      }
+      sponsored_progress_value: {
+        Args: {
+          _c: Database["public"]["Tables"]["sponsored_challenges"]["Row"]
+          _uid: string
+        }
+        Returns: number
       }
       username_available: { Args: { _username: string }; Returns: boolean }
       username_is_valid: { Args: { _username: string }; Returns: boolean }
