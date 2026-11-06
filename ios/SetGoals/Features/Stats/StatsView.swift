@@ -49,7 +49,7 @@ struct StatsView: View {
     private var thisWeek: [DayTotals] { Array(syncedHistory.isEmpty ? week : syncedHistory).suffix(daysSinceMonday) }
     private var maxSteps: Int { max(1, week.map(\.steps).max() ?? 1) }
     private var avg: Int { week.isEmpty ? 0 : week.reduce(0) { $0 + $1.steps } / week.count }
-    private var weeklyEarnedMin: Int { thisWeek.reduce(0) { $0 + settings.earnedMin(from: $1.steps) } }
+    private var weeklyEarnedMin: Int { thisWeek.reduce(0) { $0 + settings.earnedMin(from: $1.steps, on: SettingsStore.date(fromDayKey: $1.day)) } }
     private var goal: Int { max(1, settings.dailyGoal) }
     private var last30: [DayTotals] { Array(syncedHistory.suffix(30)) }
     private var goalPct: Int {
@@ -496,7 +496,7 @@ struct Insights {
             guard let date = f.date(from: d.day) else { continue }
             let dow = Calendar.current.component(.weekday, from: date) - 1  // 0 = Sunday
             buckets[dow].append(Double(d.steps))
-            let min = Double(settings.earnedMin(from: d.steps))
+            let min = Double(settings.earnedMin(from: d.steps, on: SettingsStore.date(fromDayKey: d.day)))
             if dow == 0 || dow == 6 { weekendMin += min; weekendCount += 1 }
             else { weekdayMin += min; weekdayCount += 1 }
         }

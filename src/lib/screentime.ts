@@ -36,6 +36,60 @@ export function saveProST(next: ProST) {
   } catch {}
 }
 
+/** Local-weekend check (Sat/Sun), matching the iOS `Calendar.current` rule. */
+export function isWeekendDay(date: Date = new Date()): boolean {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+/**
+ * The cap that actually applies on `date`. When split caps are on they
+ * override the standard daily cap entirely; otherwise the standard cap rules.
+ */
+export function effectiveCapHours(
+  dailyCapHours: number,
+  pro: ProST,
+  isPro: boolean,
+  date: Date = new Date(),
+): number {
+  if (isPro && pro.splitCaps) {
+    return isWeekendDay(date) ? pro.weekendCap : pro.weekdayCap;
+  }
+  return dailyCapHours;
+}
+
+/**
+ * Steps needed per 30 earned minutes on `date`. The PRO weekend 2x
+ * multiplier halves the steps required on Saturdays and Sundays.
+ */
+export function effectiveStepsPer30(
+  stepsPer30: number,
+  pro: ProST,
+  isPro: boolean,
+  date: Date = new Date(),
+): number {
+  if (isPro && pro.weekend2x && isWeekendDay(date)) {
+    return Math.max(1, Math.round(stepsPer30 / 2));
+  }
+  return stepsPer30;
+}
+
+/** Earned minutes for a day, honoring the PRO weekend multiplier and split caps. */
+export function earnedMinForDay(
+  steps: number,
+  stepsPer30: number,
+  dailyCapHours: number,
+  pro: ProST,
+  isPro: boolean,
+  date: Date = new Date(),
+): number {
+  return earnedMinFromSteps(
+    steps,
+    effectiveStepsPer30(stepsPer30, pro, isPro, date),
+    effectiveCapHours(dailyCapHours, pro, isPro, date),
+  );
+}
+
 /**
  * Rollover minutes from yesterday's unused earned screen time.
  * Since actual screen-time consumption isn't tracked, we treat
@@ -50,6 +104,8 @@ export function computeRolloverMin(
   isPro: boolean,
 ): number {
   if (!isPro || !pro.rollover) return 0;
-  const earnedYesterday = earnedMinFromSteps(yesterdaySteps, stepsPer30, dailyCapHours);
-  return Math.min(earnedYesterday, dailyCapHours * 60);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const earnedYesterday = earnedMinForDay(yesterdaySteps, stepsPer30, dailyCapHours, pro, isPro, yesterday);
+  return Math.min(earnedYesterday, effectiveCapHours(dailyCapHours, pro, isPro) * 60);
 }

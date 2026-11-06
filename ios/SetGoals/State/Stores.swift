@@ -44,11 +44,51 @@ final class SettingsStore: ObservableObject {
     var hasCap: Bool { dailyCapHours > 0 && dailyCapHours < 24 }
     var capMin: Int { hasCap ? dailyCapHours * 60 : Int.max / 4 }
 
-    /// `earnedMinFromSteps` — identical rounding to the web helper.
-    func earnedMin(from steps: Int) -> Int {
-        guard stepsPer30 > 0 else { return 0 }
-        let raw = Int((Double(steps) / Double(stepsPer30) * 30).rounded(.down))
-        return min(raw, capMin)
+    /// Local-weekend check (Sat/Sun), matching `isWeekendDay` on the web.
+    static func isWeekend(_ date: Date = Date()) -> Bool {
+        let wd = Calendar.current.component(.weekday, from: date)
+        return wd == 1 || wd == 7
+    }
+
+    /// Parse a "yyyy-MM-dd" day key into a local Date (web: `new Date(day + "T00:00:00")`).
+    static func date(fromDayKey key: String) -> Date {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .current
+        f.dateFormat = "yyyy-MM-dd"
+        return f.date(from: key) ?? Date()
+    }
+
+    /// The cap that actually applies on `date`: PRO split caps override the
+    /// standard daily cap entirely (web `effectiveCapHours`).
+    func effectiveCapHours(for date: Date = Date()) -> Int {
+        let pro = ProSTStore.shared
+        if isPro, pro.splitCaps {
+            return SettingsStore.isWeekend(date) ? pro.weekendCap : pro.weekdayCap
+        }
+        return dailyCapHours
+    }
+
+    /// Steps needed per 30 earned minutes on `date`: the PRO weekend 2x
+    /// multiplier halves the requirement on Sat/Sun (web `effectiveStepsPer30`).
+    func effectiveStepsPer30(for date: Date = Date()) -> Int {
+        let pro = ProSTStore.shared
+        if isPro, pro.weekend2x, SettingsStore.isWeekend(date) {
+            return max(1, Int((Double(stepsPer30) / 2).rounded()))
+        }
+        return stepsPer30
+    }
+
+    /// `earnedMinFromSteps` — identical rounding to the web helper, honoring
+    /// the PRO weekend multiplier and split caps (web `earnedMinForDay`).
+    func earnedMin(from steps: Int, on date: Date = Date()) -> Int {
+        let per30 = effectiveStepsPer30(for: date)
+        guard per30 > 0 else { return 0 }
+        let raw = Int((Double(steps) / Double(per30) * 30).rounded(.down))
+        let capHours = effectiveCapHours(for: date)
+        let cap = capHours > 0 && capHours < 24 ? capHours * 60 : Int.max / 4
+        return min(raw, cap)
     }
 
     static func formatScreenMin(_ m: Int) -> String {

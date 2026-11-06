@@ -21,7 +21,10 @@ struct HomeView: View {
     private var goal: Int { settings.dailyGoal > 0 ? settings.dailyGoal : 8000 }
     private var steps: Int { health.steps }
     private var isChild: Bool { settings.role == "child" }
-    private var capMin: Int { settings.hasCap ? settings.dailyCapHours * 60 : 24 * 60 }
+    private var capMin: Int {
+        let cap = settings.effectiveCapHours()
+        return cap > 0 && cap < 24 ? cap * 60 : 24 * 60
+    }
     private var rolloverMin: Int {
         guard settings.isPro, settings.hasCap else { return 0 }
         return settings.rolloverMin

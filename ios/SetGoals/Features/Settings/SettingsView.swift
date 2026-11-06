@@ -235,6 +235,18 @@ struct SettingsView: View {
 
     // MARK: - Earning rules
 
+    /// When PRO split caps are on they override the standard daily cap, so the
+    /// row shows the split instead of a value that no longer applies.
+    private var dailyCapMeta: String {
+        let pro = ProSTStore.shared
+        if settings.isPro, pro.splitCaps {
+            return L.t("settings.cap_split_meta", ["wd": "\(pro.weekdayCap)", "we": "\(pro.weekendCap)"])
+        }
+        return settings.dailyCapHours >= 24
+            ? L.t("parent.no_cap")
+            : "\(settings.dailyCapHours)\(L.t("settings.hours"))"
+    }
+
     private var earningGroup: some View {
         group(L.t("settings.earning")) {
             row(L.t("settings.daily_goal"),
@@ -245,9 +257,7 @@ struct SettingsView: View {
             }
             divider
             row(L.t("settings.daily_cap"),
-                meta: settings.dailyCapHours >= 24
-                    ? L.t("parent.no_cap")
-                    : "\(settings.dailyCapHours)\(L.t("settings.hours"))", locked: !settings.isPro) {
+                meta: dailyCapMeta, locked: !settings.isPro) {
                 if settings.isPro { capOpen = true } else { proOpen = true }
             }
         }

@@ -170,7 +170,7 @@ enum ChallengeCatalog {
             case .distance: current = week.reduce(0) { $0 + $1.distanceKm }
             case .exercise: current = Double(week.reduce(0) { $0 + $1.exerciseMinutes })
             case .calories: current = Double(week.reduce(0) { $0 + $1.calories })
-            case .earned: current = Double(week.reduce(0) { $0 + settings.earnedMin(from: $1.steps) })
+            case .earned: current = Double(week.reduce(0) { $0 + settings.earnedMin(from: $1.steps, on: SettingsStore.date(fromDayKey: $1.day)) })
             case .streak: current = Double(settings.streakCount)
             case .goal: current = 0
             }

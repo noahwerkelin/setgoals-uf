@@ -97,7 +97,9 @@ struct SliderDialog: View {
 
     private var sliderMax: Double { Double(unlimited == nil ? max : max + step) }
     private var isUnlimited: Bool {
-        if let u = unlimited { return Int(local.rounded()) >= u.sentinel }
+        // The last slider stop IS the "no cap" choice — never show a phantom
+        // value (e.g. "9 h") beyond the labeled maximum.
+        if unlimited != nil { return Int(local.rounded()) >= Int(sliderMax) }
         return false
     }
 

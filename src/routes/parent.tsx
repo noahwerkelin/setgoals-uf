@@ -1091,7 +1091,7 @@ function CategoryToggle({
   );
 }
 
-import { loadProST, saveProST, DEFAULT_PRO_ST, type ProST } from "@/lib/screentime";
+import { loadProST, saveProST, DEFAULT_PRO_ST, effectiveCapHours, type ProST } from "@/lib/screentime";
 import { saveRolloverPref } from "@/lib/bonus";
 
 
@@ -1180,6 +1180,11 @@ function ProScreenTimeSection({
               onChange={(v) => save({ ...state, weekendCap: v })}
               suffix={t("settings.hours")}
             />
+            <p className="text-[11px] font-medium text-sage-600">
+              {t("pro.st.today_cap", {
+                n: effectiveCapHours(state.weekdayCap, state, true),
+              })}
+            </p>
           </div>
         )}
 

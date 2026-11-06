@@ -1,5 +1,6 @@
 // Challenge catalog — trackable, deterministic daily/weekly selection.
-import { earnedMinFromSteps, type SettingsState } from "./settings";
+import { type SettingsState } from "./settings";
+import { earnedMinForDay, loadProST } from "./screentime";
 import type { DayTotals } from "./steps";
 
 export type Metric = "steps" | "distance" | "exercise" | "calories" | "earned" | "streak" | "goal";
@@ -214,7 +215,7 @@ export function challengeProgress(c: Challenge, ctx: ProgressCtx): { current: nu
       case "exercise": current = t.exercise_minutes; break;
       case "calories": current = t.calories; break;
       case "earned":
-        current = earnedMinFromSteps(t.steps, settings.stepsPer30, settings.dailyCapHours);
+        current = earnedMinForDay(t.steps, settings.stepsPer30, settings.dailyCapHours, loadProST(), settings.isPro);
         break;
       case "goal":
         current = t.steps >= settings.dailyGoal ? 1 : t.steps / Math.max(1, settings.dailyGoal);
@@ -228,7 +229,7 @@ export function challengeProgress(c: Challenge, ctx: ProgressCtx): { current: nu
         distance_km: a.distance_km + d.distance_km,
         exercise_minutes: a.exercise_minutes + d.exercise_minutes,
         calories: a.calories + d.calories,
-        earned: a.earned + earnedMinFromSteps(d.steps, settings.stepsPer30, settings.dailyCapHours),
+        earned: a.earned + earnedMinForDay(d.steps, settings.stepsPer30, settings.dailyCapHours, loadProST(), settings.isPro, new Date(d.day + "T00:00:00")),
       }),
       { steps: 0, distance_km: 0, exercise_minutes: 0, calories: 0, earned: 0 },
     );

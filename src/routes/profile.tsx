@@ -6,7 +6,8 @@ import { ProfileBadgeStrip } from "@/components/ProfileBadgeStrip";
 import { ProfileAura } from "@/components/ProfileAura";
 import { FriendsCard } from "@/components/FriendsCard";
 import { useT } from "@/lib/i18n";
-import { currentStreak, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
+import { currentStreak, useSettings, formatScreenMin, isImageAvatar } from "@/lib/settings";
+import { earnedMinForDay, effectiveCapHours, loadProST } from "@/lib/screentime";
 import { useTodaySteps } from "@/lib/steps";
 import { fileToSquareDataUrl, initialsFromName } from "@/lib/avatar";
 
@@ -77,8 +78,8 @@ function Page() {
           <ProfileAura
             activity={stepsToday / Math.max(1, settings.dailyGoal)}
             screen={
-              earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours) /
-              Math.max(1, (settings.dailyCapHours || 3) * 60)
+              earnedMinForDay(stepsToday, settings.stepsPer30, settings.dailyCapHours, loadProST(), settings.isPro) /
+              Math.max(1, effectiveCapHours(settings.dailyCapHours || 3, loadProST(), settings.isPro) * 60)
             }
           />
           <div className="relative flex flex-col items-center text-center gap-3">
@@ -166,7 +167,7 @@ function Page() {
             <Mini
               label={t("profile.mini.earned")}
               value={formatScreenMin(
-                earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours),
+                earnedMinForDay(stepsToday, settings.stepsPer30, settings.dailyCapHours, loadProST(), settings.isPro),
               )}
             />
           </div>

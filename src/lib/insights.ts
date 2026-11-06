@@ -1,5 +1,5 @@
 import type { DayTotals } from "./steps";
-import { earnedMinFromSteps } from "./settings";
+import { earnedMinForDay, DEFAULT_PRO_ST, type ProST } from "./screentime";
 
 export type Insights = {
   activityScore: number;
@@ -59,6 +59,8 @@ export function computeInsights(
   dailyGoal: number,
   stepsPer30: number,
   dailyCapHours: number,
+  pro: ProST = DEFAULT_PRO_ST,
+  isPro: boolean = false,
 ): Insights {
   const steps = history.map((d) => d.steps);
   const n = steps.length;
@@ -98,7 +100,14 @@ export function computeInsights(
   let weekdayCount = 0;
   for (const d of src) {
     const dow = new Date(d.day + "T00:00:00").getDay();
-    const min = earnedMinFromSteps(d.steps, stepsPer30, dailyCapHours);
+    const min = earnedMinForDay(
+      d.steps,
+      stepsPer30,
+      dailyCapHours,
+      pro,
+      isPro,
+      new Date(d.day + "T00:00:00"),
+    );
     if (dow === 0 || dow === 6) {
       weekendMin += min;
       weekendCount++;

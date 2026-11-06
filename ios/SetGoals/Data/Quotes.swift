@@ -33,6 +33,21 @@ enum Quotes {
         Quote(text: "Action is the foundational key to all success.", author: "Pablo Picasso"),
         Quote(text: "Strive for progress, not perfection.", author: "Unknown"),
         Quote(text: "The best project you'll ever work on is you.", author: "Unknown"),
+        Quote(text: "Walking is the best possible exercise. Habituate yourself to walk very far.", author: "Thomas Jefferson"),
+        Quote(text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius"),
+        Quote(text: "The groundwork of all happiness is health.", author: "Leigh Hunt"),
+        Quote(text: "Motivation gets you started. Habit keeps you going.", author: "Jim Ryun"),
+        Quote(text: "The best time to plant a tree was twenty years ago. The second best time is now.", author: "Chinese proverb"),
+        Quote(text: "Walk as if you are kissing the Earth with your feet.", author: "Thich Nhat Hanh"),
+        Quote(text: "Everywhere is walking distance if you have the time.", author: "Steven Wright"),
+        Quote(text: "To keep the body in good health is a duty.", author: "Buddha"),
+        Quote(text: "One step at a time is good walking.", author: "Chinese proverb"),
+        Quote(text: "The reason I exercise is for the quality of life I enjoy.", author: "Kenneth H. Cooper"),
+        Quote(text: "Do something today that your future self will thank you for.", author: "Unknown"),
+        Quote(text: "An early-morning walk is a blessing for the whole day.", author: "Henry David Thoreau"),
+        Quote(text: "Discipline is choosing what you want most over what you want now.", author: "Unknown"),
+        Quote(text: "A little progress each day adds up to big results.", author: "Unknown"),
+        Quote(text: "Take a walk outside — it will clear your mind and move your body.", author: "Unknown"),
     ]
 
     static let sv: [Quote] = [
@@ -61,6 +76,21 @@ enum Quotes {
         Quote(text: "Handling är grunden till all framgång.", author: "Pablo Picasso"),
         Quote(text: "Sträva efter framsteg, inte perfektion.", author: "Okänd"),
         Quote(text: "Det bästa projektet du någonsin arbetar med är du själv.", author: "Okänd"),
+        Quote(text: "Promenader är den bästa möjliga motionen. Vänj dig vid att gå långt.", author: "Thomas Jefferson"),
+        Quote(text: "Det spelar ingen roll hur långsamt du går, så länge du inte stannar.", author: "Konfucius"),
+        Quote(text: "Grunden till all lycka är hälsa.", author: "Leigh Hunt"),
+        Quote(text: "Motivation får dig att börja. Vanor håller dig igång.", author: "Jim Ryun"),
+        Quote(text: "Den bästa tiden att plantera ett träd var för tjugo år sedan. Den näst bästa tiden är nu.", author: "Kinesiskt ordspråk"),
+        Quote(text: "Gå som om du kysser jorden med dina fötter.", author: "Thich Nhat Hanh"),
+        Quote(text: "Allt är gångavstånd om du har tid.", author: "Steven Wright"),
+        Quote(text: "Att hålla kroppen frisk är en plikt.", author: "Buddha"),
+        Quote(text: "Ett steg i taget är bra gång.", author: "Kinesiskt ordspråk"),
+        Quote(text: "Anledningen till att jag tränar är livskvaliteten jag får.", author: "Kenneth H. Cooper"),
+        Quote(text: "Gör något idag som ditt framtida jag kommer att tacka dig för.", author: "Okänd"),
+        Quote(text: "En tidig morgonpromenad är en välsignelse för hela dagen.", author: "Henry David Thoreau"),
+        Quote(text: "Disciplin är att välja det du vill ha mest framför det du vill ha nu.", author: "Okänd"),
+        Quote(text: "Lite framsteg varje dag blir stora resultat.", author: "Okänd"),
+        Quote(text: "Ta en promenad utomhus – det klarnar sinnet och rör på kroppen.", author: "Okänd"),
     ]
 
     /// One quote per day, advancing through the pool like the web version.

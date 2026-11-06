@@ -1,39 +1,11 @@
 # Tasks
-- [x] Hide Home behind an opaque white splash opening, fading into darker sage with cached subtle grain; retain logo and loading bar.
-- [ ] Verify updated splash first-frame coverage and texture on iPhone; blocked by unavailable Xcode/device runtime.
-- [x] Replace the Subscription & Payment Terms body in Swedish and English with the supplied 2026-10-27 text; other documents unchanged.
-- [ ] Verify the updated legal documents render correctly in the iPhone app; blocked by unavailable Xcode/device runtime.
-- [x] Share existing username validation across Swift regular and child creation/editing; add bilingual, nonblocking availability checks.
-- [x] Enforce case-insensitive global username uniqueness safely in the existing database, preserving accounts and relationships.
-- [x] Provide separate SQL and safe application instructions; shared rule tests, rollback database tests and native syntax checks passed.
-- [ ] Verify username creation/editing/joining end-to-end in Swift; blocked by unavailable Xcode/iPhone runtime.
-- [x] Redesign Swift Map with full-screen movable Map mode, one expanded random floating location, blurred controls, and separate expandable List mode in English/Swedish.
-- [x] Parse changed Swift Map view and check bilingual labels; preserve nearby search, directions and shared bottom navigation.
-- [ ] Verify new native Map/List interaction and appearance; blocked by unavailable Xcode/device runtime.
-- [x] Require recipient acceptance for new friendships in web and Swift; retain friend removal.
-- [x] Verify request permissions, acceptance, decline/cancellation, and removal in rollback-only database tests; signed-in web send/read-back/cancel passed.
-- [ ] Verify native friend request controls on iPhone; blocked by unavailable Xcode/device runtime.
-- [x] Repair native rollover preference/allowance synchronization and backend rounding; repair secure friend search/addition.
-- [x] Preload account-scoped family data at app entry and refresh after changes.
-- [x] Make native tab reselection return from Settings to Profile without changing bar styling.
-- [x] Verify real signed-in friend search, addition, read-back and removal; Swift syntax and web build pass.
-- [ ] Run rollback-only database mutation regressions; blocked by read-only sandbox test connection.
-- [ ] Verify native bonus, family loading and Settings tab reselection on an iPhone; blocked by unavailable Xcode/device runtime.
-- [x] Match Swift Screen Time heading, remove its Settings shortcut and family diagram, retain child list.
-- [x] Simplify child creation and expanded management with shared styling and English/Swedish labels.
-- [x] Validate Swift syntax, bilingual keys and retained action paths; native visual and device checks remain blocked by unavailable Xcode.
-- [x] Redesign native Profile with inline cached statistics and Settings at top-right.
-- [x] Replace Coach bottom tab with a role-aware Screen Time dashboard and preserve Coach access.
-- [x] Add expandable Family Circle using existing child management, rewards and tasks.
-- [x] Replace custom category rows with native pickers; remove per-category cap controls.
-- [x] Verify bilingual strings, navigation and source consistency with parser/source review.
-- [ ] Validate native appearance, picker/shield behavior and parent/child flows; blocked by unavailable Xcode and Apple-device runtime.
-- [x] Update Swift Home ring colors, minutes, step hierarchy, restore the original daily quote, and place Friends last.
-- [x] Preload and share friends data at app entry; source checks passed, but native visual and loading-speed verification requires Xcode.
-- [x] Align Swift onboarding with the web project's font, semantic colors, and control styling; bundle missing Albert Sans weights.
-- [x] Verify font registration, English/Swedish glyphs, and unchanged setup flow in source; native appearance remains unverified without Xcode.
-- [x] Match Swift onboarding controls and surfaces to SetGoals; remove the welcome sign-in shortcut.
-- [x] Review unchanged setup requirements and shared onboarding styling in source; native visual/device validation requires Xcode.
-- [x] Restrict personal earning rules and daily cap customization to PRO in Swift and web.
-- [x] Refresh the upgrade feature view with English and Swedish copy while preserving purchase and restore flows.
-- [x] Verify the web flow and apply the required package security update. Native purchase/device testing requires Xcode and an Apple device.
+- [x] Add ~15 new daily quotes (EN+SV) to web and iOS pools, aligned (40 per language).
+- [x] Screen time: weekend 2x multiplier doubles earning on Sat/Sun (web + iOS, central helpers).
+- [x] Screen time: split weekday/weekend caps override the standard daily cap everywhere (Home, Stats, insights, rollover, challenges, profile).
+- [x] Screen time: fix cap slider accuracy (phantom "9h" vs "no cap" sentinel bug, web + iOS).
+- [x] Screen time: daily-limit UI coherence — split-cap meta on the cap row; "today's cap" in the PRO split section.
+- [x] Speed: splash dismisses when ready (1.2s minimum total) instead of a flat 2.5s post-load wait.
+- [x] Speed: Challenges streak reads preloaded SettingsStore; week seeded from StatsCache, background refresh.
+- [x] Write docs/LAUNCH-CHECKLIST.md (privacy, entitlements, payments, device testing).
+- [x] Verify: web typecheck + build OK, 6 new screen-time rule tests pass.
+- [ ] Verify native screen-time rules, splash timing and scroll feel on iPhone; blocked by unavailable Xcode/device runtime.

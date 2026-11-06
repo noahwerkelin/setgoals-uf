@@ -14,7 +14,6 @@ struct ChallengesView: View {
     @State private var week: [DayTotals] = []
     @ObservedObject private var badgeStore = BadgeStore.shared
     private var earnedBadges: Set<String> { badgeStore.earned }
-    @State private var streak: StreakRow?
     @State private var detail: Challenge?
 
     var body: some View {
@@ -36,15 +35,20 @@ struct ChallengesView: View {
         }
         .task {
             sub = initialTab
-            // Sync movement first so badges reflect real activity.
-            await HealthKitService.shared.refreshToday()
-            Task { await BadgeSync.run() }
-            week = await SupabaseAPI.weekTotals()
-            streak = try? await SupabaseAPI.streak()
-            // Completed challenges pay out their screen-time reward once
-            // per day (daily) or per week (weekly).
-            await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
-
+            // Show preloaded data instantly — the streak arrives with the
+            // account at app entry and the week rides on the stats cache —
+            // then refresh in the background without blanking the view.
+            if week.isEmpty { week = Array(StatsCache.shared.history.suffix(7)) }
+            Task {
+                // Sync movement first so badges reflect real activity.
+                await HealthKitService.shared.refreshToday()
+                await BadgeSync.run()
+                let freshWeek = await SupabaseAPI.weekTotals()
+                if !freshWeek.isEmpty { week = freshWeek }
+                // Completed challenges pay out their screen-time reward once
+                // per day (daily) or per week (weekly).
+                await ChallengeRewards.claimCompleted(week: week, today: health, settings: settings)
+            }
         }
         .sheet(item: $detail) { c in
             ChallengeDetailSheet(challenge: c, progress: ChallengeCatalog.progress(c, today: health, week: week, settings: settings))
@@ -68,13 +72,13 @@ struct ChallengesView: View {
                     .font(F.sans(10, .medium))
             }
             .foregroundStyle(theme.p.s100.opacity(0.85))
-            Text(L.t("challenges.streak_days", ["n": "\(streak?.count ?? 0)"]))
+            Text(L.t("challenges.streak_days", ["n": "\(settings.streakCount)"]))
                 .font(F.xl3).tabularNums().foregroundStyle(theme.primaryForeground)
             Text(L.t("challenges.streak_sub")).font(F.sm)
                 .foregroundStyle(theme.p.s100.opacity(0.85))
             HStack(spacing: 6) {
                 Image(systemName: "crown.fill").font(.system(size: 11))
-                Text(L.t("challenges.streak_best", ["n": "\(max(streak?.best ?? 0, streak?.count ?? 0))"]))
+                Text(L.t("challenges.streak_best", ["n": "\(max(settings.streakBest, settings.streakCount))"]))
                     .font(F.sans(13, .semibold)).tabularNums()
             }
             .foregroundStyle(theme.primaryForeground)

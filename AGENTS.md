@@ -21,3 +21,5 @@
 - Child accounts hide the Screen Time tab (BottomNav filters it and RootView redirects), because parents manage child limits.
 - Light/Dark/System appearance lives in Theme: palette tokens are dynamic UIColors and the choice overrides window style so sheets follow.
 - Native splash stays opaque from its first frame, uses Theme tokens and a cached static grain tile, and respects Reduce Motion; launch loading and dismissal remain owned by SetGoalsApp to avoid coupling animation to account state and per-frame texture work.
+- Screen-time caps and the PRO weekend multiplier are resolved only through `effectiveCapHours`/`effectiveStepsPer30`/`earnedMinForDay` (web `src/lib/screentime.ts`, iOS `SettingsStore`), so split weekday/weekend caps override the standard cap identically on every screen.
+- The splash dismisses as soon as app-entry loading finishes (short minimum total, never a flat post-load delay); Challenges/Stats read preloaded SettingsStore/StatsCache data and refresh in the background.

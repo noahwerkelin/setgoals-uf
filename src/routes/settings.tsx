@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT, type Lang } from "@/lib/i18n";
 import { useSettings, type SettingsState } from "@/lib/settings";
+import { loadProST } from "@/lib/screentime";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -265,7 +266,13 @@ function Page() {
             />
             <Row
               label={t("settings.daily_cap")}
-              meta={settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`}
+              meta={(() => {
+                const pro = loadProST();
+                if (settings.isPro && pro.splitCaps) {
+                  return t("settings.cap_split_meta", { wd: pro.weekdayCap, we: pro.weekendCap });
+                }
+                return settings.dailyCapHours >= 24 ? t("parent.no_cap") : `${settings.dailyCapHours}${t("settings.hours")}`;
+              })()}
               locked={!settings.isPro}
               onClick={() => settings.isPro ? setCapOpen(true) : setProOpen(true)}
             />
@@ -683,7 +690,9 @@ function SliderDialog({
   useEffect(() => {
     if (open) setLocal(value);
   }, [open, value]);
-  const isUnlimited = unlimited && local >= unlimited.sentinel;
+  // The last slider stop IS the "no cap" choice — never show a phantom
+  // value (e.g. "9h") beyond the labeled maximum.
+  const isUnlimited = unlimited && local >= sliderMax;
   return (
     <Dialog
       open={open}

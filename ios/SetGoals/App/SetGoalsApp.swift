@@ -50,6 +50,7 @@ struct SetGoalsApp: App {
             .preferredColorScheme(theme.colorScheme)
             .onAppear { theme.applyAppearance() }
             .task {
+                let splashStart = Date()
                 await auth.bootstrap()
                 if auth.signedIn {
                     async let friends: Void = FriendsStore.shared.preload()
@@ -84,7 +85,11 @@ struct SetGoalsApp: App {
                         ScreenTimeService.shared.scheduleDailyMonitoring()
                     }
                 }
-                try? await Task.sleep(for: .seconds(2.5))
+                // Dismiss as soon as everything is ready — only hold the
+                // splash long enough for the reveal to read (1.2 s total),
+                // never a flat extra wait after loading has finished.
+                let remaining = 1.2 - Date().timeIntervalSince(splashStart)
+                if remaining > 0 { try? await Task.sleep(for: .seconds(remaining)) }
                 withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
             }
             .onChange(of: settings.themeColor) { _, new in theme.color = new }

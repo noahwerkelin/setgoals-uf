@@ -640,6 +640,9 @@ struct ProScreenTimeSection: View {
                     VStack(spacing: 12) {
                         capSlider(L.t("pro.st.weekday_cap"), value: $pst.weekdayCap)
                         capSlider(L.t("pro.st.weekend_cap"), value: $pst.weekendCap)
+                        Text(L.t("pro.st.today_cap", ["n": "\(settings.effectiveCapHours())"]))
+                            .font(F.sans(11, .medium)).foregroundStyle(theme.p.s600)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(16)
                     .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))

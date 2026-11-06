@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Lock, Sparkles, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useT } from "@/lib/i18n";
-import { useSettings, earnedMinFromSteps, formatScreenMin } from "@/lib/settings";
+import { useSettings, formatScreenMin } from "@/lib/settings";
+import { earnedMinForDay, loadProST } from "@/lib/screentime";
 import { useWeekSteps, useHistorySteps } from "@/lib/steps";
 import { ProUpgradeDialog } from "@/components/Pro";
 import { computeInsights, buildMessages } from "@/lib/insights";
@@ -27,7 +28,8 @@ function Page() {
   const { settings } = useSettings();
   const { data: week = [] } = useWeekSteps();
   const { data: history = [] } = useHistorySteps(180);
-  const insights = computeInsights(history, settings.dailyGoal, settings.stepsPer30, settings.dailyCapHours);
+  const proST = loadProST();
+  const insights = computeInsights(history, settings.dailyGoal, settings.stepsPer30, settings.dailyCapHours, proST, settings.isPro);
   const messages = buildMessages(insights, lang, settings.displayName || settings.username);
   const locale = lang === "sv" ? "sv-SE" : "en-US";
   const WEEK = week.map((d) => d.steps);
@@ -41,9 +43,18 @@ function Page() {
   const daysSinceMonday = jsDay === 0 ? 7 : jsDay;
   const thisWeek = (history.length ? history : week).slice(-daysSinceMonday);
 
-  // Screen time earned since Monday.
+  // Screen time earned since Monday — each day uses its own weekday/weekend
+  // cap and the PRO weekend multiplier.
   const weeklyEarnedMin = thisWeek.reduce(
-    (a, d) => a + earnedMinFromSteps(d.steps, settings.stepsPer30, settings.dailyCapHours),
+    (a, d) =>
+      a + earnedMinForDay(
+        d.steps,
+        settings.stepsPer30,
+        settings.dailyCapHours,
+        proST,
+        settings.isPro,
+        new Date(d.day + "T00:00:00"),
+      ),
     0,
   );
 

@@ -7,7 +7,8 @@ import { AppShell } from "@/components/AppShell";
 import { ProgressRing } from "@/components/ProgressRing";
 import { useT } from "@/lib/i18n";
 import { initialsFromName } from "@/lib/avatar";
-import { formatDistance, useSettings, earnedMinFromSteps, formatScreenMin, isImageAvatar } from "@/lib/settings";
+import { formatDistance, useSettings, formatScreenMin, isImageAvatar } from "@/lib/settings";
+import { earnedMinForDay, effectiveCapHours, loadProST } from "@/lib/screentime";
 import { useTodaySteps } from "@/lib/steps";
 import { BADGES, tierStyle } from "@/components/Badges";
 import { useEarnedBadges, useDailyBadgeCheck } from "@/lib/badges";
@@ -89,9 +90,10 @@ function Home() {
   else if (hour >= 17 || hour < 5) greetingKey = "home.greeting.evening";
   if (HOLIDAYS[md]) greetingKey = HOLIDAYS[md];
   const rolloverMin = useRolloverMin(settings.isPro);
-  const capMin = settings.dailyCapHours * 60;
+  const proST = loadProST();
+  const capMin = effectiveCapHours(settings.dailyCapHours, proST, settings.isPro) * 60;
   const bonusMin = useBonusMin();
-  const baseEarned = earnedMinFromSteps(stepsToday, settings.stepsPer30, settings.dailyCapHours);
+  const baseEarned = earnedMinForDay(stepsToday, settings.stepsPer30, settings.dailyCapHours, proST, settings.isPro);
   const earnedMin = Math.min(capMin + rolloverMin, baseEarned + rolloverMin) + bonusMin;
   const remainingMin = Math.max(0, capMin + rolloverMin - Math.min(capMin + rolloverMin, baseEarned + rolloverMin));
   const ringProgress = Math.min(1, stepsToday / goal);
@@ -331,6 +333,21 @@ const QUOTES: Record<string, { text: string; author: string }[]> = {
     { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
     { text: "Strive for progress, not perfection.", author: "Unknown" },
     { text: "The best project you'll ever work on is you.", author: "Unknown" },
+    { text: "Walking is the best possible exercise. Habituate yourself to walk very far.", author: "Thomas Jefferson" },
+    { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+    { text: "The groundwork of all happiness is health.", author: "Leigh Hunt" },
+    { text: "Motivation gets you started. Habit keeps you going.", author: "Jim Ryun" },
+    { text: "The best time to plant a tree was twenty years ago. The second best time is now.", author: "Chinese proverb" },
+    { text: "Walk as if you are kissing the Earth with your feet.", author: "Thich Nhat Hanh" },
+    { text: "Everywhere is walking distance if you have the time.", author: "Steven Wright" },
+    { text: "To keep the body in good health is a duty.", author: "Buddha" },
+    { text: "One step at a time is good walking.", author: "Chinese proverb" },
+    { text: "The reason I exercise is for the quality of life I enjoy.", author: "Kenneth H. Cooper" },
+    { text: "Do something today that your future self will thank you for.", author: "Unknown" },
+    { text: "An early-morning walk is a blessing for the whole day.", author: "Henry David Thoreau" },
+    { text: "Discipline is choosing what you want most over what you want now.", author: "Unknown" },
+    { text: "A little progress each day adds up to big results.", author: "Unknown" },
+    { text: "Take a walk outside — it will clear your mind and move your body.", author: "Unknown" },
   ],
   sv: [
     { text: "Ta hand om din kropp. Det är den enda plats du har att bo på.", author: "Jim Rohn" },
@@ -358,6 +375,21 @@ const QUOTES: Record<string, { text: string; author: string }[]> = {
     { text: "Handling är grunden till all framgång.", author: "Pablo Picasso" },
     { text: "Sträva efter framsteg, inte perfektion.", author: "Okänd" },
     { text: "Det bästa projektet du någonsin arbetar med är du själv.", author: "Okänd" },
+    { text: "Promenader är den bästa möjliga motionen. Vänj dig vid att gå långt.", author: "Thomas Jefferson" },
+    { text: "Det spelar ingen roll hur långsamt du går, så länge du inte stannar.", author: "Konfucius" },
+    { text: "Grunden till all lycka är hälsa.", author: "Leigh Hunt" },
+    { text: "Motivation får dig att börja. Vanor håller dig igång.", author: "Jim Ryun" },
+    { text: "Den bästa tiden att plantera ett träd var för tjugo år sedan. Den näst bästa tiden är nu.", author: "Kinesiskt ordspråk" },
+    { text: "Gå som om du kysser jorden med dina fötter.", author: "Thich Nhat Hanh" },
+    { text: "Allt är gångavstånd om du har tid.", author: "Steven Wright" },
+    { text: "Att hålla kroppen frisk är en plikt.", author: "Buddha" },
+    { text: "Ett steg i taget är bra gång.", author: "Kinesiskt ordspråk" },
+    { text: "Anledningen till att jag tränar är livskvaliteten jag får.", author: "Kenneth H. Cooper" },
+    { text: "Gör något idag som ditt framtida jag kommer att tacka dig för.", author: "Okänd" },
+    { text: "En tidig morgonpromenad är en välsignelse för hela dagen.", author: "Henry David Thoreau" },
+    { text: "Disciplin är att välja det du vill ha mest framför det du vill ha nu.", author: "Okänd" },
+    { text: "Lite framsteg varje dag blir stora resultat.", author: "Okänd" },
+    { text: "Ta en promenad utomhus – det klarnar sinnet och rör på kroppen.", author: "Okänd" },
   ],
 };
 
