@@ -4,7 +4,7 @@ Checked: 2026-11-06 UTC. **Read-only findings, not implementation approval.**
 
 ## Decision and blockers
 
-The supported architectural route is for the separate website to use the existing app-owned Auth session and publishable client configuration, then caller-authorized database RPCs. It does not require enabling Cloud in the website project or attaching two projects through a managed-backend setting. Platform guidance explicitly supports a second app using this backend with its own non-Lovable domain; external return URLs must be added to Auth's allow-list.
+The candidate architectural route is for the separate website to establish its own session with the existing app-owned Auth service and use caller-authorized database RPCs. External return URLs can be allowlisted, but this alone does not establish platform support for sharing managed Cloud Auth across projects. The previous description of this route as already supported was too strong. Secure, supported website authentication and privileged access remain unverified; do not enable a second Cloud backend or alter the existing backend before resolving this gate.
 
 The current integration is **not ready for privileged website use**. No schema, policies, roles, Auth settings, subscriptions, Swift files or published code were changed. No production records were created or edited. The only supplied admin document is the instruction for this project; the referenced complete admin specification is missing.
 

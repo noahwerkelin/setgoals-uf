@@ -1,6 +1,7 @@
 # Tasks
 - [x] Admin integration: inspect live backend identity, tables, ACLs/RLS, functions, migration registry, Auth redirects and existing RPC access; document read-only findings.
-- [ ] Admin integration: implementation blocked by missing complete admin specification, unverified hosted MFA/rate limits and unapproved website redirects; ordinary/MFA test accounts required.
+- [x] Admin integration: recover the 03:16 instruction and inspect the separate website snapshot; correct the earlier unsupported connection claim and document the implementation gate.
+- [ ] Admin integration: implementation blocked by unconfirmed supported cross-project Auth connection, missing complete admin specification, unverified hosted MFA/rate limits and unapproved website redirects; ordinary/MFA test accounts required.
 - [x] Add ~15 new daily quotes (EN+SV) to web and iOS pools, aligned (40 per language).
 - [x] Screen time: weekend 2x multiplier doubles earning on Sat/Sun (web + iOS, central helpers).
 - [x] Screen time: split weekday/weekend caps override the standard daily cap everywhere (Home, Stats, insights, rollover, challenges, profile).
