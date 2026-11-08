@@ -775,6 +775,27 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          lang: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          lang?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          lang?: string
+        }
+        Relationships: []
+      }
       parent_child_relationships: {
         Row: {
           child_profile_id: string
@@ -1619,6 +1640,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_newsletter_subscribers: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          lang: string
+        }[]
+      }
       admin_overview_daily: {
         Args: { _from: string; _to?: string }
         Returns: {
@@ -1949,6 +1978,10 @@ export type Database = {
           name: string
           username: string
         }[]
+      }
+      newsletter_subscribe: {
+        Args: { _email: string; _lang?: string }
+        Returns: undefined
       }
       parent_family_pro: { Args: never; Returns: boolean }
       parent_family_pro_status: {

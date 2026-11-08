@@ -1,4 +1,5 @@
 # Architecture rules
+- Newsletter subscriptions use a public validating SECURITY DEFINER RPC and a private RLS table; the admin list reuses admin_require and an advisory transaction lock serializes the global hourly insert limit to prevent bypasses.
 - Native campaigns use one account-scoped CampaignStore loaded asynchronously at entry/foreground; caller-scoped RPCs enforce eligibility and server rewards reconcile into the native base allowance without double granting.
 - Admin deletion is an audited MFA-authorized request completed by an authenticated server route using the supported Auth admin API; never delete managed Auth rows directly from SQL.
 - Native signup and username edits reuse UsernameRules; global username reservations in the database serialize claims across profiles and children, with linked child/profile rows treated as one identity, so concurrent clients cannot bypass uniqueness.
