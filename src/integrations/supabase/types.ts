@@ -854,7 +854,7 @@ export type Database = {
           id: string
           last_active_at?: string | null
           onboarding_completed?: boolean
-          region?: string
+          region: string
           role?: Database["public"]["Enums"]["user_role_kind"]
           updated_at?: string
           username: string
