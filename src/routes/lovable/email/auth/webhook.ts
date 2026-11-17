@@ -56,11 +56,49 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
             },
             recovery: {
               subject: 'Reset your password',
-              render: (data) =>
-                React.createElement(RecoveryEmail, {
+              render: (data) => {
+                // AuthEmailHookData exposes the Auth verification URL, not a
+                // token_hash field. Its `token` field is the raw email OTP and
+                // must never be used as a token_hash fallback.
+                let verificationUrl: URL
+                try {
+                  verificationUrl = new URL(data.url)
+                } catch {
+                  // Do not include the URL or any token in errors/logs.
+                  throw new Error('Recovery email requires a valid Auth verification URL')
+                }
+
+                // Supabase's action-link contract is:
+                // /auth/v1/verify?type=recovery&token={hashed_token}.
+                // A PKCE callback's `code` or verifier is not this token.
+                const tokenHashes = verificationUrl.searchParams.getAll('token')
+                const actionTypes = verificationUrl.searchParams.getAll('type')
+                const tokenHash = tokenHashes[0]
+                if (
+                  data.action_type !== 'recovery' ||
+                  verificationUrl.protocol !== 'https:' ||
+                  verificationUrl.pathname !== '/auth/v1/verify' ||
+                  actionTypes.length !== 1 ||
+                  actionTypes[0] !== 'recovery' ||
+                  tokenHashes.length !== 1 ||
+                  !tokenHash ||
+                  tokenHash.trim() !== tokenHash ||
+                  tokenHash === data.token
+                ) {
+                  // The SDK catches render failures, returns 500 and retries;
+                  // no email is sent with a missing or ambiguous recovery hash.
+                  throw new Error('Recovery email requires an unambiguous recovery token hash')
+                }
+
+                const resetUrl = new URL('/reset-password', SITE_URL)
+                resetUrl.searchParams.set('token_hash', tokenHash)
+                resetUrl.searchParams.set('type', 'recovery')
+
+                return React.createElement(RecoveryEmail, {
                   siteName: SITE_NAME,
-                  confirmationUrl: data.url,
-                }),
+                  confirmationUrl: resetUrl.toString(),
+                })
+              },
             },
             email_change: {
               subject: 'Confirm your new email',
