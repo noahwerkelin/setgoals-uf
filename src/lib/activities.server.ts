@@ -1,13 +1,6 @@
 import { z } from "zod";
 
-export type ActivityKind =
-  | "Hiking"
-  | "Running"
-  | "Cycling"
-  | "Swim"
-  | "Family"
-  | "Gym"
-  | "Nature";
+export type ActivityKind = "Hiking" | "Running" | "Cycling" | "Swim" | "Family" | "Gym" | "Nature";
 
 export type Activity = {
   id: string;
@@ -38,9 +31,7 @@ function haversine(aLat: number, aLng: number, bLat: number, bLng: number) {
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(bLat - aLat);
   const dLng = toRad(bLng - aLng);
-  const s =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
@@ -57,11 +48,7 @@ const PLACE_TYPES: { type: string; kind: ActivityKind }[] = [
   { type: "tourist_attraction", kind: "Family" },
 ];
 
-async function fetchGooglePlaces(
-  lat: number,
-  lng: number,
-  radiusM: number,
-): Promise<Activity[]> {
+async function fetchGooglePlaces(lat: number, lng: number, radiusM: number): Promise<Activity[]> {
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
   const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
   if (!LOVABLE_API_KEY || !GOOGLE_MAPS_API_KEY) return [];
@@ -72,12 +59,13 @@ async function fetchGooglePlaces(
       try {
         const res = await fetch(`${GATEWAY}/places/v1/places:searchNearby`, {
           method: "POST",
+          signal: AbortSignal.timeout(8000),
           headers: {
             Authorization: `Bearer ${LOVABLE_API_KEY}`,
             "X-Connection-Api-Key": GOOGLE_MAPS_API_KEY,
             "Content-Type": "application/json",
             "X-Goog-FieldMask":
-              "places.id,places.displayName,places.location,places.rating,places.userRatingCount,places.formattedAddress,places.currentOpeningHours.openNow,places.photos.name",
+              "places.id,places.displayName,places.location,places.rating,places.userRatingCount,places.formattedAddress,places.photos.name",
           },
           body: JSON.stringify({
             includedTypes: [type],
@@ -96,7 +84,6 @@ async function fetchGooglePlaces(
             rating?: number;
             userRatingCount?: number;
             formattedAddress?: string;
-            currentOpeningHours?: { openNow?: boolean };
             photos?: Array<{ name: string }>;
           }>;
         };
@@ -115,7 +102,6 @@ async function fetchGooglePlaces(
             rating: p.rating,
             userRatingsTotal: p.userRatingCount,
             address: p.formattedAddress,
-            openNow: p.currentOpeningHours?.openNow,
             photoUrl: photo ? `__resolve__:${photo}` : undefined,
           });
         }
@@ -153,13 +139,9 @@ function classifyOsm(tags: Record<string, string>): ActivityKind | null {
   return null;
 }
 
-async function fetchOverpass(
-  lat: number,
-  lng: number,
-  radiusM: number,
-): Promise<Activity[]> {
+async function fetchOverpass(lat: number, lng: number, radiusM: number): Promise<Activity[]> {
   const q = `
-    [out:json][timeout:25];
+    [out:json][timeout:10];
     (
       node["leisure"~"park|playground|nature_reserve|fitness_station|fitness_centre|swimming_area"](around:${radiusM},${lat},${lng});
       way["leisure"~"park|nature_reserve|swimming_area"](around:${radiusM},${lat},${lng});
@@ -174,6 +156,7 @@ async function fetchOverpass(
   try {
     const res = await fetch("https://overpass-api.de/api/interpreter", {
       method: "POST",
+      signal: AbortSignal.timeout(11000),
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "data=" + encodeURIComponent(q),
     });
@@ -212,56 +195,51 @@ export async function searchNearbyActivities(data: {
   lng: number;
   radiusM: number;
 }): Promise<{ activities: Activity[] }> {
-    const [google, osm] = await Promise.all([
-      fetchGooglePlaces(data.lat, data.lng, data.radiusM),
-      fetchOverpass(data.lat, data.lng, data.radiusM),
-    ]);
-    const merged = [...google, ...osm];
+  const [google, osm] = await Promise.all([
+    fetchGooglePlaces(data.lat, data.lng, data.radiusM),
+    fetchOverpass(data.lat, data.lng, data.radiusM),
+  ]);
+  const merged = [...google, ...osm];
 
-    // de-dupe by name + ~50m proximity
-    const kept: Activity[] = [];
-    for (const a of merged.sort((x, y) => x.distanceM - y.distanceM)) {
-      const dup = kept.find(
-        (k) =>
-          k.name.toLowerCase() === a.name.toLowerCase() &&
-          haversine(k.lat, k.lng, a.lat, a.lng) < 80,
-      );
-      if (!dup) kept.push(a);
-    }
-
-    // Resolve Google Places photo references to real CDN URLs the browser can load.
-    const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-    const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
-    const result = kept.slice(0, 80);
-    if (LOVABLE_API_KEY && GOOGLE_MAPS_API_KEY) {
-      await Promise.all(
-        result.map(async (a) => {
-          if (!a.photoUrl?.startsWith("__resolve__:")) return;
-          const name = a.photoUrl.slice("__resolve__:".length);
-          try {
-            const r = await fetch(
-              `${GATEWAY}/places/v1/${name}/media?maxWidthPx=640&skipHttpRedirect=true`,
-              {
-                headers: {
-                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                  "X-Connection-Api-Key": GOOGLE_MAPS_API_KEY,
-                },
-              },
-            );
-            if (!r.ok) {
-              a.photoUrl = undefined;
-              return;
-            }
-            const j = (await r.json()) as { photoUri?: string };
-            a.photoUrl = j.photoUri;
-          } catch {
-            a.photoUrl = undefined;
-          }
-        }),
-      );
-    } else {
-      // Strip unresolved markers so the client doesn't try to load them.
-      for (const a of result) if (a.photoUrl?.startsWith("__resolve__:")) a.photoUrl = undefined;
-    }
-    return { activities: result };
+  // de-dupe by name + ~50m proximity
+  const kept: Activity[] = [];
+  for (const a of merged.sort((x, y) => x.distanceM - y.distanceM)) {
+    const dup = kept.find(
+      (k) => k.name.toLowerCase() === a.name.toLowerCase() && haversine(k.lat, k.lng, a.lat, a.lng) < 80,
+    );
+    if (!dup) kept.push(a);
   }
+
+  // Resolve Google Places photo references to real CDN URLs the browser can load.
+  const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+  const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+  const result = kept.slice(0, 80);
+  if (LOVABLE_API_KEY && GOOGLE_MAPS_API_KEY) {
+    await Promise.all(
+      result.map(async (a) => {
+        if (!a.photoUrl?.startsWith("__resolve__:")) return;
+        const name = a.photoUrl.slice("__resolve__:".length);
+        try {
+          const r = await fetch(`${GATEWAY}/places/v1/${name}/media?maxWidthPx=640&skipHttpRedirect=true`, {
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "X-Connection-Api-Key": GOOGLE_MAPS_API_KEY,
+            },
+          });
+          if (!r.ok) {
+            a.photoUrl = undefined;
+            return;
+          }
+          const j = (await r.json()) as { photoUri?: string };
+          a.photoUrl = j.photoUri;
+        } catch {
+          a.photoUrl = undefined;
+        }
+      }),
+    );
+  } else {
+    // Strip unresolved markers so the client doesn't try to load them.
+    for (const a of result) if (a.photoUrl?.startsWith("__resolve__:")) a.photoUrl = undefined;
+  }
+  return { activities: result };
+}
