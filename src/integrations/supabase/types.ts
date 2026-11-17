@@ -828,6 +828,64 @@ export type Database = {
           },
         ]
       }
+      parent_pin_attempts: {
+        Row: {
+          failed_attempts: number
+          locked_until: string | null
+          parent_id: string
+          updated_at: string
+        }
+        Insert: {
+          failed_attempts?: number
+          locked_until?: string | null
+          parent_id: string
+          updated_at?: string
+        }
+        Update: {
+          failed_attempts?: number
+          locked_until?: string | null
+          parent_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_pin_attempts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parent_security: {
+        Row: {
+          created_at: string
+          parent_id: string
+          pin_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          parent_id: string
+          pin_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          parent_id?: string
+          pin_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_security_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1924,6 +1982,7 @@ export type Database = {
           target: number
         }[]
       }
+      has_parent_pin: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2012,6 +2071,7 @@ export type Database = {
         Args: { _day: string; _minutes: number }
         Returns: undefined
       }
+      reset_parent_pin: { Args: { p_pin: string }; Returns: boolean }
       search_friend_users: {
         Args: { _query: string }
         Returns: {
@@ -2020,6 +2080,7 @@ export type Database = {
           username: string
         }[]
       }
+      set_parent_pin: { Args: { p_pin: string }; Returns: boolean }
       setgoals_parent_gift: {
         Args: { p_child_id: string; p_minutes: number; p_note?: string }
         Returns: undefined
@@ -2033,6 +2094,7 @@ export type Database = {
       }
       username_available: { Args: { _username: string }; Returns: boolean }
       username_is_valid: { Args: { _username: string }; Returns: boolean }
+      verify_parent_pin: { Args: { p_pin: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
