@@ -2094,6 +2094,7 @@ export type Database = {
       }
       username_available: { Args: { _username: string }; Returns: boolean }
       username_is_valid: { Args: { _username: string }; Returns: boolean }
+      verify_child_parent_pin: { Args: { p_pin: string }; Returns: boolean }
       verify_parent_pin: { Args: { p_pin: string }; Returns: boolean }
     }
     Enums: {
