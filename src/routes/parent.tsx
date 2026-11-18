@@ -463,7 +463,13 @@ function Page() {
                   {k.invitationStatus === "connected" ? (
                     <div className="mt-4 flex items-center gap-2 rounded-2xl bg-sage-50 px-4 py-3 ring-1 ring-sage-200">
                       <Link2 className="size-4 text-sage-700" />
-                      <p className="text-xs font-semibold text-sage-900">{t("parent.child.status_connected")}</p>
+                      <p className="flex-1 text-xs font-semibold text-sage-900">{t("parent.child.status_connected")}</p>
+                      <button
+                        onClick={() => regenerate(k)}
+                        className="flex items-center gap-1 rounded-xl bg-white px-2 py-1.5 text-[11px] font-semibold text-sage-700 ring-1 ring-sage-200"
+                      >
+                        <RefreshCw className="size-3.5" /> {t("parent.child.regenerate")}
+                      </button>
                     </div>
                   ) : (
                     <>

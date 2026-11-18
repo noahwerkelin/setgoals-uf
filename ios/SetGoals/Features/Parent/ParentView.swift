@@ -328,7 +328,7 @@ struct ParentView: View {
                     PrimaryButton(title: L.t(c.auth_user_id != nil ? "parent.gift.cta" : "parent.gift.needs_join"),
                                   enabled: c.auth_user_id != nil) { gifting = c }
                 }
-                if c.invitation_status != "connected" { invitationBlock(c) }
+                invitationBlock(c)
             case .tasks:
                 ChildTasksSection(childID: c.id, childName: c.name, parentID: parentID,
                                   canAssign: c.auth_user_id != nil && parentID != nil)
@@ -372,6 +372,9 @@ struct ParentView: View {
                 Text(L.t("parent.child.status_connected")).font(F.sans(12, .semibold))
                     .foregroundStyle(theme.p.s900)
                 Spacer(minLength: 0)
+                smallButton("arrow.clockwise", L.t("parent.child.regenerate")) {
+                    Task { _ = try? await SupabaseAPI.issueChildCode(c.id); await reload() }
+                }
             }
             .padding(.horizontal, 16).padding(.vertical, 12)
             .background(theme.p.s50, in: RoundedRectangle(cornerRadius: R.xl2, style: .continuous))
