@@ -21,7 +21,28 @@ export async function redeemChildCodeServer(code: string): Promise<{ email: stri
     if (child.auth_user_id) {
       // Self-heal a ghost link (auth account no longer exists) so the code stays usable.
       const { data: existing } = await supabaseAdmin.auth.admin.getUserById(child.auth_user_id as string);
-      if (existing?.user) throw new Error("This invitation code has already been used.");
+      if (existing?.user) {
+        // Re-login: the parent issued a fresh code for an existing child account.
+        if (child.invitation_status !== "pending") throw new Error("This invitation code has already been used.");
+        if (new Date(child.invitation_expires_at as string).getTime() < Date.now()) {
+          await supabaseAdmin.from("children").update({ invitation_status: "expired" }).eq("id", child.id);
+          throw new Error("This invitation code has expired. Ask your parent for a new one.");
+        }
+        // Consume the code atomically so it can only be used once.
+        const { data: consumed, error: consumeErr } = await supabaseAdmin
+          .from("children")
+          .update({ invitation_status: "connected" })
+          .eq("id", child.id)
+          .eq("code", formatted)
+          .eq("invitation_status", "pending")
+          .select("id");
+        if (consumeErr) throw new Error(consumeErr.message);
+        if (!consumed || consumed.length === 0) throw new Error("This invitation code has already been used.");
+        const password = randomPassword();
+        const { error: pwErr } = await supabaseAdmin.auth.admin.updateUserById(existing.user.id, { password });
+        if (pwErr) throw new Error(pwErr.message);
+        return { email: existing.user.email as string, password };
+      }
       const { error: healErr } = await supabaseAdmin
         .from("children")
         .update({ auth_user_id: null, invitation_status: "pending" })

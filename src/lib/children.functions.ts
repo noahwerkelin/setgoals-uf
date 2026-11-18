@@ -38,13 +38,14 @@ export const issueChildCode = createServerFn({ method: "POST" })
       // account genuinely still exists; otherwise clear the ghost link.
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: authCheck } = await supabaseAdmin.auth.admin.getUserById(child.auth_user_id);
-      if (authCheck?.user) throw new Error("This child has already joined — the code cannot be changed.");
+      if (!authCheck?.user) {
       await supabaseAdmin.from("username_reservations").delete().eq("owner_id", child.auth_user_id);
       const { error: clearErr } = await supabaseAdmin
         .from("children")
         .update({ auth_user_id: null, invitation_status: "pending" })
         .eq("id", child.id);
       if (clearErr) throw clearErr;
+      }
     }
 
     const expiresAt = new Date(Date.now() + DEFAULT_TTL_DAYS * 86400_000).toISOString();
