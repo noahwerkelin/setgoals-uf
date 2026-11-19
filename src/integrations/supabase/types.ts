@@ -1642,8 +1642,8 @@ export type Database = {
       admin_can_write: { Args: { _perm: string }; Returns: boolean }
       admin_dashboard_stats: { Args: never; Returns: Json }
       admin_delete_user: {
-        Args: { _reason: string; _uid: string }
-        Returns: string
+        Args: { _reason?: string; _uid: string }
+        Returns: undefined
       }
       admin_get_audit_logs: {
         Args: {
